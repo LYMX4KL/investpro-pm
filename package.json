@@ -1,0 +1,15 @@
+{
+  "name": "investpro-pm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "InvestPro Realty property management portal — static site + Netlify Functions for third-party webhooks",
+  "scripts": {
+    "test-webhook-local": "echo 'Use Netlify CLI: netlify dev — then POST to http://localhost:8888/.netlify/functions/petscreening-webhook'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

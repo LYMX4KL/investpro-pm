@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Screening — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .vendor-bar { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.5rem; padding:1rem 1.25rem; background:#F7F8FB; border-left:4px solid #1F4FC1; border-radius:4px; }
+  .vendor-bar a { background:#fff; padding:.6rem 1rem; border:1px solid #DDE3F0; border-radius:4px; text-decoration:none; color:#1F4FC1; font-weight:600; font-size:.9rem; }
+  .vendor-bar a:hover { background:#1F4FC1; color:#fff; }
+  .vendor-bar small { display:block; color:#6B7280; font-size:.75rem; margin-top:.2rem; font-weight:400; }
+  .screen-table { width:100%; border-collapse:collapse; }
+  .screen-table th, .screen-table td { padding:.85rem .75rem; border-bottom:1px solid #DDE3F0; text-align:left; vertical-align:middle; font-size:.92rem; }
+  .screen-table th { background:#F7F8FB; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; }
+  .pill-status { display:inline-block; padding:.2rem .6rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .pill-status.pending { background:#FFF3CD; color:#856404; }
+  .pill-status.in_progress { background:#CFE2FF; color:#0A4FB1; }
+  .pill-status.complete { background:#D1F2DA; color:#0F5C2A; }
+  .pill-status.unknown { background:#F0F0F0; color:#555; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1000; align-items:center; justify-content:center; padding:1rem; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:8px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; padding:2rem; }
+  .modal h2 { margin:0 0 1rem; }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  .field-row .form-group { margin:0; }
+  .pet-card { background:#F7F8FB; padding:1rem; border-radius:4px; margin-top:.75rem; }
+  .pet-card label { font-size:.85rem; }
+  .help-card { background:#F7F8FB; border-left:4px solid #1F4FC1; padding:1rem 1.25rem; margin-bottom:1.25rem; border-radius:4px; font-size:.9rem; color:#555A6B; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Screening</strong> · VA workflow</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1200px;">
+  <div class="dash-title">
+    <h1>Screening Queue</h1>
+    <a href="dashboard.html" class="btn btn-outline">← Back to Dashboard</a>
+  </div>
+
+  <div class="help-card">
+    <strong>How this works:</strong> When an application comes in, send the applicant their screening invites (TU + PetScreening), then come back here to log the results when reports return. Quick-launch buttons below open each vendor portal in a new tab.
+  </div>
+
+  <div class="vendor-bar" id="vendorBar">
+    <div style="flex:1; min-width:200px;">
+      <a href="#" id="open-petscreening" target="_blank" rel="noopener">🐾 Open PetScreening Dashboard
+        <small id="petscreening-account">Loading account…</small>
+      </a>
+    </div>
+    <div style="flex:1; min-width:200px;">
+      <a href="#" id="open-smartmove" target="_blank" rel="noopener">🛡️ Open TU SmartMove
+        <small id="smartmove-account">Loading account…</small>
+      </a>
+    </div>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading applications…</div>
+
+  <div id="empty-state" style="display:none; padding:3rem 1rem; text-align:center; color:#6B7280;">
+    <p style="font-size:1.1rem;">No applications in the screening queue yet.</p>
+    <p style="font-size:.9rem;">Once applicants submit through <code>/forms/rental-application.html</code>, they'll appear here.</p>
+  </div>
+
+  <table class="screen-table" id="screenTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>App ID</th>
+        <th>Applicant</th>
+        <th>Property</th>
+        <th>Submitted</th>
+        <th>Credit / Background</th>
+        <th>Pet Screening</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="screenBody"></tbody>
+  </table>
+</main>
+
+<!-- Enter Results modal -->
+<div class="modal-bg" id="resultsModal">
+  <div class="modal">
+    <h2 id="modalTitle">Enter Screening Results</h2>
+    <div id="modal-banner"></div>
+
+    <h3 style="color:#1F4FC1; font-size:1rem; margin-top:1rem;">Credit & Background (TransUnion SmartMove)</h3>
+    <div class="field-row">
+      <div class="form-group">
+        <label>Credit Score</label>
+        <input type="number" id="credit-score" min="300" max="850" placeholder="e.g. 720" />
+      </div>
+      <div class="form-group">
+        <label>Provider</label>
+        <select id="credit-provider">
+          <option value="smartmove">TU SmartMove</option>
+          <option value="rentspree">RentSpree</option>
+          <option value="manual">Manual / Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="form-group">
+        <label>Background — clean?</label>
+        <select id="background-clean">
+          <option value="">— select —</option>
+          <option value="true">✓ Clean (no concerns)</option>
+          <option value="false">⚠ Findings to review</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Eviction findings</label>
+        <select id="eviction-findings">
+          <option value="">— select —</option>
+          <option value="none">None</option>
+          <option value="found">Found — see notes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Background / criminal notes (optional)</label>
+      <textarea id="background-notes" rows="2" style="width:100%; padding:.5rem; border:1px solid #DDE3F0; border-radius:4px;"></textarea>
+    </div>
+
+    <div class="form-group" style="background:#F7F8FB; padding:.85rem 1rem; border-radius:4px; border-left:3px solid #1F4FC1;">
+      <label style="display:block;">📎 Upload Credit / Background Report (PDF)</label>
+      <div style="font-size:.85rem; color:#6B7280; margin-bottom:.5rem;">Drop the TU SmartMove (or whichever vendor) PDF here. Stored in <code>verification-results</code> bucket; only people with PII access can download.</div>
+      <input type="file" id="credit-pdf" accept="application/pdf" />
+      <div id="credit-pdf-status" style="font-size:.85rem; margin-top:.4rem;"></div>
+      <div id="credit-pdf-existing" style="font-size:.85rem; margin-top:.4rem;"></div>
+    </div>
+
+    <h3 style="color:#1F4FC1; font-size:1rem; margin-top:1.5rem;">Pet Screening (PetScreening.com)</h3>
+    <div id="pets-section">
+      <p style="color:#6B7280; font-size:.9rem;">Loading pets…</p>
+    </div>
+
+    <h3 style="color:#1F4FC1; font-size:1rem; margin-top:1.5rem;">Recommendation</h3>
+    <div class="field-row">
+      <div class="form-group">
+        <label>VA recommendation</label>
+        <select id="recommendation">
+          <option value="">— select —</option>
+          <option value="approve">Approve</option>
+          <option value="approve_with_conditions">Approve with conditions</option>
+          <option value="deny">Deny</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Income meets 3x rent?</label>
+        <select id="meets-3x">
+          <option value="">— select —</option>
+          <option value="true">✓ Yes</option>
+          <option value="false">✗ No</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Recommendation notes</label>
+      <textarea id="recommendation-notes" rows="2" style="width:100%; padding:.5rem; border:1px solid #DDE3F0; border-radius:4px;"></textarea>
+    </div>
+
+    <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.5rem;">
+      <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-save">Save Results</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  // VA + broker + compliance can use this page (people with PII access)
+  const u = await window.investproAuth.requireRole(['broker', 'va', 'compliance']);
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const empty = document.getElementById('empty-state');
+  const table = document.getElementById('screenTable');
+  const tbody = document.getElementById('screenBody');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to see real applications.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // ---------- Vendor bar ----------
+  const { data: settings } = await supa.from('vendor_settings').select('key, value');
+  const settingMap = {};
+  (settings || []).forEach(s => { settingMap[s.key] = s.value; });
+
+  function setVendorLink(linkId, accountId, urlVal, accountVal, fallbackHref, missingMsg) {
+    const link = document.getElementById(linkId);
+    const account = document.getElementById(accountId);
+    if (urlVal) {
+      link.href = urlVal;
+      link.style.opacity = '1';
+    } else {
+      link.href = fallbackHref;
+      link.style.opacity = '.65';
+    }
+    account.textContent = accountVal ? `Account: ${accountVal}` : (urlVal ? '' : missingMsg);
+  }
+  setVendorLink('open-petscreening', 'petscreening-account',
+    settingMap.petscreening_pm_url, settingMap.petscreening_account_email,
+    'https://www.petscreening.com', 'Not set yet — broker: configure in Vendor Settings');
+  setVendorLink('open-smartmove', 'smartmove-account',
+    settingMap.smartmove_landlord_url, settingMap.smartmove_account_email,
+    'https://smartmove.transunion.com', 'Not set yet — broker: configure in Vendor Settings');
+
+  // ---------- Applications list ----------
+  // Only apps that are past payment + signed (i.e. truly ready for screening)
+  const { data: apps, error } = await supa
+    .from('applications')
+    .select(`
+      id, confirmation_number, first_name, last_name, status,
+      property_id, created_at,
+      screening_reports ( id, credit_score, recommendation, va_finalized_at )
+    `)
+    .neq('status', 'pending_payment')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  loading.style.display = 'none';
+
+  if (error) {
+    banner.innerHTML = '<div class="banner banner-error">Could not load applications: ' + error.message + '</div>';
+    return;
+  }
+
+  if (!apps || apps.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+
+  // Pull property addresses in batch
+  const propertyIds = [...new Set(apps.map(a => a.property_id).filter(Boolean))];
+  let propertyMap = {};
+  if (propertyIds.length > 0) {
+    const { data: props } = await supa
+      .from('properties')
+      .select('id, address_line1, unit_number, city')
+      .in('id', propertyIds);
+    (props || []).forEach(p => {
+      propertyMap[p.id] = `${p.address_line1}${p.unit_number ? ' #' + p.unit_number : ''}, ${p.city || ''}`;
+    });
+  }
+
+  table.style.display = '';
+
+  for (const a of apps) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${a.confirmation_number || ''}</strong></td>
+      <td>${(a.first_name || '') + ' ' + (a.last_name || '')}</td>
+      <td>${propertyMap[a.property_id] || '—'}</td>
+      <td>${a.created_at ? new Date(a.created_at).toLocaleDateString() : '—'}</td>
+      <td><span class="pill-status ${creditPillClass(a)}">${creditPillText(a)}</span></td>
+      <td><span class="pill-status unknown" id="pet-${a.id}">Loading…</span></td>
+      <td><button class="btn btn-primary btn-sm" data-app="${a.id}">Enter Results</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function creditPillClass(a) {
+    if (a.screening_reports && a.screening_reports.length && a.screening_reports[0].credit_score) return 'complete';
+    return 'pending';
+  }
+  function creditPillText(a) {
+    if (a.screening_reports && a.screening_reports.length && a.screening_reports[0].credit_score)
+      return 'Score: ' + a.screening_reports[0].credit_score;
+    return 'Pending';
+  }
+
+  // Pet status — fetch in batch
+  const appIds = apps.map(a => a.id);
+  const { data: pets } = await supa
+    .from('application_pets')
+    .select('application_id, pet_screening_status')
+    .in('application_id', appIds);
+
+  const petStatusByApp = {};
+  (pets || []).forEach(p => {
+    if (!petStatusByApp[p.application_id]) petStatusByApp[p.application_id] = [];
+    petStatusByApp[p.application_id].push(p.pet_screening_status);
+  });
+  for (const a of apps) {
+    const cell = document.getElementById('pet-' + a.id);
+    if (!cell) continue;
+    const list = petStatusByApp[a.id] || [];
+    if (list.length === 0) {
+      cell.textContent = 'No pets';
+      cell.className = 'pill-status unknown';
+    } else if (list.every(s => s === 'complete' || s === 'n_a')) {
+      cell.textContent = 'Complete (' + list.length + ')';
+      cell.className = 'pill-status complete';
+    } else if (list.some(s => s === 'invited' || s === 'in_progress')) {
+      cell.textContent = 'In progress';
+      cell.className = 'pill-status in_progress';
+    } else {
+      cell.textContent = 'Pending (' + list.length + ')';
+      cell.className = 'pill-status pending';
+    }
+  }
+
+  // ---------- Modal: Enter Results ----------
+  const modal = document.getElementById('resultsModal');
+  document.getElementById('modal-cancel').addEventListener('click', () => modal.classList.remove('show'));
+
+  let currentApp = null;
+  let currentPets = [];
+
+  document.querySelectorAll('button[data-app]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const appId = btn.dataset.app;
+      currentApp = apps.find(a => a.id === appId);
+      if (!currentApp) return;
+
+      document.getElementById('modalTitle').textContent =
+        'Screening Results — ' + (currentApp.confirmation_number || appId.slice(0, 8));
+
+      // Load existing screening_reports row if any
+      const { data: existing } = await supa
+        .from('screening_reports')
+        .select('*')
+        .eq('application_id', appId)
+        .maybeSingle();
+
+      const r = existing || {};
+      document.getElementById('credit-score').value = r.credit_score || '';
+      document.getElementById('credit-provider').value = r.credit_provider || 'smartmove';
+      document.getElementById('background-clean').value = r.background_clean === null || r.background_clean === undefined ? '' : String(r.background_clean);
+      document.getElementById('eviction-findings').value = '';
+      document.getElementById('background-notes').value = r.background_summary || '';
+      document.getElementById('recommendation').value = r.recommendation || '';
+      document.getElementById('meets-3x').value = r.meets_3x_income === null || r.meets_3x_income === undefined ? '' : String(r.meets_3x_income);
+      document.getElementById('recommendation-notes').value = r.recommendation_notes || '';
+
+      // Show existing PDF link if one's already attached
+      const existingPdf = document.getElementById('credit-pdf-existing');
+      document.getElementById('credit-pdf').value = '';
+      document.getElementById('credit-pdf-status').textContent = '';
+      if (r.pdf_storage_path) {
+        const { data: signed } = await supa.storage
+          .from('verification-results')
+          .createSignedUrl(r.pdf_storage_path, 60 * 60);
+        existingPdf.innerHTML = signed?.signedUrl
+          ? `📄 <a href="${signed.signedUrl}" target="_blank" rel="noopener">View current report PDF</a> (link expires in 1 hr)`
+          : `📄 Report on file: ${r.pdf_storage_path}`;
+      } else {
+        existingPdf.textContent = '';
+      }
+
+      // Load pets
+      const { data: petRows } = await supa
+        .from('application_pets')
+        .select('id, name, pet_type, designation, pet_screening_fido_score, pet_screening_status, pet_screening_url, pet_screening_notes')
+        .eq('application_id', appId);
+      currentPets = petRows || [];
+
+      const petsSection = document.getElementById('pets-section');
+      if (currentPets.length === 0) {
+        petsSection.innerHTML = '<p style="color:#6B7280; font-size:.9rem;">No pets on this application.</p>';
+      } else {
+        petsSection.innerHTML = '';
+        for (const p of currentPets) {
+          const card = document.createElement('div');
+          card.className = 'pet-card';
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>${p.name || 'Unnamed'} · ${p.pet_type || ''} ${p.designation && p.designation !== 'pet' ? '(' + p.designation.toUpperCase() + ')' : ''}</strong>
+              <select data-pet-status="${p.id}" style="padding:.3rem .5rem; border:1px solid #DDE3F0; border-radius:4px; font-size:.85rem;">
+                <option value="not_sent">Not sent</option>
+                <option value="invited">Invited</option>
+                <option value="in_progress">In progress</option>
+                <option value="complete">Complete</option>
+                <option value="n_a">N/A (service / ESA)</option>
+              </select>
+            </div>
+            <div class="field-row" style="margin-top:.5rem;">
+              <div class="form-group"><label>FIDO Score (1–5)</label>
+                <input type="number" min="1" max="5" data-pet-fido="${p.id}" value="${p.pet_screening_fido_score || ''}" />
+              </div>
+              <div class="form-group"><label>Profile URL (optional)</label>
+                <input type="text" data-pet-url="${p.id}" placeholder="petscreening.com/..." value="${p.pet_screening_url || ''}" />
+              </div>
+            </div>
+          `;
+          petsSection.appendChild(card);
+          card.querySelector(`[data-pet-status="${p.id}"]`).value = p.pet_screening_status || 'not_sent';
+        }
+      }
+
+      modal.classList.add('show');
+    });
+  });
+
+  // Save handler
+  document.getElementById('modal-save').addEventListener('click', async () => {
+    const banner2 = document.getElementById('modal-banner');
+    banner2.innerHTML = '';
+    if (!currentApp) return;
+
+    const reportPayload = {
+      application_id: currentApp.id,
+      credit_score: parseInt(document.getElementById('credit-score').value) || null,
+      credit_provider: document.getElementById('credit-provider').value || null,
+      background_clean: parseTriState(document.getElementById('background-clean').value),
+      background_summary: document.getElementById('background-notes').value || null,
+      recommendation: document.getElementById('recommendation').value || null,
+      meets_3x_income: parseTriState(document.getElementById('meets-3x').value),
+      recommendation_notes: document.getElementById('recommendation-notes').value || null,
+      va_finalized_by: u.id,
+      va_finalized_at: new Date().toISOString()
+    };
+
+    // Handle PDF upload if a file was selected
+    const pdfInput = document.getElementById('credit-pdf');
+    if (pdfInput.files && pdfInput.files[0]) {
+      const file = pdfInput.files[0];
+      const safeName = file.name.replace(/[^a-z0-9._-]/gi, '_');
+      const storagePath = `${currentApp.id}/${Date.now()}_${safeName}`;
+      document.getElementById('credit-pdf-status').textContent = 'Uploading PDF…';
+      const { error: upErr } = await supa.storage
+        .from('verification-results')
+        .upload(storagePath, file, { contentType: file.type, upsert: false });
+      if (upErr) {
+        banner2.innerHTML = '<div class="banner banner-error">PDF upload failed: ' + upErr.message + '</div>';
+        return;
+      }
+      reportPayload.pdf_storage_path = storagePath;
+      document.getElementById('credit-pdf-status').textContent = '✓ PDF uploaded';
+    }
+
+    // Upsert screening_reports (one row per application due to UNIQUE constraint)
+    const { error: rErr } = await supa
+      .from('screening_reports')
+      .upsert(reportPayload, { onConflict: 'application_id' });
+
+    if (rErr) {
+      banner2.innerHTML = '<div class="banner banner-error">Save failed: ' + rErr.message + '</div>';
+      return;
+    }
+
+    // Save per-pet updates
+    for (const p of currentPets) {
+      const status = document.querySelector(`[data-pet-status="${p.id}"]`).value;
+      const fidoStr = document.querySelector(`[data-pet-fido="${p.id}"]`).value;
+      const urlStr = document.querySelector(`[data-pet-url="${p.id}"]`).value;
+      const update = {
+        pet_screening_status: status,
+        pet_screening_fido_score: fidoStr ? parseInt(fidoStr) : null,
+        pet_screening_url: urlStr || null,
+        pet_screening_completed_at: status === 'complete' ? new Date().toISOString() : null
+      };
+      await supa.from('application_pets').update(update).eq('id', p.id);
+    }
+
+    banner2.innerHTML = '<div class="banner banner-success">✓ Saved. Reloading…</div>';
+    setTimeout(() => location.reload(), 1200);
+  });
+
+  function parseTriState(v) {
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    return null;
+  }
+})();
+</script>
+</body>
+</html>

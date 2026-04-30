@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vendor Settings — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .vendor-card { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:1.5rem; margin-bottom:1.25rem; }
+  .vendor-card h3 { margin: 0 0 .35rem 0; color:#1F4FC1; font-family:'Playfair Display', Georgia, serif; }
+  .vendor-card .vendor-tag { display:inline-block; background:#5FAB22; color:#fff; font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.2rem .6rem; border-radius:999px; margin-bottom:.75rem; }
+  .setting-row { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; padding-top:1rem; border-top:1px dashed #E2E8F0; }
+  .setting-row:first-of-type { border-top:none; padding-top:0; margin-top:.5rem; }
+  .setting-label { flex:0 0 100%; font-weight:600; font-size:.95rem; color:#1F2937; }
+  .setting-desc { flex:0 0 100%; font-size:.85rem; color:#6B7280; margin:.15rem 0 .5rem; }
+  .setting-input-wrap { display:flex; gap:.5rem; flex:1 1 100%; align-items:center; }
+  .setting-input-wrap input { flex:1; padding:.6rem .8rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.95rem; }
+  .save-btn { padding:.6rem 1rem; }
+  .save-status { font-size:.8rem; min-width:80px; }
+  .save-status.saved { color:#5FAB22; font-weight:600; }
+  .save-status.error { color:#B0342B; font-weight:600; }
+  .help-card { background:#F7F8FB; border-left:4px solid #1F4FC1; padding:1rem 1.25rem; margin-bottom:1.5rem; border-radius:4px; }
+  .help-card p { margin:.25rem 0; font-size:.9rem; color:#555A6B; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Vendor Settings</strong> · Screening services</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:900px;">
+  <div class="dash-title">
+    <h1>Vendor Settings</h1>
+    <a href="#" id="backLink" class="btn btn-outline">← Back to Dashboard</a>
+  </div>
+
+  <div class="help-card">
+    <p><strong>What this is:</strong> Paste in the URLs and account emails for the third-party screening services you use. The VA will see these on the Screening workflow page and can click straight through to the vendor portals.</p>
+    <p>Once entered, applicant-facing pages (like the rental application) will automatically include your PetScreening link in the pet section.</p>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading settings…</div>
+
+  <div id="content" style="display:none;">
+    <!-- PetScreening card -->
+    <div class="vendor-card">
+      <span class="vendor-tag">Pet Screening</span>
+      <h3>PetScreening.com</h3>
+      <p style="font-size:.9rem; color:#555A6B; margin:0;">
+        Industry-standard pet, ESA, and service-animal screening.
+        <a href="https://www.petscreening.com" target="_blank" rel="noopener">Sign up free →</a>
+      </p>
+      <div id="petscreening-fields"></div>
+
+      <!-- Webhook section: read-only URL display + secret -->
+      <div class="setting-row" style="margin-top:1.5rem; background:#FFFAEC; padding:1rem; border-radius:6px; border:1px solid #F1D88A;">
+        <div class="setting-label">⚡ Webhook URL <small style="color:#6B7280; font-weight:400;">— paste this into PetScreening dashboard → Webhooks</small></div>
+        <div class="setting-desc">PetScreening will POST here when an applicant completes their pet profile. Copy this URL and paste it into your PetScreening Property Manager dashboard's Webhook / API Notifications section.</div>
+        <div class="setting-input-wrap">
+          <input type="text" id="webhook-url-display" readonly
+                 style="background:#fff; font-family:monospace; font-size:.85rem;"
+                 value="https://investpro-realty.netlify.app/.netlify/functions/petscreening-webhook" />
+          <button class="btn btn-outline save-btn" id="copy-webhook-url" type="button">Copy</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">Webhook shared secret</div>
+        <div class="setting-desc">A random string (16+ chars) PetScreening uses to sign callbacks so we can verify they're real. Generate one (or click Generate below), paste it into <strong>both</strong> PetScreening's webhook config <strong>and</strong> Netlify Site settings → Environment variables → <code>PETSCREENING_WEBHOOK_SECRET</code>.</div>
+        <div class="setting-input-wrap">
+          <input type="text" id="input-petscreening_webhook_secret" placeholder="(none yet — click Generate)" />
+          <button class="btn btn-outline save-btn" id="generate-secret" type="button">Generate</button>
+          <button class="btn btn-primary save-btn" data-key="petscreening_webhook_secret">Save</button>
+          <span class="save-status" id="status-petscreening_webhook_secret"></span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">Reference param name</div>
+        <div class="setting-desc">The query-string parameter PetScreening uses to round-trip our app ID. Default: <code>referenceNumber</code>. Only change if PetScreening's docs use a different name.</div>
+        <div class="setting-input-wrap">
+          <input type="text" id="input-petscreening_reference_param" placeholder="referenceNumber" />
+          <button class="btn btn-primary save-btn" data-key="petscreening_reference_param">Save</button>
+          <span class="save-status" id="status-petscreening_reference_param"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TransUnion SmartMove card -->
+    <div class="vendor-card">
+      <span class="vendor-tag">Credit & Background</span>
+      <h3>TransUnion SmartMove</h3>
+      <p style="font-size:.9rem; color:#555A6B; margin:0;">
+        Credit, criminal, and eviction reports. Applicant pays directly; you receive the report.
+        <a href="https://smartmove.transunion.com" target="_blank" rel="noopener">SmartMove portal →</a>
+      </p>
+      <div id="smartmove-fields"></div>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance']);
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to manage real settings.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  const { data: settings, error } = await supa
+    .from('vendor_settings')
+    .select('key, value, description')
+    .order('key');
+
+  if (error) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-error">Could not load settings: ' + error.message + '</div>';
+    return;
+  }
+
+  loading.style.display = 'none';
+  content.style.display = '';
+
+  // Render fields under each card
+  const groups = {
+    'petscreening-fields': ['petscreening_pm_url', 'petscreening_account_email'],
+    'smartmove-fields':    ['smartmove_landlord_url', 'smartmove_account_email']
+  };
+
+  const labels = {
+    petscreening_pm_url:        'Your Property Manager profile URL',
+    petscreening_account_email: 'Account email (for VA reference)',
+    smartmove_landlord_url:     'SmartMove landlord portal URL',
+    smartmove_account_email:    'Account email (for VA reference)'
+  };
+
+  const placeholders = {
+    petscreening_pm_url:        'https://petscreening.com/InvestProRealty',
+    petscreening_account_email: 'kenny@investprorealty.net',
+    smartmove_landlord_url:     'https://smartmove.transunion.com',
+    smartmove_account_email:    'kenny@investprorealty.net'
+  };
+
+  for (const groupId of Object.keys(groups)) {
+    const groupEl = document.getElementById(groupId);
+    for (const k of groups[groupId]) {
+      const setting = settings.find(s => s.key === k) || { key: k, value: '', description: '' };
+      const row = document.createElement('div');
+      row.className = 'setting-row';
+      row.innerHTML = `
+        <div class="setting-label">${labels[k]}</div>
+        <div class="setting-desc">${setting.description || ''}</div>
+        <div class="setting-input-wrap">
+          <input type="text" id="input-${k}" placeholder="${placeholders[k] || ''}" value="${(setting.value || '').replace(/"/g, '&quot;')}" />
+          <button class="btn btn-primary save-btn" data-key="${k}">Save</button>
+          <span class="save-status" id="status-${k}"></span>
+        </div>
+      `;
+      groupEl.appendChild(row);
+    }
+  }
+
+  // Pre-populate the static inputs (webhook secret + reference param) from settings
+  const staticKeys = ['petscreening_webhook_secret', 'petscreening_reference_param'];
+  for (const k of staticKeys) {
+    const s = settings.find(s => s.key === k);
+    const inp = document.getElementById('input-' + k);
+    if (inp && s && s.value) inp.value = s.value;
+  }
+
+  // Wire save buttons (skip ones without data-key — Copy / Generate buttons)
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    if (!btn.dataset.key) return;
+    btn.addEventListener('click', async () => {
+      const k = btn.dataset.key;
+      const input = document.getElementById('input-' + k);
+      const status = document.getElementById('status-' + k);
+      const newVal = input.value.trim();
+
+      btn.disabled = true;
+      if (status) {
+        status.textContent = 'Saving…';
+        status.className = 'save-status';
+      }
+
+      const { error: upErr } = await supa
+        .from('vendor_settings')
+        .update({ value: newVal || null, updated_by: u.id })
+        .eq('key', k);
+
+      btn.disabled = false;
+      if (upErr) {
+        if (status) {
+          status.textContent = '✗ ' + upErr.message;
+          status.className = 'save-status error';
+        }
+      } else if (status) {
+        status.textContent = '✓ Saved';
+        status.className = 'save-status saved';
+        setTimeout(() => { status.textContent = ''; }, 2500);
+      }
+    });
+  });
+
+  // Copy webhook URL button
+  document.getElementById('copy-webhook-url').addEventListener('click', async () => {
+    const inp = document.getElementById('webhook-url-display');
+    inp.select();
+    try {
+      await navigator.clipboard.writeText(inp.value);
+      const btn = document.getElementById('copy-webhook-url');
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    } catch (e) {
+      // Fallback for older browsers
+      document.execCommand('copy');
+    }
+  });
+
+  // Generate secret button — creates a 32-char random hex string
+  document.getElementById('generate-secret').addEventListener('click', () => {
+    const arr = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(arr);
+    const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    document.getElementById('input-petscreening_webhook_secret').value = hex;
+  });
+})();
+</script>
+</body>
+</html>
