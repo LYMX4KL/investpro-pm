@@ -137,13 +137,24 @@ window.investproAuth = {
     location.href = (location.pathname.includes('/portal/') ? '/portal/login.html' : '/portal/login.html');
   },
 
-  /** Send a password-reset email. */
+  /** Send a password-reset email. The link in the email lands on
+   *  /portal/reset-password.html, which has a "set new password" form
+   *  that calls updateUser() and routes the user to their dashboard. */
   async resetPassword(email) {
     if (DEMO_MODE) return { ok: true, demo: true };
     const sb = await getSupa();
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: location.origin + '/portal/login.html'
+      redirectTo: location.origin + '/portal/reset-password.html'
     });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  },
+
+  /** Update the password of the currently signed-in user (used by reset-password.html
+   *  after a recovery session is established, OR by any signed-in user from a profile page). */
+  async updatePassword(newPassword) {
+    if (DEMO_MODE) return { ok: true, demo: true };
+    const sb = await getSupa();
+    const { error } = await sb.auth.updateUser({ password: newPassword });
     return error ? { ok: false, error: error.message } : { ok: true };
   },
 

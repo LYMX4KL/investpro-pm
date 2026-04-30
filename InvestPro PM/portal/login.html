@@ -80,6 +80,13 @@
 <script src="../js/main.js"></script>
 <script src="../js/auth.js"></script>
 <script>
+  // Safety net: if the user lands on /login.html with a recovery hash
+  // (e.g., from an older email that pointed here before we built reset-password.html),
+  // forward them to the proper set-new-password page instead of trapping them in a loop.
+  if (location.hash.includes('type=recovery') || location.hash.includes('access_token')) {
+    location.replace('/portal/reset-password.html' + location.hash);
+  }
+
   document.getElementById('loginForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const fd = new FormData(e.target);
