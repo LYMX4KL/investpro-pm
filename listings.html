@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Listings — InvestPro Realty</title>
+<meta name="description" content="Available homes for rent and for sale, managed and listed by InvestPro Realty in the Las Vegas valley." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="images/favicon.png" />
+<script src="js/preview-gate.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a> &nbsp;|&nbsp; ✉️ <a href="mailto:info@investprorealty.net">info@investprorealty.net</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand"><img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="index.html">Home</a></li><li><a href="property-management.html">Property Management</a></li>
+      <li><a href="listings.html">Listings</a></li><li><a href="sales.html">Buy / Sell</a></li>
+      <li><a href="recruiting.html">Join InvestPro</a></li><li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="index.html">Home</a> &nbsp;/&nbsp; Listings</div>
+    <h1>Available Properties</h1>
+    <p>Homes for sale and rent across Las Vegas, Henderson, North Las Vegas, Summerlin, and the rest of the valley.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <form id="listingFilter" class="filter-bar" onsubmit="event.preventDefault();">
+      <input name="q" placeholder="Search by city, ZIP, address…" />
+      <select name="type">
+        <option value="">All Types</option>
+        <option value="rent">For Rent</option>
+        <option value="sale">For Sale</option>
+      </select>
+      <select name="beds">
+        <option value="">Any Beds</option>
+        <option value="1">1+</option><option value="2">2+</option>
+        <option value="3">3+</option><option value="4">4+</option>
+      </select>
+      <input name="min" type="number" placeholder="Min $" />
+      <input name="max" type="number" placeholder="Max $" />
+      <button type="reset" class="btn btn-outline">Reset</button>
+    </form>
+
+    <!-- Dynamic listings loaded from properties-store (manual entries + future MLS sync) -->
+    <div class="grid grid-3" id="dynamicListings"></div>
+
+    <h3 id="staticListingsTitle" style="margin-top:2.5rem;margin-bottom:1rem;display:none;">Sample listings</h3>
+
+    <div class="grid grid-3">
+      <article class="property-card" data-listing data-type="rent" data-beds="2" data-price="1850">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Sahara condo" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$1,850 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">3601 W Sahara Ave #207 — Las Vegas, NV 89102</div>
+          <div class="meta"><span><strong>2</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,120</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="rent" data-beds="3" data-price="2350">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Henderson 3 bed" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$2,350 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">Whitney Ranch — Henderson, NV 89014</div>
+          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,580</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="rent" data-beds="4" data-price="3200">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Summerlin 4 bed" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$3,200 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">Summerlin South — Las Vegas, NV 89135</div>
+          <div class="meta"><span><strong>4</strong>Beds</span><span><strong>3</strong>Baths</span><span><strong>2,610</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="sale" data-beds="3" data-price="485000">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Green Valley 3 bed" /><span class="badge">For Sale</span></div>
+        <div class="body">
+          <div class="price">$485,000</div>
+          <div class="addr">Green Valley Ranch — Henderson, NV 89052</div>
+          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2.5</strong>Baths</span><span><strong>1,840</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="sale" data-beds="4" data-price="725000">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Summerlin 4 bed" /><span class="badge">For Sale</span></div>
+        <div class="body">
+          <div class="price">$725,000</div>
+          <div class="addr">Summerlin South — Las Vegas, NV 89135</div>
+          <div class="meta"><span><strong>4</strong>Beds</span><span><strong>3</strong>Baths</span><span><strong>2,610</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="sale" data-beds="5" data-price="985000">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Centennial 5 bed" /><span class="badge">For Sale</span></div>
+        <div class="body">
+          <div class="price">$985,000</div>
+          <div class="addr">Centennial Hills — Las Vegas, NV 89149</div>
+          <div class="meta"><span><strong>5</strong>Beds</span><span><strong>4</strong>Baths</span><span><strong>3,420</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="rent" data-beds="1" data-price="1395">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Spring Valley studio" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$1,395 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">Spring Valley — Las Vegas, NV 89117</div>
+          <div class="meta"><span><strong>1</strong>Bed</span><span><strong>1</strong>Bath</span><span><strong>720</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="sale" data-beds="3" data-price="395000">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="NLV 3 bed" /><span class="badge">For Sale</span></div>
+        <div class="body">
+          <div class="price">$395,000</div>
+          <div class="addr">Aliante — North Las Vegas, NV 89084</div>
+          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,640</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+
+      <article class="property-card" data-listing data-type="rent" data-beds="2" data-price="1995">
+        <div class="photo"><img src="images/property-placeholder.svg" alt="Mountain's Edge townhome" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$1,995 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">Mountain's Edge — Las Vegas, NV 89178</div>
+          <div class="meta"><span><strong>2</strong>Beds</span><span><strong>2.5</strong>Baths</span><span><strong>1,410</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
+        </div>
+      </article>
+    </div>
+    <p class="muted center mt-3" style="font-size:.85rem;">Sample listings shown for design demonstration. Real listings will be powered via MLS / IDX feed once deployed.</p>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="container">
+    <h2>Don't see what you're looking for?</h2>
+    <p>Tell us what you need and we'll send you new listings as they hit the market.</p>
+    <a href="contact.html" class="btn btn-primary">Get Custom Alerts</a>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="index.html" class="brand"><img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102<br/>702-816-5555</p></div>
+    <div><h4>Services</h4><ul><li><a href="property-management.html">Property Management</a></li><li><a href="sales.html">Buy / Sell</a></li><li><a href="listings.html">Listings</a></li></ul></div>
+    <div><h4>For Clients</h4><ul><li><a href="portal/login.html">Owner Login</a></li><li><a href="portal/login.html">Tenant Login</a></li><li><a href="forms/rental-application.html">Apply</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="recruiting.html">Careers</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+<script src="js/main.js"></script>
+<script src="js/properties-store.js"></script>
+<script>
+(async () => {
+  const props = await window.propertiesStore.list({ status: 'listed' });
+  const grid = document.getElementById('dynamicListings');
+  if (!grid || !props.length) return;
+  grid.innerHTML = props.map(p => {
+    const photo = (p.photos && p.photos[0]) || 'images/property-placeholder.svg';
+    const addr = p.address_line1 + (p.address_line2 ? ' ' + p.address_line2 : '') + ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
+    return `
+      <article class="property-card" data-listing data-type="rent" data-beds="${p.bedrooms || 0}" data-price="${p.monthly_rent || 0}">
+        <div class="photo"><img src="${photo.replace(/^\\.\\.\\//,'')}" alt="${escape(p.address_line1)}" /><span class="badge">For Rent</span></div>
+        <div class="body">
+          <div class="price">$${Number(p.monthly_rent).toLocaleString()} <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+          <div class="addr">${escape(addr)}</div>
+          <div class="meta"><span><strong>${p.bedrooms || '?'}</strong>Beds</span><span><strong>${p.bathrooms || '?'}</strong>Baths</span><span><strong>${p.sqft ? Number(p.sqft).toLocaleString() : '?'}</strong>Sq Ft</span></div>
+          <div style="margin-top:1rem;display:flex;gap:.5rem;">
+            <a href="forms/rental-application.html?property=${encodeURIComponent(p.id)}" class="btn btn-primary btn-block">Apply Now</a>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+  // Show "Sample listings" header to separate dynamic from static cards
+  document.getElementById('staticListingsTitle').style.display = '';
+  function escape(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+})();
+</script>
+</body>
+</html>

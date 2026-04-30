@@ -1,0 +1,33 @@
+SUBJECT: Quick review needed — InvestPro PM Platform operations plan (track changes by [DATE])
+
+Hi team,
+
+Attached is the v2 draft of the operations plan for the new InvestPro PM platform we're building — the rebuilt website + workflow system that consolidates what we currently do across Buildium, our IP Rentals spreadsheet, Constant Contact, Monday.com, and email into one place.
+
+The doc walks through three things:
+  1. The applicant journey — what someone applying for one of our properties experiences from "Apply Online" through move-in
+  2. The VA work queue — what daily life looks like for the application processor
+  3. Notification & communication rules — who gets emailed/texted at every step (with our BCC/CC rules and "no tenant + owner together" rule baked in)
+
+What I need from you:
+Please read the sections that touch your role and push back on anything that doesn't match how we actually run today. If a step is wrong, missing, or in the wrong order, I want to know NOW — before we start building — not after. Don't sugar-coat it.
+
+How to mark up the doc:
+  1. Open the attached Word doc
+  2. Go to the "Review" tab → click "Track Changes" so I can see what you change
+  3. Edit / add / strike through / comment freely
+  4. Save and email it back to me
+
+If you only have 15 minutes, please focus on the policy call-outs I added in this version:
+  • Holding-fee priority rule (Section 5) — only certified funds in person, app must be fully decided before another offer goes out, etc.
+  • Prorated rent rules (Section 9) — 10th-of-month cutoff, deferred move-in cost rules
+  • Sewer/trash law update (Section 9) — must be included in rent going forward
+  • In-person lease signing + 30-45 min orientation policy (Section 11)
+  • MICR rules (Section 13) — 3-business-day return, photo evidence advisory
+
+Please return your edits by [DATE — suggest end of business 3 days from sending]. We're aiming to start building Phase 2 right after, so I'd like to keep the momentum.
+
+If you have questions or want to talk through anything before marking up, just call me — 702-816-5555 — easier than long emails.
+
+Thanks,
+Kenny

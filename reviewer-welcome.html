@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reviewer Welcome — InvestPro Realty (Team Preview)</title>
+<meta name="description" content="Team review hub for the InvestPro Realty website preview. Quick links to every page that needs feedback." />
+<meta name="robots" content="noindex,nofollow" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="images/favicon.png" />
+<script src="js/preview-gate.js"></script>
+<link rel="stylesheet" href="css/styles.css" />
+<style>
+  .review-hero {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 60%, var(--navy-soft) 100%);
+    color: var(--white); padding: 4rem 0 3rem; text-align: center;
+    border-bottom: 4px solid var(--gold);
+  }
+  .review-hero .pill {
+    display: inline-block; background: var(--gold); color: var(--white);
+    font-size: .75rem; font-weight: 700; letter-spacing: .25em;
+    text-transform: uppercase; padding: .35rem 1rem; border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .review-hero h1 { color: var(--white); font-size: clamp(2rem, 4vw, 3rem); margin-bottom: .8rem; }
+  .review-hero p { color: #C9CFE0; max-width: 720px; margin: 0 auto 1.5rem; font-size: 1.1rem; }
+  .review-hero .build-tag {
+    display: inline-block; background: rgba(255,255,255,.08);
+    padding: .5rem 1.25rem; border-radius: 999px;
+    font-size: .9rem; color: #fff;
+  }
+  .review-section { padding: 3rem 0; }
+  .review-section h2 { font-size: 1.6rem; }
+  .review-section .muted { font-size: .95rem; }
+  .checklist-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem; margin-top: 1.5rem;
+  }
+  .checklist-card {
+    background: var(--white); border: 1px solid var(--line);
+    border-radius: 6px; padding: 1.4rem; display: flex; flex-direction: column;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .checklist-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .checklist-card .ico {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--cream); color: var(--gold-dark);
+    display: grid; place-items: center; font-size: 1.4rem;
+    margin-bottom: .8rem;
+  }
+  .checklist-card.priority .ico { background: var(--gold); color: var(--white); }
+  .checklist-card h3 { font-size: 1.05rem; margin-bottom: .35rem; color: var(--navy); }
+  .checklist-card p { font-size: .9rem; margin-bottom: 1rem; flex: 1; color: var(--ink-soft); }
+  .checklist-card .btn { padding: .55rem 1rem; font-size: .8rem; }
+  .priority-badge {
+    display: inline-block; background: var(--gold); color: var(--white);
+    font-size: .65rem; font-weight: 700; padding: .15rem .55rem;
+    border-radius: 999px; text-transform: uppercase; letter-spacing: .12em;
+    margin-left: .35rem; vertical-align: middle;
+  }
+  .changelog {
+    background: var(--cream); border-left: 4px solid var(--gold);
+    padding: 1.5rem 1.8rem; border-radius: 4px; margin-bottom: 2rem;
+  }
+  .changelog h3 { margin-top: 0; }
+  .changelog ul { margin: .5rem 0 0; padding-left: 1.4rem; }
+  .changelog li { margin-bottom: .4rem; }
+  .feedback-box {
+    background: linear-gradient(135deg, var(--cream) 0%, #FFFFFF 100%);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 2rem; text-align: center;
+  }
+  .feedback-box h3 { margin-top: 0; }
+  .creds {
+    display: inline-block; background: var(--white); border: 1px solid var(--line);
+    padding: 1rem 1.5rem; border-radius: 4px; font-family: monospace;
+    font-size: .9rem; margin-top: 1rem; text-align: left;
+  }
+  .creds strong { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="container">
+    <span>📞 <a href="tel:7028165555">702-816-5555</a></span>
+    <span>3601 W Sahara Ave, Suite 207</span>
+  </div>
+</div>
+
+<!-- Header (same as public site) -->
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" />
+      <span class="brand-tag">Team Preview</span>
+    </a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="reviewer-welcome.html"><strong>Reviewer Hub</strong></a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="property-management.html">Property Management</a></li>
+      <li><a href="listings.html">Listings</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="review-hero">
+  <div class="container">
+    <span class="pill">For Your Eyes Only · Team Review</span>
+    <h1>Welcome, team — let's review the new investprorealty.net</h1>
+    <p>This is a working preview of the rebuild. Click any card below to jump straight to the page that needs your eyeballs. Most important pages have a gold "Priority" badge — look at those first.</p>
+    <span class="build-tag">🔒 Build v0.4-preview · Updated 2026-04-27</span>
+  </div>
+</section>
+
+<section class="review-section">
+  <div class="container" style="max-width:1100px;">
+
+    <!-- What's new -->
+    <div class="changelog">
+      <h3>📌 What changed in v0.4 (latest)</h3>
+      <ul>
+        <li><strong>Rental Application form rebuilt</strong> to match our actual GLVAR Rev. 11.19 form. Now 13 sections including a new <strong>Holding Fee Agreement</strong>, full pet acknowledgments, and the 10 GLVAR disclosures.</li>
+        <li><strong>Fees updated to $75 primary applicant / $50 each additional adult</strong> (was previously $45 flat).</li>
+        <li>New fields lay groundwork for auto-routing <strong>VOR</strong> to prior landlords and <strong>Employment Verification</strong> to current employers (the actual auto-send happens in Phase 3).</li>
+        <li>Reviewer Welcome page (this page!) — so you can find what to look at without hunting.</li>
+      </ul>
+    </div>
+
+    <!-- Priority cards -->
+    <h2>🎯 Start here — the new stuff that needs feedback</h2>
+    <p class="muted">These pages have the most recent changes. Walk through them and let us know if anything is unclear, missing, or wrong.</p>
+    <div class="checklist-grid">
+
+      <div class="checklist-card priority">
+        <div class="ico">📝</div>
+        <h3>Rental Application Form <span class="priority-badge">Priority</span></h3>
+        <p>The 13-section application — fill it out as if you were a real applicant. Pay special attention to: holding fee section (12), pet acknowledgments (7), 10 disclosures (11).</p>
+        <a href="forms/rental-application.html" class="btn btn-primary">Open the form →</a>
+      </div>
+
+      <div class="checklist-card priority">
+        <div class="ico">🏘️</div>
+        <h3>Property Management Hub <span class="priority-badge">Priority</span></h3>
+        <p>The PM landing page that splits visitors into Owner vs. Tenant paths. Does the messaging make sense? Are services listed clearly?</p>
+        <a href="property-management.html" class="btn btn-primary">Open PM page →</a>
+      </div>
+
+      <div class="checklist-card priority">
+        <div class="ico">📊</div>
+        <h3>After-Submit Confirmation <span class="priority-badge">Priority</span></h3>
+        <p>The page applicants see right after submitting. Confirmation #, fee summary, 6-step "what happens next" timeline.</p>
+        <a href="forms/application-submitted.html?c=IPR-DEMO123&demo=1" class="btn btn-primary">Open submitted page →</a>
+      </div>
+
+      <div class="checklist-card priority">
+        <div class="ico">🔍</div>
+        <h3>Application Status Tracker <span class="priority-badge">Priority</span></h3>
+        <p>Where applicants and showing agents check status by confirmation # + email. Use any value to test in demo mode.</p>
+        <a href="forms/application-status.html" class="btn btn-primary">Open status page →</a>
+      </div>
+    </div>
+
+    <!-- Public site -->
+    <h2 style="margin-top:3rem;">🏠 Public site — main pages prospective clients land on</h2>
+    <div class="checklist-grid">
+      <div class="checklist-card"><div class="ico">🏠</div><h3>Homepage</h3><p>The first impression. Hero, three-pillar pitch, listings teaser, testimonials, CTA.</p><a href="index.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">🏘️</div><h3>Owner Services (PM detail)</h3><p>Drill-down for property owners: pricing, included services, owner portal description.</p><a href="owner-services.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">🛋️</div><h3>Tenant Services (PM detail)</h3><p>For tenants of InvestPro-managed properties — apply, pay rent, submit maintenance.</p><a href="tenant-services.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">🔑</div><h3>Listings</h3><p>Available rentals + sales with working filter (try the search bar and filters).</p><a href="listings.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">📍</div><h3>Sample Property Detail</h3><p>What a single-property listing page looks like (3601 W Sahara #207).</p><a href="property-detail.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">📈</div><h3>Buy / Sell</h3><p>The brokerage's sales side — buying and selling homes.</p><a href="sales.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">💼</div><h3>Recruiting (Join InvestPro)</h3><p>For agents — comp ladder (50% → 80%), generational overrides, bonus pools, application form.</p><a href="recruiting.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">ℹ️</div><h3>About</h3><p>The company story + Kenny's bio.</p><a href="about.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">✉️</div><h3>Contact</h3><p>Office info + general inquiry form.</p><a href="contact.html" class="btn btn-outline">Open →</a></div>
+    </div>
+
+    <!-- Forms -->
+    <h2 style="margin-top:3rem;">📋 Other forms (try filling them out)</h2>
+    <div class="checklist-grid">
+      <div class="checklist-card"><div class="ico">🔧</div><h3>Maintenance Request</h3><p>What current tenants use to report a repair issue.</p><a href="forms/maintenance-request.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">📈</div><h3>Free Rental Analysis Request</h3><p>What property owners use to ask us to manage their rental.</p><a href="forms/listing-inquiry.html" class="btn btn-outline">Open →</a></div>
+    </div>
+
+    <!-- Portals -->
+    <h2 style="margin-top:3rem;">🔐 Owner &amp; Tenant Portal demos</h2>
+    <p class="muted">Login uses demo mode — type any email + a 4+ character password. Pick the role to see the matching dashboard.</p>
+    <div class="checklist-grid">
+      <div class="checklist-card"><div class="ico">🔐</div><h3>Login Page</h3><p>Owner / Tenant login screen.</p><a href="portal/login.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">📊</div><h3>Owner Dashboard</h3><p>Property summary, statements, work orders, documents (sample data).</p><a href="portal/owner-dashboard.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">🏠</div><h3>Tenant Dashboard</h3><p>Pay rent, lease info, maintenance history, payment history (sample data).</p><a href="portal/tenant-dashboard.html" class="btn btn-outline">Open →</a></div>
+      <div class="checklist-card"><div class="ico">➕</div><h3>Sign Up</h3><p>New owner or tenant account creation flow.</p><a href="portal/signup.html" class="btn btn-outline">Open →</a></div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-box" style="margin-top:3rem;">
+      <h3>💬 How to give feedback</h3>
+      <p>Click the blue <strong>🔒 Preview v0.4-preview</strong> badge in the bottom-right of any page — it opens a pre-addressed email to Kenny with the page URL and build number filled in. Write what you think and hit send.</p>
+      <p class="muted" style="margin-top:1rem;font-size:.9rem;">Or just reply to whatever message Kenny sent with the link. Anything works — the goal is to surface anything confusing, missing, or wrong.</p>
+    </div>
+
+    <!-- Test creds reminder -->
+    <div class="feedback-box" style="margin-top:1.5rem;">
+      <h3>🔑 Test credentials reminder</h3>
+      <div class="creds">
+        Preview password: <strong>investpro2026</strong><br/>
+        Portal demo login: <strong>any email</strong> + <strong>any 4+ char password</strong><br/>
+        Sample listing for application form: <strong>3601 W Sahara Ave #207</strong>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="index.html" class="brand"><img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Team Preview</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Public site</h4><ul><li><a href="index.html">Home</a></li><li><a href="property-management.html">Property Management</a></li><li><a href="listings.html">Listings</a></li><li><a href="recruiting.html">Recruiting</a></li></ul></div>
+    <div><h4>Application flow</h4><ul><li><a href="forms/rental-application.html">Apply</a></li><li><a href="forms/application-status.html">Status</a></li><li><a href="forms/maintenance-request.html">Maintenance</a></li></ul></div>
+    <div><h4>Portals</h4><ul><li><a href="portal/login.html">Login</a></li><li><a href="portal/owner-dashboard.html">Owner Dashboard</a></li><li><a href="portal/tenant-dashboard.html">Tenant Dashboard</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>This is a private team preview — not the live site.</span></div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
