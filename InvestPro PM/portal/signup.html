@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Account — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="auth-wrap">
+  <div class="auth-card">
+    <div class="center">
+      <h1>Create Account</h1>
+      <p class="muted">Owners and tenants of InvestPro-managed properties.</p>
+    </div>
+
+    <div id="banner-area"></div>
+
+    <form id="signupForm">
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" name="full_name" required /></div>
+        <div class="form-group">
+          <label>I am a…</label>
+          <select name="role" required>
+            <option value="tenant">Tenant</option>
+            <option value="owner">Property Owner</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required minlength="6" autocomplete="new-password" />
+        <div class="form-help">At least 6 characters.</div>
+      </div>
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="agree" required />
+        <label for="agree">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+
+    <div class="switch">Already have an account? <a href="login.html">Log in</a></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty.</span><span><a href="../index.html">Back to website</a></span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const banner = document.getElementById('banner-area');
+    banner.innerHTML = '';
+    const res = await window.investproAuth.signUp({
+      email: fd.get('email'),
+      password: fd.get('password'),
+      fullName: fd.get('full_name'),
+      role: fd.get('role')
+    });
+    if (!res.ok) {
+      banner.innerHTML = '<div class="banner banner-error">' + (res.error || 'Sign-up failed.') + '</div>';
+      return;
+    }
+    if (res.demo) {
+      location.href = (fd.get('role') === 'owner') ? 'owner-dashboard.html' : 'tenant-dashboard.html';
+    } else {
+      banner.innerHTML = '<div class="banner banner-success">Account created! Please check your email to confirm, then <a href="login.html">log in</a>.</div>';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rental Application — InvestPro Realty</title>
+<meta name="description" content="Apply to rent a property managed by InvestPro Realty. $75 primary / $50 each additional adult. Aligned to GLVAR Rev. 11.19." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="../css/application.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li><li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li><li><a href="../sales.html">Buy / Sell</a></li>
+      <li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="../index.html">Home</a> &nbsp;/&nbsp; <a href="../tenant-services.html">Tenants</a> &nbsp;/&nbsp; Rental Application</div>
+    <h1>Rental Application</h1>
+    <p>Application Fee: <strong>$75 primary applicant</strong>, <strong>$50 each additional adult</strong>. Every adult living in the home must submit their own application. A <strong>Holding Fee</strong> is also collected with every application — refundable if you're denied; forfeited if you're approved but don't sign the lease.</p>
+  </div>
+</section>
+
+<section><div class="container" style="max-width:920px;">
+  <div class="info-callout">
+    <strong>What happens after you apply:</strong> (1) Submit your application + pay both fees. (2) Admin auto-sends Verification of Rental History (VOR) to your prior landlord and Employment Verification to your employer. (3) Credit + background + pet screening run via our partners. (4) PM (and owner, when required) reviews and decides. (5) If approved, term sheet emailed for acceptance. (6) Lease signing, orientation, move-in. Already applied? <a href="application-status.html">Check status</a>.
+  </div>
+
+  <div class="form-card">
+    <form id="applicationForm" action="#" method="post" enctype="multipart/form-data">
+      <div class="progress-steps">
+  <div class="step-pill"><span class="num">1</span>Property &amp; Role</div>
+  <div class="step-pill"><span class="num">2</span>You</div>
+  <div class="step-pill"><span class="num">3</span>Residences</div>
+  <div class="step-pill"><span class="num">4</span>Income</div>
+  <div class="step-pill"><span class="num">5</span>References</div>
+  <div class="step-pill"><span class="num">6</span>Household</div>
+  <div class="step-pill"><span class="num">7</span>Pets</div>
+  <div class="step-pill"><span class="num">8</span>Other Info</div>
+  <div class="step-pill"><span class="num">9</span>Documents</div>
+  <div class="step-pill"><span class="num">10</span>Agent</div>
+  <div class="step-pill"><span class="num">11</span>Disclosures</div>
+  <div class="step-pill"><span class="num">12</span>Holding Fee</div>
+  <div class="step-pill"><span class="num">13</span>Sign &amp; Pay</div>
+</div>
+
+<fieldset>
+  <legend>1 · Property &amp; Your Role</legend>
+  <div class="form-group">
+    <label>Property Address <span class="required">*</span></label>
+    <input type="text" name="property_address" required placeholder="e.g. 3601 W Sahara Ave #207, Las Vegas, NV 89102" />
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Desired Move-In Date <span class="required">*</span></label><input type="date" name="move_in_date" required /></div>
+    <div class="form-group"><label>Desired Lease Term</label><select name="lease_term"><option>12 months</option><option>6 months</option><option>9 months</option><option>18 months</option><option>Month-to-month</option></select></div>
+  </div>
+  <div class="info-callout" style="margin-top:0;">
+    <strong>Every adult living in the home must submit their own application.</strong> The first adult to apply for a property pays $75; each additional adult applying after that pays $50.
+  </div>
+  <div class="form-group">
+    <label>Are you the primary applicant for this property, or a co-applicant joining one already submitted? <span class="required">*</span></label>
+    <div class="agent-toggle" id="roleToggle">
+      <label class="active"><input type="radio" name="applicant_role" value="primary" checked /> Primary applicant — $75 fee</label>
+      <label><input type="radio" name="applicant_role" value="co" /> Co-applicant — $50 fee (someone in my household already applied)</label>
+    </div>
+    <div class="form-help" id="roleHelp">If you're applying first, you're the primary. If your spouse / partner / roommate already applied, you're a co-applicant.</div>
+  </div>
+  <div class="form-group" id="primaryApplicantWrap" style="display:none;">
+    <label>Name &amp; email of the primary applicant (so we can link your applications)</label>
+    <input type="text" name="primary_applicant_link" placeholder="Jane Doe — jane@example.com" />
+  </div>
+  <div class="form-group">
+    <label>How did you hear about this property?</label>
+    <select name="referral_source"><option>Zillow</option><option>Trulia</option><option>Realtor.com</option><option>Apartments.com</option><option>InvestPro Realty website</option><option>Showing agent / realtor</option><option>Drove by / yard sign</option><option>Friend / referral</option><option>Other</option></select>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>2 · Applicant Information</legend>
+  <div class="form-row">
+    <div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" name="first_name" required /></div>
+    <div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" name="last_name" required /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Date of Birth <span class="required">*</span></label><input type="date" name="dob" required /></div>
+    <div class="form-group"><label>SSN (last 4 only)</label><input type="text" name="ssn_last4" maxlength="4" pattern="[0-9]{4}" placeholder="1234" /><div class="form-help">Optional. Full SSN collected only via screening service.</div></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" name="email" required /></div>
+    <div class="form-group"><label>Home Phone <span class="required">*</span></label><input type="tel" name="phone" required /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Other Phone</label><input type="tel" name="other_phone" /></div>
+    <div class="form-group"><label>Best time to reach you</label><input type="text" name="contact_time" placeholder="e.g. weekday evenings" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Driver's License / State ID #</label><input type="text" name="dl_number" /></div>
+    <div class="form-group"><label>Issuing State</label><input type="text" name="dl_state" maxlength="2" placeholder="NV" style="text-transform:uppercase;" /></div>
+  </div>
+  <div class="form-group"><label>Emergency Contact (name, relationship, phone, email)</label><input type="text" name="emergency_contact" placeholder="Jane Smith, sister, 702-555-0123, jane@example.com" /></div>
+</fieldset>
+
+<fieldset>
+  <legend>3 · Current &amp; Prior Residences</legend>
+  <div class="form-group"><label>Current Address <span class="required">*</span></label><input type="text" name="current_address" required /></div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Currently <span class="required">*</span></label>
+      <select name="current_own_or_rent" id="current_own_or_rent" required onchange="updateResidenceFields('current')">
+        <option value="">Select…</option>
+        <option value="rent">Renting</option>
+        <option value="own">Owned</option>
+        <option value="family">Living with family</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group"><label id="current_payment_label">Monthly Rent / Mortgage</label><input type="number" name="current_rent" placeholder="$" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>How long?</label><input type="text" name="current_duration" placeholder="2 years 4 months" /></div>
+    <div class="form-group"><label>Reason for Leaving</label><input type="text" name="reason_for_leaving" /></div>
+  </div>
+
+  <!-- RENTING branch -->
+  <div id="current_rent_fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group"><label>Current Landlord Name <span class="required">*</span></label><input type="text" name="current_landlord" /></div>
+      <div class="form-group"><label>Landlord Phone <span class="required">*</span></label><input type="tel" name="current_landlord_phone" /></div>
+    </div>
+    <div class="form-group"><label>Landlord Email <span class="required">*</span> <span class="muted small">(we'll send them a Verification of Rental form)</span></label><input type="email" name="current_landlord_email" /></div>
+  </div>
+
+  <!-- OWNING branch (per Joan's flag — applicants who own their current home need a different verification path) -->
+  <div id="current_own_fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group"><label>Mortgage Holder / Lender Name <span class="required">*</span></label><input type="text" name="current_mortgage_holder" placeholder="e.g., Wells Fargo Home Mortgage" /></div>
+      <div class="form-group"><label>Lender Phone</label><input type="tel" name="current_lender_phone" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>County Records Reference / Parcel #</label><input type="text" name="current_county_record_ref" placeholder="Found on your property tax bill" /></div>
+      <div class="form-group"><label>Approx. Home Value</label><input type="number" name="current_home_value" placeholder="$" /></div>
+    </div>
+    <div class="info-callout">📋 Since you own your home, we'll verify ownership via county records (no landlord contact needed). Please upload your <strong>most recent mortgage statement</strong> in the Documents section instead of a landlord email.</div>
+  </div>
+
+  <!-- FAMILY/OTHER branch -->
+  <div id="current_family_fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group"><label>Property Owner Name <span class="required">*</span></label><input type="text" name="current_owner_name" placeholder="The person whose name the property is in" /></div>
+      <div class="form-group"><label>Their Phone</label><input type="tel" name="current_owner_phone" /></div>
+    </div>
+    <div class="form-group"><label>Their Relationship to You</label><input type="text" name="current_owner_relationship" placeholder="e.g., parent, sibling, friend" /></div>
+  </div>
+
+  <div class="info-callout" style="margin-top:1.2rem;">If you've been at your current address less than 2 years, please complete the prior residence section.</div>
+  <div class="form-group"><label>Prior Address</label><input type="text" name="prior_address" /></div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Prior — Owned or Rented?</label>
+      <select name="prior_own_or_rent" id="prior_own_or_rent" onchange="updateResidenceFields('prior')">
+        <option value=""></option>
+        <option value="rent">Renting</option>
+        <option value="own">Owned</option>
+        <option value="family">Living with family</option>
+      </select>
+    </div>
+    <div class="form-group"><label>How long?</label><input type="text" name="prior_duration" /></div>
+  </div>
+
+  <!-- PRIOR RENT branch -->
+  <div id="prior_rent_fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group"><label>Prior Landlord</label><input type="text" name="prior_landlord" /></div>
+      <div class="form-group"><label>Prior Landlord Phone</label><input type="tel" name="prior_landlord_phone" /></div>
+    </div>
+    <div class="form-group"><label>Prior Landlord Email</label><input type="email" name="prior_landlord_email" /></div>
+  </div>
+  <!-- PRIOR OWN branch -->
+  <div id="prior_own_fields" style="display:none;">
+    <div class="form-row">
+      <div class="form-group"><label>Prior Mortgage Holder</label><input type="text" name="prior_mortgage_holder" /></div>
+      <div class="form-group"><label>Approx. Home Value</label><input type="number" name="prior_home_value" placeholder="$" /></div>
+    </div>
+    <p class="muted small">If owned, we'll verify via county records.</p>
+  </div>
+
+  <div class="form-group"><label>Reason for Leaving (prior)</label><input type="text" name="prior_reason_for_leaving" /></div>
+</fieldset>
+
+<script>
+/** Toggle which fields show based on rent/own/family selection.
+ *  Per Joan's review (2026-04-28): applicants who own their current home need
+ *  a different verification path (mortgage statement + county records) than
+ *  renters (VOR sent to landlord). */
+function updateResidenceFields(prefix) {
+  const sel = document.getElementById(prefix + '_own_or_rent');
+  if (!sel) return;
+  const value = sel.value;
+  const branches = ['rent', 'own', 'family'];
+  branches.forEach(b => {
+    const el = document.getElementById(prefix + '_' + b + '_fields');
+    if (el) el.style.display = (value === b) ? '' : 'none';
+  });
+  // Adjust the "monthly rent/mortgage" label
+  if (prefix === 'current') {
+    const lbl = document.getElementById('current_payment_label');
+    if (lbl) {
+      lbl.textContent = (value === 'own') ? 'Monthly Mortgage'
+                      : (value === 'rent') ? 'Monthly Rent'
+                      : 'Monthly Housing Cost';
+    }
+  }
+  // For 'other', show the family fields as a fallback (catches roommate, etc.)
+  if (value === 'other') {
+    const fam = document.getElementById(prefix + '_family_fields');
+    if (fam) fam.style.display = '';
+  }
+}
+// Initialize on page load (in case browser remembered a value)
+document.addEventListener('DOMContentLoaded', () => {
+  updateResidenceFields('current');
+  updateResidenceFields('prior');
+});
+</script>
+
+<fieldset>
+  <legend>4 · Employment &amp; Income</legend>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Employment Status <span class="required">*</span></label>
+      <select name="employment_status" required>
+        <option value="">Select…</option>
+        <option>Full-time W-2</option><option>Part-time W-2</option>
+        <option>Self-employed / 1099</option><option>Retired (fixed income)</option>
+        <option>Student</option><option>Unemployed</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Monthly Gross Income <span class="required">*</span></label>
+      <input type="number" name="monthly_income" required placeholder="$" />
+      <div class="form-help">Tenants typically must show 3× monthly rent.</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Current Employer <span class="required">*</span></label><input type="text" name="employer" required /></div>
+    <div class="form-group"><label>Job Title / Role</label><input type="text" name="job_title" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Employer Address</label><input type="text" name="employer_address" /></div>
+    <div class="form-group"><label>Length of Employment</label><input type="text" name="emp_duration" placeholder="e.g. 4 years" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Supervisor Name</label><input type="text" name="supervisor_name" /></div>
+    <div class="form-group"><label>Supervisor Phone</label><input type="tel" name="supervisor_phone" /></div>
+  </div>
+  <div class="form-group"><label>HR / Verification Email (we'll send an Employment Verification form to this address)</label><input type="email" name="employer_verification_email" /></div>
+
+  <div class="info-callout" style="margin-top:1.2rem;">If you've been at your current employer less than 3 years, please add your prior employer.</div>
+  <div class="form-row">
+    <div class="form-group"><label>Prior Employer</label><input type="text" name="prior_employer" /></div>
+    <div class="form-group"><label>Prior — How long?</label><input type="text" name="prior_emp_duration" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Prior — Position / Salary</label><input type="text" name="prior_emp_position" placeholder="e.g. Manager, $75k/yr" /></div>
+    <div class="form-group"><label>Prior — Supervisor Phone</label><input type="tel" name="prior_supervisor_phone" /></div>
+  </div>
+
+  <div class="form-group">
+    <label>Other Sources of Income (alimony, child support, investments, SSI, etc.)</label>
+    <textarea name="other_income" rows="2" placeholder="Source + monthly amount. Optional unless used to qualify."></textarea>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>5 · Personal &amp; Credit References</legend>
+
+  <p class="muted">Two personal references (not relatives), plus your bank for credit reference.</p>
+
+  <div class="form-row">
+    <div class="form-group"><label>Personal Reference #1 — Name</label><input type="text" name="ref1_name" /></div>
+    <div class="form-group"><label>Relationship</label><input type="text" name="ref1_relationship" placeholder="e.g. coworker, friend" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Phone</label><input type="tel" name="ref1_phone" /></div>
+    <div class="form-group"><label>Email</label><input type="email" name="ref1_email" /></div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group"><label>Personal Reference #2 — Name</label><input type="text" name="ref2_name" /></div>
+    <div class="form-group"><label>Relationship</label><input type="text" name="ref2_relationship" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Phone</label><input type="tel" name="ref2_phone" /></div>
+    <div class="form-group"><label>Email</label><input type="email" name="ref2_email" /></div>
+  </div>
+
+  <h4 style="margin-top:1.5rem;">Credit Reference (Bank)</h4>
+  <div class="form-row">
+    <div class="form-group"><label>Bank Name</label><input type="text" name="bank_name" /></div>
+    <div class="form-group"><label>Account # (last 4 only)</label><input type="text" name="bank_account_last4" maxlength="4" /></div>
+  </div>
+  <div class="form-group"><label>Bank Address / Branch</label><input type="text" name="bank_address" /></div>
+</fieldset>
+
+<fieldset>
+  <legend>6 · Household — Co-Applicants, Vehicles, Other Occupants</legend>
+
+  <h4>Co-Applicants (other adults who will live in the home)</h4>
+  <p class="muted">Each co-applicant must submit their own application + pay the $50 fee. List them here so we know to expect them.</p>
+  <div class="form-row">
+    <div class="form-group"><label>Co-Applicant #1 Name</label><input type="text" name="coapp1_name" /></div>
+    <div class="form-group"><label>Phone</label><input type="tel" name="coapp1_phone" /></div>
+  </div>
+  <div class="form-group"><label>Email</label><input type="email" name="coapp1_email" /></div>
+  <div class="form-row">
+    <div class="form-group"><label>Co-Applicant #2 Name</label><input type="text" name="coapp2_name" /></div>
+    <div class="form-group"><label>Phone</label><input type="tel" name="coapp2_phone" /></div>
+  </div>
+  <div class="form-group"><label>Email</label><input type="email" name="coapp2_email" /></div>
+  <div class="form-row">
+    <div class="form-group"><label>Co-Applicant #3 Name</label><input type="text" name="coapp3_name" /></div>
+    <div class="form-group"><label>Phone</label><input type="tel" name="coapp3_phone" /></div>
+  </div>
+  <div class="form-group"><label>Email</label><input type="email" name="coapp3_email" /></div>
+  <div class="form-row">
+    <div class="form-group"><label>Co-Applicant #4 Name</label><input type="text" name="coapp4_name" /></div>
+    <div class="form-group"><label>Phone</label><input type="tel" name="coapp4_phone" /></div>
+  </div>
+  <div class="form-group"><label>Email</label><input type="email" name="coapp4_email" /></div>
+
+  <h4 style="margin-top:1.5rem;">Vehicles</h4>
+  <div class="form-row">
+    <div class="form-group"><label>Vehicle #1 — Make / Model</label><input type="text" name="vehicle1_make_model" placeholder="2021 Toyota Camry" /></div>
+    <div class="form-group"><label>License Plate</label><input type="text" name="vehicle1_plate" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>State</label><input type="text" name="vehicle1_state" maxlength="2" placeholder="NV" style="text-transform:uppercase;" /></div>
+    <div class="form-group"><label>Year / Color</label><input type="text" name="vehicle1_year_color" placeholder="2021 Silver" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Vehicle #2 — Make / Model</label><input type="text" name="vehicle2_make_model" /></div>
+    <div class="form-group"><label>License Plate</label><input type="text" name="vehicle2_plate" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>State</label><input type="text" name="vehicle2_state" maxlength="2" style="text-transform:uppercase;" /></div>
+    <div class="form-group"><label>Year / Color</label><input type="text" name="vehicle2_year_color" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Vehicle #3 — Make / Model</label><input type="text" name="vehicle3_make_model" /></div>
+    <div class="form-group"><label>License Plate</label><input type="text" name="vehicle3_plate" /></div>
+  </div>
+
+  <h4 style="margin-top:1.5rem;">Other Occupants (children + non-applying adults)</h4>
+  <p class="muted">Anyone living at the property who is NOT applying — children, dependents, etc.</p>
+  <div class="form-row">
+    <div class="form-group"><label>Occupant #1 Name</label><input type="text" name="occupant1_name" /></div>
+    <div class="form-group"><label>Relationship</label><input type="text" name="occupant1_relationship" placeholder="child, parent, etc." /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Age</label><input type="text" name="occupant1_age" /></div>
+    <div class="form-group"><label>Occupation / School</label><input type="text" name="occupant1_occupation" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Occupant #2 Name</label><input type="text" name="occupant2_name" /></div>
+    <div class="form-group"><label>Relationship</label><input type="text" name="occupant2_relationship" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Age</label><input type="text" name="occupant2_age" /></div>
+    <div class="form-group"><label>Occupation / School</label><input type="text" name="occupant2_occupation" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Occupant #3 Name</label><input type="text" name="occupant3_name" /></div>
+    <div class="form-group"><label>Relationship</label><input type="text" name="occupant3_relationship" /></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Age</label><input type="text" name="occupant3_age" /></div>
+    <div class="form-group"><label>Occupation / School</label><input type="text" name="occupant3_occupation" /></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>7 · Pets</legend>
+
+  <div class="info-callout" style="margin-top:0;">
+    <strong>Service animals, ESAs, and assistance animals are NOT pets.</strong> Per CFR / NRS / Fair Housing Act, those animals require a separate <strong>Lease Addendum for Service and/or Emotional Support Animals</strong> — not this section. If you have one, complete that addendum (we'll email you the link after you submit). All other animals — even small pets — go here.
+  </div>
+
+  <p class="muted"><strong>Pet screening:</strong> All pets must be registered through <a href="https://www.petscreening.com" target="_blank" rel="noopener">PetScreening.com</a> as part of our review. We'll send you the link after you submit. Some breeds are restricted by our insurance — check the Unacceptable Breeds list before applying with a dog (we'll email it with your confirmation).</p>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Do you have any pets?</label>
+      <select name="has_pets" id="hasPets"><option value="no">No</option><option value="yes">Yes</option></select>
+    </div>
+    <div class="form-group" id="petCountWrap" style="display:none;">
+      <label>Number of pets</label>
+      <select name="pet_count" id="petCount"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+    </div>
+  </div>
+
+  <div id="petsContainer" style="display:none;"></div>
+  <template id="petTemplate">
+    <div class="pet-card" data-pet>
+      <div class="pet-head"><h4>Pet <span class="pet-num">#</span></h4><button type="button" class="remove-pet">Remove</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Pet Name <span class="required">*</span></label><input type="text" name="pet_name[]" /></div>
+        <div class="form-group"><label>Type</label><select name="pet_type[]"><option>Dog</option><option>Cat</option><option>Bird</option><option>Reptile</option><option>Small mammal</option><option>Fish</option><option>Other</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Breed <span class="required">*</span></label><input type="text" name="pet_breed[]" /></div>
+        <div class="form-group"><label>Weight (lb)</label><input type="number" name="pet_weight[]" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Age</label><input type="text" name="pet_age[]" placeholder="e.g. 3 yrs" /></div>
+        <div class="form-group"><label>Gender</label><select name="pet_gender[]"><option>Female</option><option>Male</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Spayed / Neutered?</label><select name="pet_fixed[]"><option>Yes</option><option>No</option></select></div>
+        <div class="form-group"><label>Pet License # (county/HOA, if any)</label><input type="text" name="pet_license[]" /></div>
+      </div>
+    </div>
+  </template>
+
+  <div id="petAcknowledgments" style="display:none;margin-top:1.5rem;">
+    <h4>Pet Acknowledgments</h4>
+    <p class="muted">Required for every pet. These are part of your lease.</p>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_health" id="petAckHealth" /><label for="petAckHealth">I certify each pet is in good health, and I will attach a <strong>certificate of good health from a licensed veterinarian</strong> in the documents section.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_photo" id="petAckPhoto" /><label for="petAckPhoto">I will attach a <strong>clear photo of each pet</strong> in the documents section, with the pet's name labeled.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_leash" id="petAckLeash" /><label for="petAckLeash">I will keep all pets on a leash when not in a fenced backyard, and clean up all waste on the property and in any common areas.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_ccr" id="petAckCcr" /><label for="petAckCcr">If the property is part of a Common Interest Community (HOA), I will abide by all rules, regulations, and CC&amp;Rs regarding pet ownership.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_material" id="petAckMaterial" /><label for="petAckMaterial">I understand the representations I make about my pet(s) are a <strong>material provision</strong> of the lease agreement.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_approval" id="petAckApproval" /><label for="petAckApproval">I am requesting Landlord's approval to keep the pet(s) at the property.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_revoke" id="petAckRevoke" /><label for="petAckRevoke">I understand if any pet creates a breach of lease terms, the pet approval can be <strong>revoked immediately</strong> upon written notice.</label></div>
+    <div class="form-group checkbox-group"><input type="checkbox" name="pet_ack_insurance" id="petAckInsurance" /><label for="petAckInsurance">I will obtain a <strong>renter's insurance policy that includes pet liability coverage</strong>, with Landlord and Property Manager named as additional insureds. I agree to hold both harmless for any pet-related incidents.</label></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>8 · Other Information</legend>
+  <p class="muted">Honest answers help. Disclosures here don't automatically disqualify you — context matters and we'd much rather know upfront than discover later.</p>
+
+  <div class="form-group checkbox-group"><input type="checkbox" name="disclose_evicted" id="evicted" /><label for="evicted">Have you ever been evicted or asked to leave a rental property?</label></div>
+  <div class="form-group checkbox-group"><input type="checkbox" name="disclose_bankruptcy" id="bk" /><label for="bk">Have you filed for bankruptcy in the last 7 years?</label></div>
+  <div class="form-group checkbox-group"><input type="checkbox" name="disclose_felony" id="felony" /><label for="felony">Have you been convicted of a felony?</label></div>
+  <div class="form-group checkbox-group"><input type="checkbox" name="disclose_breaklease" id="brklease" /><label for="brklease">Have you ever broken a lease before its end date?</label></div>
+  <div class="form-group checkbox-group"><input type="checkbox" name="disclose_refused_rent" id="refused" /><label for="refused">Have you ever <strong>willfully refused</strong> to pay rent when due?</label></div>
+
+  <div class="form-group">
+    <label>If you checked any of the above, please explain:</label>
+    <textarea name="disclose_explain" rows="3"></textarea>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>How long do you plan to live at this property?</label>
+      <select name="plan_to_live">
+        <option>Less than 1 year</option>
+        <option>1–2 years</option>
+        <option>2–4 years</option>
+        <option>4+ years</option>
+        <option>Indefinitely</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Do you plan to use any liquid-filled furniture? (waterbed, large aquarium, etc.)</label>
+      <select name="liquid_furniture"><option>No</option><option>Yes</option></select>
+    </div>
+  </div>
+  <div class="form-group"><label>If yes, describe (waterbed size, aquarium gallons, etc.)</label><input type="text" name="liquid_furniture_detail" /></div>
+
+  <div class="form-group">
+    <label>Does anyone in the household smoke?</label>
+    <p class="form-help">Includes all tobacco, smoking-related products, electronic cigarettes, vaping pens, or other instruments that emit smoke or vapor.</p>
+    <select name="smoker"><option>No — no one smokes/vapes</option><option>Yes — outside only</option><option>Yes — inside the property</option></select>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>9 · Required Documents</legend>
+  <p class="muted">Drop files in each box, or click to browse. PDF, JPG, PNG, or HEIC. Max 10MB per file.</p>
+
+  <div class="form-group">
+    <label>Government-Issued Photo ID <span class="doc-required">Required</span></label>
+    <p class="form-help">Driver's license, state ID, or passport (front + back if double-sided).</p>
+    <label class="upload-zone" data-target="docs_id">
+      <input type="file" name="docs_id" multiple accept="image/*,.pdf,.heic" />
+      <span class="ico">📄</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_id"></ul>
+  </div>
+
+  <div class="form-group">
+    <label>Proof of Income <span class="doc-required">Required</span></label>
+    <p class="form-help">Last 2 paystubs (W-2) — OR — last 3 months bank statements / 2 years tax returns (1099 / self-employed).</p>
+    <label class="upload-zone" data-target="docs_income">
+      <input type="file" name="docs_income" multiple accept="image/*,.pdf" />
+      <span class="ico">💵</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_income"></ul>
+  </div>
+
+  <div class="form-group">
+    <label>Bank Statements <span class="doc-optional">Recommended</span></label>
+    <p class="form-help">Last 2–3 months. Speeds up review for self-employed or non-traditional income.</p>
+    <label class="upload-zone" data-target="docs_bank">
+      <input type="file" name="docs_bank" multiple accept="image/*,.pdf" />
+      <span class="ico">🏦</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_bank"></ul>
+  </div>
+
+  <!-- Mortgage statement upload — only relevant if applicant currently OWNS (Joan's flag) -->
+  <div class="form-group" id="docs_mortgage_group" style="display:none;">
+    <label>Mortgage Statement <span class="required">*</span></label>
+    <p class="form-help">Most recent statement from your mortgage holder. Required since you indicated you currently own your home.</p>
+    <label class="upload-zone" data-target="docs_mortgage">
+      <input type="file" name="docs_mortgage" multiple accept="image/*,.pdf" />
+      <span class="ico">🏠</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_mortgage"></ul>
+  </div>
+  <script>
+    // Show mortgage upload only when current_own_or_rent === 'own'
+    document.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('current_own_or_rent');
+      const group = document.getElementById('docs_mortgage_group');
+      if (!sel || !group) return;
+      const sync = () => { group.style.display = (sel.value === 'own') ? '' : 'none'; };
+      sel.addEventListener('change', sync);
+      sync();
+    });
+  </script>
+
+  <div class="form-group">
+    <label>Reference Letters <span class="doc-optional">Optional</span></label>
+    <p class="form-help">Prior landlord letters or written personal references (in addition to references in section 5).</p>
+    <label class="upload-zone" data-target="docs_references">
+      <input type="file" name="docs_references" multiple accept="image/*,.pdf" />
+      <span class="ico">📝</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_references"></ul>
+  </div>
+
+  <div class="form-group" id="petDocsWrap" style="display:none;">
+    <label>Pet Vet Certificates &amp; Photos <span class="doc-required">Required if you have pets</span></label>
+    <p class="form-help">Certificate of good health from a licensed veterinarian, plus a clear photo of each pet (name labeled).</p>
+    <label class="upload-zone" data-target="docs_pets">
+      <input type="file" name="docs_pets" multiple accept="image/*,.pdf" />
+      <span class="ico">🐾</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_pets"></ul>
+  </div>
+
+  <div class="form-group">
+    <label>Other Supporting Documents <span class="doc-optional">Optional</span></label>
+    <p class="form-help">Co-signer agreements, gift letters, military orders, etc.</p>
+    <label class="upload-zone" data-target="docs_other">
+      <input type="file" name="docs_other" multiple accept="image/*,.pdf" />
+      <span class="ico">📎</span><strong>Click to upload</strong> or drag files here
+    </label>
+    <ul class="file-list" data-list="docs_other"></ul>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>10 · Showing / Listing Agent &amp; Referral Source</legend>
+  <p class="muted">If a real estate agent showed you the property or referred you, please provide their info so we can pay any agent commission and notify them of your application status.</p>
+
+  <div class="agent-toggle" id="agentToggle">
+    <label class="active"><input type="radio" name="agent_involved" value="no" checked /> No agent — I found this myself</label>
+    <label><input type="radio" name="agent_involved" value="yes" /> Yes — I have a showing agent</label>
+  </div>
+
+  <div id="agentSection" style="display:none;">
+    <div class="form-group"><label>Referral Company (if different from the agent's brokerage — e.g. relocation service)</label><input type="text" name="referral_company" placeholder="Optional" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>Agent's First Name <span class="required">*</span></label><input type="text" name="agent_first" /></div>
+      <div class="form-group"><label>Agent's Last Name <span class="required">*</span></label><input type="text" name="agent_last" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nevada Real Estate License # <span class="required">*</span></label>
+        <input type="text" name="agent_license" placeholder="e.g. S.0012345" />
+        <div class="form-help">"S." (Salesperson) or "B." (Broker) number from NRED.</div>
+      </div>
+      <div class="form-group"><label>Public ID #</label><input type="text" name="agent_pid" placeholder="From NRED, if different from license #" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>MLS # <span class="required">*</span></label><input type="text" name="agent_mls" placeholder="GLVAR MLS member ID" /></div>
+      <div class="form-group"><label>Showing Date</label><input type="date" name="agent_showing_date" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Agent Email <span class="required">*</span></label><input type="email" name="agent_email" /></div>
+      <div class="form-group"><label>Agent Phone <span class="required">*</span></label><input type="tel" name="agent_phone" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Brokerage Name <span class="required">*</span></label><input type="text" name="agent_brokerage" /></div>
+      <div class="form-group"><label>Brokerage License #</label><input type="text" name="agent_brokerage_license" /></div>
+    </div>
+    <div class="form-group"><label>Brokerage Address (for commission disbursement)</label><input type="text" name="agent_brokerage_address" placeholder="Street, city, state, ZIP" /></div>
+
+    <div class="info-callout"><strong>1099 / W-9:</strong> InvestPro Realty issues 1099s annually for agent commissions. We'll email your agent a W-9 link after lease signing. License + MLS info above is sufficient for now.</div>
+
+    <div class="form-group"><label>Notes for Listing Agent / PM</label><textarea name="agent_notes" rows="2" placeholder="Anything to communicate."></textarea></div>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>11 · Disclosures &amp; Authorization</legend>
+  <p class="muted">Please read each item carefully. All boxes must be checked to submit. These reflect the GLVAR Rev. 11.19 rental application disclosures.</p>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc1_truth" id="disc1" required />
+    <label for="disc1"><strong>1. Truthful information.</strong> I declare the information on this application is true and correct. I authorize InvestPro Realty to verify it through employment checks, criminal records checks, credit checks, and verification of references and current/previous landlords. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc2_screening" id="disc2" required />
+    <label for="disc2"><strong>2. Screening providers.</strong> I authorize InvestPro Realty's third-party screening providers (TransUnion SmartMove, RentSpree, PetScreening.com, or similar) to run credit, criminal background, eviction, and pet screening reports. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc3_share" id="disc3" required />
+    <label for="disc3"><strong>3. Sharing results.</strong> I authorize InvestPro Realty to share screening results and application status with the property owner, listing agent, and showing agent. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc4_lease_required" id="disc4" required />
+    <label for="disc4"><strong>4. Lease execution required.</strong> I agree to execute the Lease Agreement before possession is given, and to pay rent and security deposit within the timeframe specified in my approval notice. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc5_no_oral" id="disc5" required />
+    <label for="disc5"><strong>5. No oral agreements.</strong> Landlord and Agent will not be bound by any representations, agreements, or promises (written or oral) outside the signed Lease Agreement. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc6_ccr" id="disc6" required />
+    <label for="disc6"><strong>6. Public records review.</strong> I have had the opportunity to review the Clark County Recorder's website for any past or current liens, CC&amp;Rs, or HOA recordings against the property. I agree to lease the property subject to that information and hold Landlord and its agents harmless. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc7_release" id="disc7" required />
+    <label for="disc7"><strong>7. Release of past landlords.</strong> I release Landlord, Agent, InvestPro Realty, and all current and previous landlords from any and all liability for any damage or injury caused by providing information about me to Landlord or Agent. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc8_false_statement" id="disc8" required />
+    <label for="disc8"><strong>8. False statements = denial.</strong> I understand a false statement on this application is grounds for denial of rental, and that any statement here may be a condition precedent to a binding lease. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc9_fair_housing" id="disc9" required />
+    <label for="disc9"><strong>9. Fair Housing.</strong> I understand approval for residency is made without regard to race, color, religion, sex, national origin, age, gender identity or expression, familial status, sexual orientation, ancestry, or handicap. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="disc10_no_rights" id="disc10" required />
+    <label for="disc10"><strong>10. No rights until lease + deposit.</strong> I acknowledge I acquire no rights to the premises until the Lease Agreement is executed and rent + security deposit are paid as required. <span class="required">*</span></label>
+  </div>
+
+  <div class="form-error" id="discErrors">All ten disclosures must be acknowledged.</div>
+</fieldset>
+
+<fieldset>
+  <legend>12 · Holding Fee Agreement</legend>
+  <p class="muted">A Holding Fee is collected with every application. It "holds" the property for you while we review.</p>
+
+  <div class="info-callout" style="margin-top:0;">
+    <strong>How the Holding Fee works:</strong>
+    <ul style="margin: .5rem 0 0; padding-left: 1.4rem;">
+      <li><strong>If your application is denied</strong> → the Holding Fee is refunded to you in full within the timeframe set by Nevada law (typically 7 business days).</li>
+      <li><strong>If you are approved but choose not to sign the lease</strong> → the Holding Fee is <strong>forfeited</strong> as compensation for the property being held off the market during your decision.</li>
+      <li><strong>If you sign the lease</strong> → the Holding Fee is applied toward your security deposit or first month's rent (specified in your term sheet).</li>
+    </ul>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Holding Fee Amount (will be confirmed on your term sheet) <span class="required">*</span></label>
+      <input type="number" name="holding_fee_amount" required placeholder="$" />
+      <div class="form-help">Typically equal to one month's rent. Final amount confirmed by your property manager.</div>
+    </div>
+    <div class="form-group">
+      <label>Approval Window <span class="required">*</span></label>
+      <select name="holding_fee_window" required>
+        <option>3 business days</option>
+        <option>5 business days</option>
+        <option>7 business days</option>
+      </select>
+      <div class="form-help">Time you have after approval to sign the lease and pay deposit.</div>
+    </div>
+  </div>
+
+  <div class="form-group checkbox-group">
+    <input type="checkbox" name="holding_fee_ack" id="holdAck" required />
+    <label for="holdAck"><strong>I have read and understand the Holding Fee terms above.</strong> I authorize InvestPro Realty to collect the Holding Fee at submission and apply the refund/forfeiture rules described. <span class="required">*</span></label>
+  </div>
+</fieldset>
+
+<fieldset>
+  <legend>13 · Sign &amp; Pay</legend>
+
+  <div class="form-group">
+    <label>Type your full legal name as your electronic signature <span class="required">*</span></label>
+    <input type="text" name="signature" required placeholder="Full legal name" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.15rem;" />
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Date</label><input type="date" name="signature_date" /></div>
+    <div class="form-group"><label>Time</label><input type="time" name="signature_time" /></div>
+  </div>
+
+  <div style="background:var(--cream);padding:1.5rem;border-radius:4px;margin:1.5rem 0;border:1px solid var(--line);">
+    <h3 style="margin-top:0;">Almost done.</h3>
+    <p>Click <strong>Continue to Payment</strong> to go to a secure Stripe checkout. You'll be charged:</p>
+    <ul style="margin: .5rem 0 .5rem 1.4rem;">
+      <li><strong id="feeApp">Application Fee: $75</strong> (primary applicant) — non-refundable</li>
+      <li><strong>Holding Fee:</strong> the amount you entered above — refundable if denied, forfeited if approved-but-no-lease, applied to deposit if you sign</li>
+    </ul>
+    <p class="muted" style="margin-bottom:0;font-size:.9rem;">Your form info auto-saves to your browser as you type — close this tab and come back later if needed.</p>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-block" style="font-size:1rem;padding:1rem;">Continue to Payment</button>
+  <p class="muted center mt-2" style="font-size:.85rem;">Equal Housing Opportunity. We do not discriminate on the basis of race, color, religion, national origin, sex, familial status, or disability.</p>
+</fieldset>
+
+<script>
+  // Live update the fee label based on primary/co-applicant choice
+  (function(){
+    const radios = document.querySelectorAll('input[name=applicant_role]');
+    const label = document.getElementById('feeApp');
+    const primaryWrap = document.getElementById('primaryApplicantWrap');
+    const update = () => {
+      const v = document.querySelector('input[name=applicant_role]:checked')?.value || 'primary';
+      label.textContent = v === 'primary'
+        ? 'Application Fee: $75 (primary applicant)'
+        : 'Application Fee: $50 (co-applicant)';
+      primaryWrap.style.display = v === 'co' ? '' : 'none';
+    };
+    radios.forEach(r => r.addEventListener('change', update));
+    update();
+  })();
+
+  // Show pet acknowledgments when user has pets
+  (function(){
+    const sel = document.getElementById('hasPets');
+    const ack = document.getElementById('petAcknowledgments');
+    if (!sel || !ack) return;
+    const update = () => { ack.style.display = sel.value === 'yes' ? '' : 'none'; };
+    sel.addEventListener('change', update);
+    update();
+  })();
+</script>
+    </form>
+  </div>
+</div></section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>Tenants</h4><ul><li><a href="rental-application.html">Apply</a></li><li><a href="application-status.html">Application Status</a></li><li><a href="maintenance-request.html">Maintenance</a></li><li><a href="../portal/login.html">Tenant Login</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script src="../js/properties-store.js"></script>
+<script src="../js/applications.js"></script>
+<script>
+/* Pre-fill property + agent fields from URL parameters when the link came
+ * from /portal/properties/list.html ("Copy apply link") or an agent share
+ * link. Falls back to letting the applicant type the address manually.
+ */
+(async function prefillFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const propId = params.get('property');
+  const agentCode = params.get('agent');
+
+  if (propId && window.propertiesStore) {
+    const prop = await window.propertiesStore.get(propId);
+    if (prop) {
+      const addrInput = document.querySelector('input[name="property_address"]');
+      if (addrInput) {
+        addrInput.value = window.formatPropertyLabel(prop);
+        // Visually mark it as auto-filled
+        addrInput.style.background = '#F2F6FF';
+        addrInput.setAttribute('readonly', 'readonly');
+        // Add a small note above it
+        const note = document.createElement('div');
+        note.style.cssText = 'font-size:.82rem;color:#5FAB22;margin-top:.3rem;font-weight:600;';
+        note.innerHTML = '✓ Auto-filled from your share link · ' + (prop.bedrooms || '?') + 'BD/' + (prop.bathrooms || '?') + 'BA · $' + Number(prop.monthly_rent).toLocaleString() + '/mo';
+        addrInput.parentNode.appendChild(note);
+      }
+      // Stash the property ID so applications.js can use it on submit
+      window._prefilledPropertyId = propId;
+      window._prefilledProperty = prop;
+    }
+  }
+
+  if (agentCode) {
+    // Show a small banner indicating the referring agent is captured
+    const fieldset = document.querySelector('fieldset');
+    if (fieldset) {
+      const banner = document.createElement('div');
+      banner.className = 'info-callout';
+      banner.style.cssText = 'background:rgba(95,171,34,.1);border-left:3px solid #5FAB22;margin-bottom:1rem;';
+      banner.innerHTML = '👤 <strong>Referred by an agent</strong> — agent code <code>' + agentCode + '</code> will be linked to this application automatically.';
+      fieldset.parentNode.insertBefore(banner, fieldset);
+    }
+    window._prefilledAgentCode = agentCode;
+  }
+})();
+</script>
+</body>
+</html>

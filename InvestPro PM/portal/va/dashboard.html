@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Application VA — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="va">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Application VA</strong> · Work Queue</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>Application Work Queue</h1>
+    <input type="search" placeholder="🔎 Search by name, confirmation #, property…" style="padding:.55rem .9rem; border:1px solid var(--line); border-radius:4px; min-width:280px;" />
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Total Active</div><div class="value">8</div></div>
+    <div class="stat-tile amber"><div class="label">Awaiting Verifications</div><div class="value">3</div><div class="sub">VOR/VOE pending</div></div>
+    <div class="stat-tile red"><div class="label">Overdue (SLA)</div><div class="value">1</div><div class="sub">past 48hr SLA</div></div>
+    <div class="stat-tile green"><div class="label">Ready for Broker</div><div class="value">2</div></div>
+  </div>
+
+  <div class="kanban">
+    <div class="kanban-column">
+      <h3>📥 Payment confirmed <span class="count">2</span></h3>
+      <div class="kanban-card" onclick="alert('In v1: opens application detail with Documents tab.')">
+        <div class="title">IPR-2K7B9X3</div>
+        <div class="meta">Sarah Chen · 3601 W Sahara #207 · 2 hrs ago</div>
+      </div>
+      <div class="kanban-card" onclick="alert('In v1: opens application detail.')">
+        <div class="title">IPR-3M9P2QR</div>
+        <div class="meta">Marcus Williams · 2440 Vegas Drive · 5 hrs ago</div>
+      </div>
+    </div>
+
+    <div class="kanban-column">
+      <h3>📑 Doc Review <span class="count">1</span></h3>
+      <div class="kanban-card" onclick="alert('In v1: opens detail.')">
+        <div class="title">IPR-7H2K4XA</div>
+        <div class="meta">Jenny Park · 1822 Twain · paystub re-upload requested</div>
+      </div>
+    </div>
+
+    <div class="kanban-column">
+      <h3>📤 Verifications Out <span class="count">3</span></h3>
+      <div class="kanban-card" onclick="alert('In v1: shows VOR/VOE/Credit status.')">
+        <div class="title">IPR-9F4Q2VW</div>
+        <div class="meta">VOR sent 26h ago · VOE waiting</div>
+      </div>
+      <div class="kanban-card" onclick="alert('In v1: shows status.')">
+        <div class="title">IPR-2N8B6ZC</div>
+        <div class="meta">Credit ✓ · VOE returned · VOR pending</div>
+      </div>
+      <div class="kanban-card overdue" onclick="alert('In v1: opens with Call Landlord task highlighted.')">
+        <div class="title">IPR-5J3K9HM ⏰</div>
+        <div class="meta">VOR: 50 hrs since send (over 48hr SLA)</div>
+      </div>
+    </div>
+
+    <div class="kanban-column">
+      <h3>🤖 Summary Draft <span class="count">2</span></h3>
+      <div class="kanban-card" onclick="alert('In v1: opens AI-drafted Screening Summary for VA review.')">
+        <div class="title">IPR-1W7Q3RA</div>
+        <div class="meta">AI summary ready · Income 3.4× ✓ · Credit 678</div>
+      </div>
+      <div class="kanban-card" onclick="alert('In v1: opens AI-drafted Screening Summary.')">
+        <div class="title">IPR-8X2P5KB</div>
+        <div class="meta">AI summary ready · Income 3.1× ✓ · Credit 720</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-section" style="margin-top:1.5rem;">
+    <h2>SLA breaches & follow-ups</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Type</th><th>Sent</th><th>Action needed</th></tr></thead>
+      <tbody>
+        <tr><td>IPR-5J3K9HM</td><td>VOR — current landlord</td><td>50 hrs ago</td><td><button class="btn btn-outline btn-sm" onclick="alert('Logs the call result and re-sends template if needed.')">Log call</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async () => {
+  const u = await window.investproAuth.requireRole(['va', 'broker', 'leasing']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();
+</script>
+</body>
+</html>

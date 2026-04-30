@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leasing Coordinator — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="leasing">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><strong>Leasing Coordinator</strong> · Dashboard</nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>Leasing Coordinator</h1>
+    <a href="../properties/list.html" class="btn btn-outline">🏠 Manage Properties</a>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Showings this week</div><div class="value">12</div></div>
+    <div class="stat-tile"><div class="label">Term sheets sent</div><div class="value">2</div></div>
+    <div class="stat-tile"><div class="label">Leases drafting</div><div class="value">1</div></div>
+    <div class="stat-tile green"><div class="label">Closed YTD</div><div class="value">23</div></div>
+  </div>
+  <div class="dash-section">
+    <h2>Term sheets to draft + send</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Property</th><th>Approval</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>IPR-1W7Q3RA</td><td>Aisha Patel</td><td>3601 W Sahara #207</td><td><span class="pill green">Approved</span></td><td><button class="btn btn-primary btn-sm" onclick="alert('Auto-fills term sheet from property + approval, opens preview.')">Generate</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-section">
+    <h2>Leases in drafting</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Property</th><th>Start</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>IPR-9P3K2VR</td><td>2440 Vegas Drive</td><td>May 15, 2026</td><td><span class="pill amber">Awaiting tenant signing appointment</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>(async () => {
+  const u = await window.investproAuth.requireRole(['leasing', 'broker', 'va']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();</script>
+</body></html>

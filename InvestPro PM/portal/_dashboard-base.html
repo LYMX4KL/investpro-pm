@@ -1,0 +1,48 @@
+<!--
+  Skeleton template for role dashboards. Each role's dashboard.html copies
+  this structure and customizes the body sections. The shell (header, sidebar,
+  auth check, sign-out) is consistent across roles so the team can navigate
+  predictably during testing.
+
+  This file is NOT linked from anywhere — it's a reference for new dashboards.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{ROLE_LABEL}} Dashboard — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-role="{{ROLE_KEY}}">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand">
+      <img src="../../images/logo.png" alt="InvestPro" class="brand-logo" />
+    </a>
+    <nav class="dash-breadcrumb"><strong>{{ROLE_LABEL}}</strong> · Dashboard</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading...</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+<main class="dash-main container">
+  <!-- BODY GOES HERE per role -->
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async () => {
+  const u = await window.investproAuth.requireRole('{{ROLE_KEY}}'); // or array, or 'internal'
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();
+</script>
+</body>
+</html>

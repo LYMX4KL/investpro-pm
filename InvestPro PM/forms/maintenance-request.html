@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maintenance Request — InvestPro Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li><li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li><li><a href="../sales.html">Buy / Sell</a></li>
+      <li><a href="../recruiting.html">Join InvestPro</a></li><li><a href="../about.html">About</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="../index.html">Home</a> &nbsp;/&nbsp; <a href="../tenant-services.html">Tenants</a> &nbsp;/&nbsp; Maintenance Request</div>
+    <h1>Submit a Maintenance Request</h1>
+    <p>For non-emergency issues. <strong>Emergencies</strong> (active leak, no heat in winter, gas smell, fire/smoke) — please call <a href="tel:7028165555" style="color:var(--gold);">702-816-5555</a> immediately.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container" style="max-width:760px;">
+    <div class="banner banner-error">🚨 <strong>For active emergencies</strong> (water flooding, gas leak, electrical fire, no heat below 40°F, no A/C above 90°F): call our 24/7 line at 702-816-5555. Do not submit through this form.</div>
+    <div class="form-card">
+      <form data-validate action="#" method="post">
+        <div class="form-row">
+          <div class="form-group"><label>Your Name <span class="required">*</span></label><input type="text" name="name" required /><div class="form-error">Required.</div></div>
+          <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" name="phone" required /><div class="form-error">Required.</div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" name="email" required /><div class="form-error">Valid email required.</div></div>
+          <div class="form-group"><label>Best time to contact</label><select name="contact_time"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Anytime</option></select></div>
+        </div>
+
+        <div class="form-group">
+          <label>Property Address <span class="required">*</span></label>
+          <input type="text" name="address" required placeholder="Where is the issue?" />
+          <div class="form-error">Required.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Issue Category <span class="required">*</span></label>
+            <select name="category" required>
+              <option value="">Select…</option>
+              <option>Plumbing</option><option>HVAC / A/C / Heating</option>
+              <option>Electrical</option><option>Appliances</option>
+              <option>Pest / Bugs / Rodents</option><option>Doors / Windows / Locks</option>
+              <option>Roof / Ceiling / Walls</option><option>Other</option>
+            </select>
+            <div class="form-error">Required.</div>
+          </div>
+          <div class="form-group">
+            <label>Urgency <span class="required">*</span></label>
+            <select name="urgency" required>
+              <option value="">Select…</option>
+              <option>Routine — within a week</option>
+              <option>Important — within 48 hours</option>
+              <option>Urgent (but not an emergency) — same day</option>
+            </select>
+            <div class="form-error">Required.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Describe the Issue <span class="required">*</span></label>
+          <textarea name="description" required placeholder="Please be as specific as possible. What's broken? Where exactly? When did it start? Have you tried anything?"></textarea>
+          <div class="form-error">Please describe the issue.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Photos (optional but very helpful)</label>
+          <input type="file" name="photos" multiple accept="image/*" />
+          <div class="form-help">You can attach up to 5 photos. JPG, PNG, or HEIC.</div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <input type="checkbox" name="entry_permission" id="entry" />
+          <label for="entry">I give permission for an authorized vendor to enter the property to perform repairs even if I'm not home. (Tenants will be notified at least 24 hours in advance when possible.)</label>
+        </div>
+        <div class="form-group">
+          <label>Pets at the property?</label>
+          <input type="text" name="pets" placeholder="e.g. 1 friendly dog (kept in crate)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Submit Maintenance Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>Tenants</h4><ul><li><a href="rental-application.html">Apply</a></li><li><a href="maintenance-request.html">Maintenance</a></li><li><a href="../portal/login.html">Tenant Login</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+<script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Application Submitted — InvestPro Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+<style>
+  .timeline { list-style:none; padding:0; margin: 1.5rem 0; }
+  .timeline li {
+    display: grid; grid-template-columns: 40px 1fr; gap: .75rem;
+    padding: 1rem 0; border-bottom: 1px solid var(--line);
+  }
+  .timeline li:last-child { border-bottom: 0; }
+  .timeline .dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--cream-dark); color: var(--ink-soft);
+    display:grid; place-items:center; font-weight:700;
+  }
+  .timeline li.done .dot { background: var(--success); color:#fff; }
+  .timeline li.current .dot { background: var(--gold); color:#fff; }
+  .timeline strong { display:block; color: var(--navy); margin-bottom: .15rem; }
+  .timeline p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+  .confirm-box {
+    background: var(--cream); border:1px solid var(--line);
+    border-left: 4px solid var(--gold); padding: 1.5rem;
+    border-radius: 4px; margin-bottom: 2rem;
+  }
+  .confirm-box .num {
+    font-family: var(--serif); font-size: 1.6rem; color: var(--navy);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li><li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li><li><a href="../contact.html">Contact</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="../index.html">Home</a> &nbsp;/&nbsp; <a href="rental-application.html">Apply</a> &nbsp;/&nbsp; Submitted</div>
+    <h1>🎉 Application Submitted</h1>
+    <p>Thank you. We've received your application and you'll get an email confirmation shortly.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container" style="max-width: 760px;">
+
+    <div class="confirm-box">
+      <div class="muted" style="font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;">Your Confirmation Number</div>
+      <div class="num" id="confirmNum">—</div>
+      <p class="muted" style="margin: .5rem 0 0;font-size:.9rem;">Save this number. You can check your status anytime at <a href="application-status.html">application-status.html</a> using this number + your email.</p>
+    </div>
+
+    <div id="demoBanner" style="display:none;" class="banner banner-info">
+      ⚙️ <strong>Demo mode:</strong> no real Stripe charge was made and no email was sent. The flow shown below is what will happen once Supabase + Stripe are connected. See <a href="../README.md">README</a>.
+    </div>
+
+    <h2>What happens next</h2>
+    <ol class="timeline" id="timeline">
+      <li class="done"><div class="dot">✓</div><div><strong>Application received</strong><p>Submitted just now. You'll receive an email confirmation at the address you provided.</p></div></li>
+      <li class="done"><div class="dot">✓</div><div><strong>Application + Holding Fee paid</strong><p>Stripe receipts sent to your email. Application fee is non-refundable; Holding Fee will be refunded if denied or applied to your deposit if approved.</p></div></li>
+      <li class="current"><div class="dot">2</div><div><strong>Admin review &amp; screening</strong><p>Our admin team verifies your documents, runs credit + background checks, and (if applicable) sends you a PetScreening.com link. Usually 1–2 business days.</p></div></li>
+      <li><div class="dot">3</div><div><strong>PM / Owner approval</strong><p>The property manager (and owner, when required) reviews the screening summary and decides.</p></div></li>
+      <li><div class="dot">4</div><div><strong>Term sheet (if approved)</strong><p>You'll receive a term sheet by email with the proposed lease terms — accept or decline.</p></div></li>
+      <li><div class="dot">5</div><div><strong>Lease signing &amp; orientation</strong><p>Schedule a date to sign the lease and walk through the property.</p></div></li>
+      <li><div class="dot">6</div><div><strong>Move-in</strong><p>You receive keys, a move-in inspection report, and login info for the tenant portal.</p></div></li>
+    </ol>
+
+    <hr style="border:0;border-top:1px solid var(--line);margin:2rem 0;" />
+
+    <h3>If your showing agent isn't your application contact</h3>
+    <p class="muted">Your showing or listing agent has been notified by email that an application was submitted on this property. They'll get another email when the result is decided.</p>
+
+    <h3>Need to upload more documents?</h3>
+    <p class="muted">Reply to your confirmation email or call us at <a href="tel:7028165555">702-816-5555</a>. We're at 3601 W Sahara Ave, Suite 207, Las Vegas, NV.</p>
+
+    <div class="center mt-4">
+      <a href="application-status.html" class="btn btn-primary">Check Application Status</a>
+      <a href="../listings.html" class="btn btn-outline">Browse More Listings</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Tenants</h4><ul><li><a href="rental-application.html">Apply</a></li><li><a href="application-status.html">Application Status</a></li><li><a href="maintenance-request.html">Maintenance</a></li></ul></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+  // Pull confirmation number from query string (?c=IPR-XXXXX) or last localStorage entry
+  const params = new URLSearchParams(location.search);
+  let confirmation = params.get('c');
+  let demo = params.get('demo') === '1';
+  if (!confirmation) {
+    try {
+      const last = JSON.parse(localStorage.getItem('investpro_last_application') || 'null');
+      if (last) { confirmation = last.confirmation; demo = !!last.demo; }
+    } catch {}
+  }
+  document.getElementById('confirmNum').textContent = confirmation || '(no record found)';
+  if (demo) document.getElementById('demoBanner').style.display = '';
+  // If user just paid via Stripe, the URL will have ?session_id=...
+  // (real impl) you'd hit Supabase here to confirm the application is now status='submitted'.
+</script>
+</body>
+</html>

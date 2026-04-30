@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Front Desk Admin — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="admin_onsite">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><strong>Front Desk / Admin</strong> · Today</nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>Front Desk · Today</h1>
+    <a href="../properties/list.html" class="btn btn-outline">🏠 Manage Properties</a>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Lease signings</div><div class="value">2</div><div class="sub">today</div></div>
+    <div class="stat-tile"><div class="label">Walk-ins logged</div><div class="value">5</div></div>
+    <div class="stat-tile"><div class="label">Holding fees received</div><div class="value">$3,700</div><div class="sub">today</div></div>
+    <div class="stat-tile"><div class="label">Keys issued</div><div class="value">1</div></div>
+  </div>
+  <div class="dash-section">
+    <h2>Today's appointments</h2>
+    <table class="dash-table">
+      <thead><tr><th>Time</th><th>Type</th><th>Person</th><th>Property</th></tr></thead>
+      <tbody>
+        <tr><td>10:00 AM</td><td>Lease signing + orientation</td><td>Aisha Patel</td><td>3601 W Sahara #207</td></tr>
+        <tr><td>2:00 PM</td><td>Holding fee drop-off</td><td>Marcus Williams</td><td>2440 Vegas Drive</td></tr>
+        <tr><td>3:30 PM</td><td>Lease signing + orientation</td><td>Ricky Tan</td><td>9420 Cheyenne Blvd</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-section">
+    <h2>Quick actions</h2>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="alert('Logs an in-person holding fee payment + advances Stripe pending status.')">Log in-person payment</button>
+      <button class="btn btn-outline" onclick="alert('Records key handoff + triggers tenant MICR window.')">Record key release</button>
+      <button class="btn btn-outline" onclick="alert('Logs a walk-in inquiry to the leads list.')">Log walk-in</button>
+    </div>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>(async () => {
+  const u = await window.investproAuth.requireRole(['admin_onsite', 'broker']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();</script>
+</body></html>

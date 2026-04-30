@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EBE3D2"/>
+      <stop offset="100%" stop-color="#C9BC9C"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <!-- Sun -->
+  <circle cx="650" cy="120" r="50" fill="#F5E6C2" opacity="0.7"/>
+  <!-- Ground -->
+  <rect y="380" width="800" height="120" fill="#A7B89A"/>
+  <!-- House -->
+  <g>
+    <polygon points="200,200 400,80 600,200" fill="#8B5E3C"/>
+    <rect x="220" y="200" width="360" height="180" fill="#F5F1EA"/>
+    <rect x="350" y="270" width="80" height="110" fill="#0A1F44"/>
+    <rect x="250" y="240" width="60" height="60" fill="#C5A572" stroke="#0A1F44" stroke-width="3"/>
+    <line x1="250" y1="270" x2="310" y2="270" stroke="#0A1F44" stroke-width="2"/>
+    <line x1="280" y1="240" x2="280" y2="300" stroke="#0A1F44" stroke-width="2"/>
+    <rect x="490" y="240" width="60" height="60" fill="#C5A572" stroke="#0A1F44" stroke-width="3"/>
+    <line x1="490" y1="270" x2="550" y2="270" stroke="#0A1F44" stroke-width="2"/>
+    <line x1="520" y1="240" x2="520" y2="300" stroke="#0A1F44" stroke-width="2"/>
+    <rect x="430" y="120" width="40" height="60" fill="#8B5E3C"/>
+  </g>
+  <!-- Trees -->
+  <g>
+    <circle cx="120" cy="370" r="50" fill="#5C7548"/>
+    <rect x="115" y="370" width="10" height="30" fill="#4A3826"/>
+    <circle cx="700" cy="380" r="40" fill="#5C7548"/>
+    <rect x="695" y="380" width="10" height="25" fill="#4A3826"/>
+  </g>
+</svg>

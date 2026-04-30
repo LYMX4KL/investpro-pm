@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B305C"/>
+      <stop offset="100%" stop-color="#0A1F44"/>
+    </linearGradient>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgba(197,165,114,0.06)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <!-- Stylised skyline -->
+  <g fill="#06152F" opacity="0.9">
+    <rect x="50"   y="500" width="120" height="400"/>
+    <rect x="190"  y="420" width="160" height="480"/>
+    <rect x="370"  y="560" width="100" height="340"/>
+    <rect x="490"  y="380" width="180" height="520"/>
+    <rect x="690"  y="460" width="140" height="440"/>
+    <rect x="850"  y="340" width="200" height="560"/>
+    <rect x="1070" y="500" width="120" height="400"/>
+    <rect x="1210" y="430" width="160" height="470"/>
+    <rect x="1390" y="520" width="160" height="380"/>
+  </g>
+  <!-- Lit windows -->
+  <g fill="#C5A572" opacity="0.55">
+    <rect x="510" y="420" width="14" height="14"/><rect x="540" y="420" width="14" height="14"/>
+    <rect x="570" y="420" width="14" height="14"/><rect x="600" y="420" width="14" height="14"/>
+    <rect x="630" y="420" width="14" height="14"/>
+    <rect x="510" y="460" width="14" height="14"/><rect x="570" y="460" width="14" height="14"/>
+    <rect x="630" y="460" width="14" height="14"/>
+    <rect x="870" y="380" width="14" height="14"/><rect x="900" y="380" width="14" height="14"/>
+    <rect x="930" y="380" width="14" height="14"/><rect x="960" y="380" width="14" height="14"/>
+    <rect x="990" y="380" width="14" height="14"/><rect x="1020" y="380" width="14" height="14"/>
+    <rect x="870" y="420" width="14" height="14"/><rect x="930" y="420" width="14" height="14"/>
+    <rect x="990" y="420" width="14" height="14"/>
+    <rect x="870" y="460" width="14" height="14"/><rect x="900" y="460" width="14" height="14"/>
+    <rect x="960" y="460" width="14" height="14"/><rect x="1020" y="460" width="14" height="14"/>
+    <rect x="220" y="460" width="14" height="14"/><rect x="250" y="460" width="14" height="14"/>
+    <rect x="280" y="460" width="14" height="14"/><rect x="310" y="460" width="14" height="14"/>
+    <rect x="220" y="500" width="14" height="14"/><rect x="280" y="500" width="14" height="14"/>
+  </g>
+</svg>

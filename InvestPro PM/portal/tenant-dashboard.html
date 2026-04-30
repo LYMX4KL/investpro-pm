@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tenant Portal — InvestPro Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Tenant Portal</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Public site</a></li>
+      <li><a href="#" id="signOutBtn">Sign out</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<div id="auth-banner"></div>
+
+<div class="dashboard-shell">
+  <aside class="dashboard-side">
+    <h3>Tenant Portal</h3>
+    <p style="color:#9aa3bd;font-size:.85rem;margin-bottom:1rem;" id="welcome">Welcome.</p>
+    <ul>
+      <li><a href="#overview" class="active">Overview</a></li>
+      <li><a href="#micr">Move-In Inspection</a></li>
+      <li><a href="#pay">Pay Rent</a></li>
+      <li><a href="#maintenance">Maintenance</a></li>
+      <li><a href="#lease">My Lease</a></li>
+      <li><a href="#payments">Payment History</a></li>
+      <li><a href="#contact">Contact PM</a></li>
+    </ul>
+  </aside>
+
+  <main class="dashboard-main">
+
+    <section id="overview">
+      <h1>Welcome, <span data-user-name>Tenant</span></h1>
+      <p class="muted" style="margin-top:-1rem;">3601 W Sahara Ave #207 — Las Vegas, NV 89102</p>
+
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">Rent Due</div><div class="value">$1,850</div></div>
+        <div class="kpi"><div class="label">Due Date</div><div class="value">May 1</div></div>
+        <div class="kpi"><div class="label">Lease Ends</div><div class="value">Aug '26</div></div>
+        <div class="kpi"><div class="label">Open Tickets</div><div class="value">0</div></div>
+      </div>
+
+      <div class="banner banner-info">📌 Set up <a href="#pay">auto-pay</a> so you never miss a date. Late fees start on the 6th.</div>
+      <div id="micrAlert" class="banner banner-warn" style="display:none;">
+        ⚠️ <strong>Move-In Inspection due soon.</strong> You have <span id="micrCountdown">3 business days</span> from key release to complete and submit your Move-In Condition Report.
+        <a href="#micr"><strong>Start now →</strong></a>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- MOVE-IN INSPECTION (MICR) — Joan-flagged feature, v1 launch -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <section id="micr" style="margin-top:3rem;">
+      <h2>Move-In Inspection</h2>
+      <p>Your Move-In Condition Report protects your security deposit. Walk through the home, mark each item below, and upload photos of anything not in perfect condition.</p>
+
+      <div class="banner banner-warn" style="margin: 1rem 0;">
+        <strong>Important:</strong> If you don't return this within <strong>3 business days</strong> of receiving keys, the property is deemed to have been in perfect/move-in-ready condition for deposit purposes. Be thorough — photos are your best evidence.
+      </div>
+
+      <div class="form-card">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <strong>Status:</strong> <span id="micrStatus" style="color:var(--gold-dark);font-weight:700;">In progress</span>
+            &nbsp;&nbsp;<strong>Deadline:</strong> <span id="micrDeadline">Friday, May 1, 2026 — 5:00 PM</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="micrPrintBtn">📄 Print blank checklist</button>
+        </div>
+
+        <p class="muted small" style="font-size:.88rem;">You can save your progress and come back. Submit when complete — or before the deadline at minimum.</p>
+
+        <!-- Inspection editor, powered by js/inspection-editor.js -->
+        <div id="inspection-root" data-inspection-id="micr-demo-1" data-mode="tenant" style="margin-top:1.5rem;">
+          <p class="muted center" style="padding:2rem 0;">Loading inspection checklist…</p>
+        </div>
+
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <button class="btn btn-outline" id="micrSaveBtn">💾 Save progress</button>
+          <button class="btn btn-primary" id="micrSubmitBtn">✅ Submit MICR</button>
+        </div>
+      </div>
+
+      <details style="margin-top:1.5rem;">
+        <summary><strong>📋 What you should look at, room-by-room (tips)</strong></summary>
+        <div style="background:var(--cream);padding:1rem 1.2rem;border-radius:4px;margin-top:.5rem;font-size:.9rem;">
+          <p><strong>Walls:</strong> Look for nail holes, scuffs, dents, faded paint.</p>
+          <p><strong>Floors:</strong> Check carpet stains, scratches on hardwood, broken tiles.</p>
+          <p><strong>Appliances:</strong> Open every appliance. Test the burners, dishwasher, garbage disposal.</p>
+          <p><strong>Plumbing:</strong> Run every faucet. Flush every toilet. Check under sinks for leaks.</p>
+          <p><strong>Smoke/CO detectors:</strong> Press the test button on each one.</p>
+          <p><strong>Windows:</strong> Open and close each. Check screens.</p>
+          <p><strong>Take photos liberally</strong> — even of things that look "fine." It's much easier to defend your deposit at move-out with photos than without.</p>
+        </div>
+      </details>
+    </section>
+
+    <section id="pay" style="margin-top:3rem;">
+      <h2>Pay Rent</h2>
+      <div class="form-card" style="max-width:520px;">
+        <p><strong>Amount Due:</strong> $1,850.00 — for May 2026</p>
+        <div class="form-group"><label>Payment Method</label>
+          <select><option>Bank Account (ACH) — no fee</option><option>Debit Card — 3% fee</option><option>Credit Card — 3% fee</option></select>
+        </div>
+        <div class="form-group"><label>Pay Amount</label><input type="number" value="1850.00" step="0.01" /></div>
+        <div class="form-group checkbox-group"><input type="checkbox" id="auto" /><label for="auto">Enroll in auto-pay (1st of every month)</label></div>
+        <button class="btn btn-primary btn-block">Pay Rent</button>
+        <p class="muted center mt-2" style="font-size:.85rem;">Payments processed via Stripe / your PM software once connected.</p>
+      </div>
+    </section>
+
+    <section id="maintenance" style="margin-top:3rem;">
+      <h2>Maintenance</h2>
+      <p>Submit a maintenance request through our public form (it'll appear here once submitted).</p>
+      <a href="../forms/maintenance-request.html" class="btn btn-primary">+ New Request</a>
+
+      <h3 style="margin-top:1.5rem;">Your open requests</h3>
+      <p class="muted">No open requests. ✨</p>
+
+      <h3 style="margin-top:1.5rem;">Past requests</h3>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Issue</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Mar 15, 2026</td><td>Water heater valve</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td></tr>
+          <tr><td>Jan 8, 2026</td><td>Garbage disposal jam</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="lease" style="margin-top:3rem;">
+      <h2>My Lease</h2>
+      <table class="tbl">
+        <tr><th>Property</th><td>3601 W Sahara Ave #207, Las Vegas, NV 89102</td></tr>
+        <tr><th>Lease Start</th><td>August 15, 2024</td></tr>
+        <tr><th>Lease End</th><td>August 14, 2026</td></tr>
+        <tr><th>Monthly Rent</th><td>$1,850</td></tr>
+        <tr><th>Security Deposit</th><td>$1,850 (held per NRS 118A)</td></tr>
+        <tr><th>Pet Deposit</th><td>$300 (1 cat)</td></tr>
+        <tr><th>Lease Document</th><td><a href="#">📄 Download Signed Lease (PDF)</a></td></tr>
+      </table>
+    </section>
+
+    <section id="payments" style="margin-top:3rem;">
+      <h2>Payment History</h2>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Description</th><th>Method</th><th>Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Apr 1, 2026</td><td>Rent — April</td><td>ACH</td><td>$1,850.00</td></tr>
+          <tr><td>Mar 1, 2026</td><td>Rent — March</td><td>ACH</td><td>$1,850.00</td></tr>
+          <tr><td>Feb 1, 2026</td><td>Rent — February</td><td>ACH</td><td>$1,850.00</td></tr>
+          <tr><td>Jan 1, 2026</td><td>Rent — January</td><td>ACH</td><td>$1,850.00</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="contact" style="margin-top:3rem;">
+      <h2>Contact Property Manager</h2>
+      <div class="form-card">
+        <form data-validate>
+          <div class="form-group"><label>Subject</label><input type="text" required /></div>
+          <div class="form-group"><label>Message</label><textarea required></textarea></div>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="../js/main.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/inspection-editor.js"></script>
+<script>
+  (async function () {
+    const u = await window.investproAuth.requireRole('tenant');
+    if (!u) return;
+    document.querySelectorAll('[data-user-name]').forEach(el => el.textContent = u.name);
+    document.getElementById('welcome').textContent = u.email;
+    if (window.investproAuth.isDemoMode()) {
+      const banner = document.getElementById('auth-banner');
+      banner.innerHTML = '<div class="banner banner-info" style="margin:0;border-radius:0;">⚙️ <strong>Demo mode:</strong> sample data shown. Connect Supabase + a payment provider to show real lease/payment data. See <a href="../README.md">README</a>.</div>';
+    }
+    document.getElementById('signOutBtn').addEventListener('click', (e)=>{ e.preventDefault(); window.investproAuth.signOut(); });
+
+    // MICR alert visibility — show only if a tenant has an active MICR window
+    // (in demo mode, always show so reviewers see the section)
+    if (window.investproAuth.isDemoMode()) {
+      const alert = document.getElementById('micrAlert');
+      if (alert) alert.style.display = 'block';
+    }
+
+    // Wire MICR submit + save buttons to the inspection editor
+    document.getElementById('micrSaveBtn')?.addEventListener('click', () => {
+      window.inspectionEditor?.saveState();
+      alert('Progress saved. You can close this page and come back to finish.');
+    });
+    document.getElementById('micrSubmitBtn')?.addEventListener('click', async () => {
+      if (!window.inspectionEditor) return;
+      const ok = await window.inspectionEditor.submit();
+      if (ok) {
+        document.getElementById('micrStatus').textContent = 'Submitted ✓';
+        document.getElementById('micrStatus').style.color = 'var(--gold)';
+      }
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Properties — InvestPro PM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><strong>Properties</strong> · Manual entry (pre-IDX)</nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title">
+    <div>
+      <h1>Properties</h1>
+      <p class="muted">Manage properties manually until the GLVAR Matrix IDX feed is wired up.</p>
+    </div>
+    <a href="add.html" class="btn btn-primary">+ Add Property</a>
+  </div>
+
+  <div class="dash-banner info">
+    📌 <strong>Manual entry mode.</strong> Once your IDX feed is live, properties listed on MLS will auto-sync here. For testing now, add properties manually below — they'll appear on the public listings page and applicants can apply through them.
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile" id="totalTile"><div class="label">Total Properties</div><div class="value">0</div></div>
+    <div class="stat-tile green" id="listedTile"><div class="label">Listed</div><div class="value">0</div></div>
+    <div class="stat-tile" id="leasedTile"><div class="label">Leased</div><div class="value">0</div></div>
+    <div class="stat-tile amber" id="vacantTile"><div class="label">Vacant (off-market)</div><div class="value">0</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>All properties</h2>
+    <div id="propertyList">
+      <p class="muted center" style="padding:2rem 0;">Loading…</p>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>How testing works in v1</h2>
+    <ol style="line-height:1.8;">
+      <li>Click <strong>+ Add Property</strong> and enter address, monthly rent, beds/baths, etc.</li>
+      <li>Save — property appears on the <a href="../../listings.html" target="_blank">public listings page</a> automatically.</li>
+      <li>Click the property's "Copy share link" to send to a test applicant (or to your team to test).</li>
+      <li>The applicant opens the link → application form pre-fills the property address + rent + agent (if attributed).</li>
+      <li>Test applications flow through Accounting → VA → Broker → Term Sheet → Lease → Move-In.</li>
+    </ol>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/properties-store.js"></script>
+<script>
+(async () => {
+  const u = await window.investproAuth.requireRole(['broker', 'leasing', 'admin_onsite', 'va']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  const props = await window.propertiesStore.list();
+
+  // Update stat tiles
+  const stats = { total: props.length, listed: 0, leased: 0, vacant: 0 };
+  props.forEach(p => {
+    if (p.status === 'listed') stats.listed++;
+    else if (p.status === 'leased') stats.leased++;
+    else stats.vacant++;
+  });
+  document.querySelector('#totalTile .value').textContent = stats.total;
+  document.querySelector('#listedTile .value').textContent = stats.listed;
+  document.querySelector('#leasedTile .value').textContent = stats.leased;
+  document.querySelector('#vacantTile .value').textContent = stats.vacant;
+
+  const list = document.getElementById('propertyList');
+  if (!props.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="icon">🏠</div>
+      <p>No properties yet. <a href="add.html"><strong>Add your first property →</strong></a></p>
+      <p class="muted small">Tip: add 2-3 sample properties so testers have something to apply for.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = `
+    <table class="dash-table">
+      <thead><tr><th>Address</th><th>Rent</th><th>Beds/Baths</th><th>Status</th><th>Listed</th><th></th></tr></thead>
+      <tbody>
+        ${props.map(p => `
+          <tr>
+            <td><strong>${escapeHtml(p.address_line1)}</strong>${p.address_line2 ? ' ' + escapeHtml(p.address_line2) : ''}<br><span class="muted small">${escapeHtml(p.city || 'Las Vegas')}, ${escapeHtml(p.state || 'NV')} ${escapeHtml(p.zip || '')}</span></td>
+            <td><strong>$${Number(p.monthly_rent).toLocaleString()}</strong>/mo</td>
+            <td>${p.bedrooms || '?'} / ${p.bathrooms || '?'}</td>
+            <td><span class="pill ${p.status === 'listed' ? 'green' : p.status === 'leased' ? 'navy' : 'amber'}">${p.status}</span></td>
+            <td><span class="muted small">${p.listing_at || '—'}</span></td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-outline btn-sm" onclick="copyApplyLink('${p.id}')">Copy apply link</button>
+              <a href="add.html?id=${encodeURIComponent(p.id)}" class="btn btn-outline btn-sm">Edit</a>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+})();
+
+function copyApplyLink(propId) {
+  const url = `${location.origin}/forms/rental-application.html?property=${propId}`;
+  navigator.clipboard.writeText(url).then(() => alert('Apply link copied — paste it into an email or text to your test applicant:\n\n' + url));
+}
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+</script>
+</body>
+</html>

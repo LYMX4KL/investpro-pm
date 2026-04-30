@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Free Rental Analysis — InvestPro Realty</title>
+<meta name="description" content="Get a free rental analysis for your Las Vegas property. We'll provide a recommended rent range, projected income, and clear breakdown of management fees." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li><li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li><li><a href="../sales.html">Buy / Sell</a></li>
+      <li><a href="../recruiting.html">Join InvestPro</a></li><li><a href="../about.html">About</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="../index.html">Home</a> &nbsp;/&nbsp; <a href="../property-management.html">PM</a> &nbsp;/&nbsp; Free Rental Analysis</div>
+    <h1>Get a Free Rental Analysis</h1>
+    <p>Tell us a bit about your property. We'll send you a recommended rent range, income projection, and clear fee breakdown — usually within one business day.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container" style="max-width:780px;">
+    <div class="form-card">
+      <form data-validate action="#" method="post">
+
+        <fieldset>
+          <legend>About You</legend>
+          <div class="form-row">
+            <div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" name="first_name" required /><div class="form-error">Required.</div></div>
+            <div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" name="last_name" required /><div class="form-error">Required.</div></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" name="email" required /><div class="form-error">Valid email required.</div></div>
+            <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" name="phone" required /><div class="form-error">Required.</div></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>About the Property</legend>
+          <div class="form-group"><label>Property Address <span class="required">*</span></label><input type="text" name="address" required placeholder="Street, city, ZIP" /><div class="form-error">Required.</div></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Property Type</label>
+              <select name="type"><option>Single-family home</option><option>Condo / Townhome</option><option>Duplex / Triplex</option><option>Multi-unit (4+)</option><option>Commercial</option></select>
+            </div>
+            <div class="form-group">
+              <label>Beds / Baths</label>
+              <input type="text" name="bb" placeholder="e.g. 3 bed / 2 bath" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Approx. Square Feet</label><input type="number" name="sqft" /></div>
+            <div class="form-group"><label>Year Built</label><input type="number" name="year" /></div>
+          </div>
+          <div class="form-group">
+            <label>Currently…</label>
+            <select name="status">
+              <option>Vacant — ready to rent</option>
+              <option>Occupied by tenant</option>
+              <option>Owner-occupied (will vacate soon)</option>
+              <option>Considering buying — not owned yet</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Your Goals</legend>
+          <div class="form-group">
+            <label>Service interest</label>
+            <select name="service">
+              <option>Full-service property management</option>
+              <option>Tenant placement only</option>
+              <option>Sell the property instead</option>
+              <option>Not sure — want to discuss options</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Anything else we should know?</label>
+            <textarea name="notes" placeholder="Existing tenant, pets allowed, HOA details, recent updates, etc."></textarea>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-block">Request Free Rental Analysis</button>
+        <p class="muted center mt-2" style="font-size:.85rem;">We'll respond within 1 business day. No obligation, no spam — just useful information.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../sales.html">Buy / Sell</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>For Owners</h4><ul><li><a href="listing-inquiry.html">Free Analysis</a></li><li><a href="../portal/login.html">Owner Login</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+<script src="../js/main.js"></script>
+</body>
+</html>

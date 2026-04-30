@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agent Portal — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="agent_showing">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Agent Portal</strong> · Dashboard</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>Welcome back, <span id="agentName">Agent</span></h1>
+    <button class="btn btn-primary" onclick="showShareModal()">🔗 Generate Share Link</button>
+  </div>
+
+  <div class="dash-banner info" id="agentVerifyBanner" style="display:none;">
+    ⚠️ <strong>License verification pending.</strong> Until your NV license + MLS member ID are verified, your share links will work but applications won't be auto-attributed to you. <a href="profile.html">Check verification status →</a>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Apps in flight</div><div class="value">2</div></div>
+    <div class="stat-tile green"><div class="label">Approved this year</div><div class="value">7</div></div>
+    <div class="stat-tile"><div class="label">Earnings YTD</div><div class="value">$3,450</div></div>
+    <div class="stat-tile amber"><div class="label">W-9 status</div><div class="value">⚠</div><div class="sub">Upload pending</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>Your share link</h2>
+    <p class="muted">Send this to clients. When they open a property page through it, your info is auto-filled into their application.</p>
+    <div style="display:flex;gap:.5rem;align-items:center;background:var(--cream);padding:1rem;border-radius:4px;font-family:monospace;font-size:.9rem;">
+      <span id="shareLink">https://investprorealty.net/listings.html?agent=AGT-X9F2</span>
+      <button class="btn btn-outline btn-sm" onclick="copyLink()">Copy</button>
+    </div>
+    <p class="muted small" style="margin-top:.5rem;">You can also generate per-property links for tighter tracking — see "Generate Share Link" button above.</p>
+  </div>
+
+  <div class="dash-section">
+    <h2>Applications you've referred</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Property</th><th>Status</th><th>Submitted</th></tr></thead>
+      <tbody>
+        <tr><td>IPR-2K7B9X3</td><td>Sarah Chen</td><td>3601 W Sahara #207</td><td><span class="pill amber">Counter-offer</span></td><td>Apr 26</td></tr>
+        <tr><td>IPR-1W7Q3RA</td><td>Aisha Patel</td><td>3601 W Sahara #207</td><td><span class="pill navy">Broker review</span></td><td>Apr 27</td></tr>
+        <tr><td>IPR-9P3K2VR</td><td>Tom Rodriguez</td><td>2440 Vegas Drive</td><td><span class="pill green">Leased ✓</span></td><td>Mar 8</td></tr>
+      </tbody>
+    </table>
+    <p class="muted small" style="margin-top:.8rem;">In v1: clicking a row will show the read-only application detail (your view excludes screening data).</p>
+  </div>
+
+  <div class="dash-section">
+    <h2>Listings synced from MLS</h2>
+    <p class="muted">Listings under your MLS member ID will appear here once your IDX feed is wired up.</p>
+    <div class="empty-state">
+      <div class="icon">🏠</div>
+      <p>No MLS listings yet — IDX integration pending Kenny's vendor confirmation.</p>
+    </div>
+  </div>
+</main>
+
+<div id="shareModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:2rem;border-radius:6px;max-width:500px;width:92%;">
+    <h2>Generate property-specific share link</h2>
+    <div class="form-group"><label>Property</label>
+      <select id="shareProp">
+        <option>3601 W Sahara #207</option>
+        <option>2440 Vegas Drive</option>
+        <option>9100 Decatur #11</option>
+      </select>
+    </div>
+    <div style="background:var(--cream);padding:1rem;border-radius:4px;font-family:monospace;font-size:.88rem;word-break:break-all;" id="generatedLink">
+      https://investprorealty.net/property-detail.html?id=PROP-1&agent=AGT-X9F2
+    </div>
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;">
+      <button class="btn btn-outline" onclick="document.getElementById('shareModal').style.display='none';">Close</button>
+      <button class="btn btn-primary" onclick="copyGenerated()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+function showShareModal() { document.getElementById('shareModal').style.display = 'flex'; }
+function copyLink() { navigator.clipboard.writeText(document.getElementById('shareLink').textContent); alert('Copied!'); }
+function copyGenerated() { navigator.clipboard.writeText(document.getElementById('generatedLink').textContent); alert('Copied! Send this to your client.'); }
+(async () => {
+  const u = await window.investproAuth.requireRole('agent');
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('agentName').textContent = u.name.split(' ')[0] || u.name;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  // Show verification banner in demo mode (in v1 with Supabase, read agents.mls_verified)
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('agentVerifyBanner').style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>

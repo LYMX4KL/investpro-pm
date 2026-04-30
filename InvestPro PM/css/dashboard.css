@@ -1,0 +1,229 @@
+/* InvestPro PM Platform — Dashboard styles
+ * Shared layout for all role dashboards (broker, va, accounting, etc.)
+ * Builds on the base styles.css palette (royal blue + kelly green).
+ */
+
+.dashboard-body {
+  background: var(--cream, #F2F6FF);
+  min-height: 100vh;
+}
+
+.dash-header {
+  background: var(--white, #fff);
+  border-bottom: 1px solid var(--line, #DDE3F0);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.dash-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: .9rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.dash-header .brand-logo { height: 32px; width: auto; }
+.dash-breadcrumb {
+  color: var(--ink-soft, #555A6B);
+  font-size: .9rem;
+  flex: 1;
+}
+.dash-breadcrumb strong { color: var(--navy, #1F4FC1); }
+.dash-user {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+}
+.dash-user .small { font-size: .85rem; }
+
+.dash-main {
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1280px;
+}
+
+/* Page title */
+.dash-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dash-title h1 {
+  font-family: var(--serif, 'Playfair Display', serif);
+  color: var(--navy, #1F4FC1);
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+/* Stat tiles row */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-tile {
+  background: var(--white, #fff);
+  border-left: 4px solid var(--navy, #1F4FC1);
+  padding: 1.1rem 1.3rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.stat-tile.green { border-left-color: var(--gold, #5FAB22); }
+.stat-tile.red { border-left-color: #B0342B; }
+.stat-tile.amber { border-left-color: #C68D1E; }
+.stat-tile .label {
+  font-size: .8rem;
+  color: var(--ink-soft, #555A6B);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  margin-bottom: .4rem;
+}
+.stat-tile .value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ink, #1A1F2E);
+  font-family: var(--serif, serif);
+}
+.stat-tile .sub {
+  font-size: .82rem;
+  color: var(--ink-soft, #555A6B);
+  margin-top: .2rem;
+}
+
+/* Kanban board */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.kanban-column {
+  background: var(--white, #fff);
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  min-height: 200px;
+}
+.kanban-column h3 {
+  font-size: .9rem;
+  font-weight: 700;
+  margin: 0 0 .8rem;
+  color: var(--navy, #1F4FC1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--cream, #F2F6FF);
+  padding-bottom: .6rem;
+}
+.kanban-column h3 .count {
+  background: var(--cream, #F2F6FF);
+  color: var(--navy, #1F4FC1);
+  font-size: .75rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+}
+.kanban-card {
+  background: var(--cream, #F2F6FF);
+  border-left: 3px solid var(--navy, #1F4FC1);
+  padding: .75rem .85rem;
+  margin-bottom: .55rem;
+  border-radius: 4px;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.kanban-card:hover { transform: translateX(2px); }
+.kanban-card .title { font-weight: 700; color: var(--ink, #1A1F2E); }
+.kanban-card .meta { font-size: .78rem; color: var(--ink-soft); margin-top: .2rem; }
+.kanban-card.overdue { border-left-color: #B0342B; }
+
+/* Section card */
+.dash-section {
+  background: var(--white, #fff);
+  padding: 1.4rem 1.6rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  margin-bottom: 1.5rem;
+}
+.dash-section h2 {
+  font-family: var(--serif, serif);
+  color: var(--navy, #1F4FC1);
+  font-size: 1.25rem;
+  margin: 0 0 1rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--ink-soft, #555A6B);
+}
+.empty-state .icon {
+  font-size: 2.5rem;
+  opacity: .5;
+  margin-bottom: .5rem;
+}
+
+/* Tables in dashboards */
+.dash-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.dash-table th { text-align: left; padding: .65rem .8rem; background: var(--cream, #F2F6FF); color: var(--navy, #1F4FC1); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+.dash-table td { padding: .65rem .8rem; border-top: 1px solid var(--line, #DDE3F0); }
+.dash-table tr:hover td { background: rgba(31,79,193,.03); }
+.dash-table .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.dash-table .pill.green { background: rgba(95,171,34,.15); color: #3F750D; }
+.dash-table .pill.red { background: rgba(176,52,43,.15); color: #8B2520; }
+.dash-table .pill.amber { background: rgba(198,141,30,.15); color: #855E13; }
+.dash-table .pill.navy { background: rgba(31,79,193,.12); color: var(--navy, #1F4FC1); }
+
+/* Sidebar layout (single shared component) */
+.dash-with-sidebar {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) { .dash-with-sidebar { grid-template-columns: 1fr; } }
+.dash-sidebar {
+  background: var(--white, #fff);
+  border-radius: 6px;
+  padding: 1rem .8rem;
+  height: fit-content;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.dash-sidebar a {
+  display: block;
+  padding: .55rem .75rem;
+  color: var(--ink, #1A1F2E);
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: .9rem;
+  margin-bottom: .15rem;
+}
+.dash-sidebar a:hover { background: var(--cream, #F2F6FF); }
+.dash-sidebar a.active { background: var(--navy, #1F4FC1); color: #fff; }
+.dash-sidebar .section-label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-soft, #555A6B);
+  font-weight: 700;
+  padding: .8rem .75rem .3rem;
+}
+
+/* Banner / alerts inside dashboards */
+.dash-banner {
+  padding: .9rem 1.2rem;
+  border-radius: 4px;
+  margin-bottom: 1.2rem;
+  font-size: .92rem;
+}
+.dash-banner.info { background: rgba(31,79,193,.08); border-left: 4px solid var(--navy); color: var(--ink); }
+.dash-banner.warn { background: rgba(198,141,30,.08); border-left: 4px solid #C68D1E; color: var(--ink); }
+.dash-banner.success { background: rgba(95,171,34,.1); border-left: 4px solid var(--gold, #5FAB22); color: var(--ink); }
+
+.btn-sm { padding: .35rem .8rem; font-size: .82rem; }

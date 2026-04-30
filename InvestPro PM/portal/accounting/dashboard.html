@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Accounting — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="accounting">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><strong>Accounting</strong> · Payment Confirmation Queue</nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span>
+  <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title"><h1>Payment Confirmation Queue</h1></div>
+
+  <div class="stat-grid">
+    <div class="stat-tile red"><div class="label">Awaiting confirm</div><div class="value">3</div></div>
+    <div class="stat-tile"><div class="label">Confirmed today</div><div class="value">5</div></div>
+    <div class="stat-tile"><div class="label">Refunds queued</div><div class="value">1</div></div>
+    <div class="stat-tile green"><div class="label">YTD Apps Processed</div><div class="value">142</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>Stripe payments awaiting confirmation</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>App fee</th><th>Holding fee</th><th>Stripe ID</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>IPR-2K7B9X3</td><td>Sarah Chen</td><td>$75.00</td><td>$1,850 (in person)</td><td>cs_test_...3J9</td><td><button class="btn btn-primary btn-sm" onclick="alert('Confirms payment, advances app to VA Review queue.')">Confirm</button></td></tr>
+        <tr><td>IPR-3M9P2QR</td><td>Marcus Williams</td><td>$75.00</td><td>$2,100 (in person)</td><td>cs_test_...5K2</td><td><button class="btn btn-primary btn-sm" onclick="alert('Confirms payment.')">Confirm</button></td></tr>
+        <tr><td>IPR-7H2K4XA</td><td>Jenny Park</td><td>$50.00</td><td>—</td><td>cs_test_...7H1</td><td><button class="btn btn-primary btn-sm" onclick="alert('Co-applicant on existing primary.')">Confirm</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-section">
+    <h2>Refunds queued (denied applications)</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Holding fee to refund</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>IPR-4Q1L9XB</td><td>James Park</td><td>$1,750</td><td><button class="btn btn-outline btn-sm" onclick="alert('Issues refund via Stripe + sends notification.')">Refund</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-section">
+    <h2>Phase 6+ (placeholder)</h2>
+    <p class="muted">Owner statements, ACH disbursements, 1099 prep, late-fee tracking — added in later phases once leasing flow is stable.</p>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>(async () => {
+  const u = await window.investproAuth.requireRole(['accounting', 'broker']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();</script>
+</body></html>

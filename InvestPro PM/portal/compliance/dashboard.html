@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compliance — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="compliance">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><strong>Compliance</strong> · Dashboard</nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title"><h1>Compliance</h1></div>
+  <div class="stat-grid">
+    <div class="stat-tile"><div class="label">Pending FCRA letters</div><div class="value">1</div></div>
+    <div class="stat-tile"><div class="label">Final statements queued</div><div class="value">0</div></div>
+    <div class="stat-tile"><div class="label">Active evictions</div><div class="value">0</div></div>
+    <div class="stat-tile green"><div class="label">Docs filed YTD</div><div class="value">487</div></div>
+  </div>
+  <div class="dash-section">
+    <h2>FCRA denial letters to send</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Decision</th><th>Sent by deadline?</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>IPR-4Q1L9XB</td><td>James Park</td><td>Denied · credit + income</td><td>Due Apr 30 (3 biz days from decision)</td><td><button class="btn btn-primary btn-sm" onclick="alert('Generates FCRA-compliant letter from template, mails it.')">Send</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="dash-section">
+    <h2>Phase 6+ (placeholder)</h2>
+    <p class="muted">Deposit-disposition review, eviction prep, document filing dashboard — added once leasing flow is stable.</p>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>(async () => {
+  const u = await window.investproAuth.requireRole(['compliance', 'broker']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();</script>
+</body></html>

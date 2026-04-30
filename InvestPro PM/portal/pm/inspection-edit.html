@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspection — InvestPro PM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><a href="dashboard.html" style="color:var(--ink-soft);text-decoration:none;">PM Dashboard</a> · <strong id="propLabel">Inspection</strong></nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+  <div class="dash-title">
+    <div>
+      <h1 id="pageTitle">Pre-Move-In Inspection</h1>
+      <p class="muted" id="pageSub">3601 W Sahara Ave #207 · Demo inspection</p>
+    </div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button class="btn btn-outline" id="saveBtn">💾 Save draft</button>
+      <button class="btn btn-primary" id="submitBtn">✅ Submit Inspection</button>
+    </div>
+  </div>
+
+  <div class="dash-banner info">
+    <strong>How to use:</strong> walk through the property, mark each item's condition, and add photos for anything not in good condition. Use the "Overall notes" box at the bottom for things the checklist doesn't cover. Your work is saved continuously — you can close this page and come back.
+  </div>
+
+  <div id="inspection-root" data-mode="pm" data-inspection-id="pm-demo-1">
+    <p class="muted center" style="padding:2rem;">Loading checklist…</p>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/inspection-editor.js"></script>
+<script>
+(async () => {
+  const u = await window.investproAuth.requireRole(['pm_service', 'broker', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  // Pull params from URL
+  const params = new URLSearchParams(location.search);
+  const type = params.get('type') || 'pre_move_in';
+  const id = params.get('id') || 'pm-demo-1';
+  document.getElementById('inspection-root').dataset.inspectionId = id;
+  if (type === 'move_in_tenant') {
+    document.getElementById('pageTitle').textContent = 'Tenant Move-In Condition Report (read-only)';
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    window.inspectionEditor?.saveState();
+    alert('Saved. You can come back to finish later.');
+  });
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const ok = await window.inspectionEditor?.submit();
+    if (ok) location.href = 'dashboard.html';
+  });
+})();
+</script>
+</body>
+</html>

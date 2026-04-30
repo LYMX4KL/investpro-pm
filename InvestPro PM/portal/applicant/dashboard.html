@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Applicant Portal — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="applicant">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Applicant</strong> · My Application</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+<main class="dash-main">
+  <div class="dash-title"><h1>Application Status</h1></div>
+
+  <div class="dash-section">
+    <h2>3601 W Sahara Ave #207</h2>
+    <p class="muted">Confirmation # IPR-1W7Q3RA · Submitted Apr 27, 2026</p>
+
+    <div style="margin:1.5rem 0;">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:130px;padding:.7rem;background:var(--cream);border-radius:4px;border-left:3px solid var(--gold);">
+          <div class="muted small">✓ Submitted</div><strong>Apr 27</strong>
+        </div>
+        <div style="flex:1;min-width:130px;padding:.7rem;background:var(--cream);border-radius:4px;border-left:3px solid var(--gold);">
+          <div class="muted small">✓ Payment confirmed</div><strong>Apr 27</strong>
+        </div>
+        <div style="flex:1;min-width:130px;padding:.7rem;background:var(--cream);border-radius:4px;border-left:3px solid var(--gold);">
+          <div class="muted small">✓ Docs verified</div><strong>Apr 28</strong>
+        </div>
+        <div style="flex:1;min-width:130px;padding:.7rem;background:var(--cream);border-radius:4px;border-left:3px solid var(--navy);">
+          <div class="muted small">⏳ Screening</div><strong>In progress</strong>
+        </div>
+        <div style="flex:1;min-width:130px;padding:.7rem;background:#f7f8fb;border-radius:4px;border-left:3px solid #ccc;">
+          <div class="muted small">Decision</div><strong>Pending</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-banner info">
+      📌 Decision expected within <strong>48 business hours</strong> from when both your application was submitted and your fee was received. Per our policy, weekends and holidays don't count.
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>Verifications in progress</h2>
+    <table class="dash-table">
+      <thead><tr><th>Type</th><th>Recipient</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Rental verification (current)</td><td>Your current landlord</td><td><span class="pill green">Received ✓</span></td></tr>
+        <tr><td>Employment verification</td><td>Your employer</td><td><span class="pill amber">Sent — awaiting reply</span></td></tr>
+        <tr><td>Credit + background</td><td>SmartMove</td><td><span class="pill green">Received ✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-section">
+    <h2>Help</h2>
+    <p>Questions? Call us at 702-816-5555 or <a href="mailto:info@investprorealty.net">email</a>. Reference your confirmation # IPR-1W7Q3RA.</p>
+  </div>
+</main>
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async () => {
+  const u = await window.investproAuth.requireRole('applicant');
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();
+</script>
+</body>
+</html>

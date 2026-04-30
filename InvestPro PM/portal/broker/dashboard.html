@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Broker — InvestPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body" data-default-role="broker">
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Broker</strong> · Decision Queue</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>Broker Dashboard</h1>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <a href="../properties/list.html" class="btn btn-outline">🏠 Manage Properties</a>
+      <a href="../properties/add.html" class="btn btn-primary">+ Add Property</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile red"><div class="label">Decisions Pending</div><div class="value">2</div><div class="sub">screening summaries ready</div></div>
+    <div class="stat-tile amber"><div class="label">Counter-offers</div><div class="value">1</div></div>
+    <div class="stat-tile"><div class="label">Properties Listed</div><div class="value">5</div></div>
+    <div class="stat-tile green"><div class="label">Active Leases</div><div class="value">38</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>📋 Applications awaiting your decision</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Property</th><th>Income</th><th>Credit</th><th>VOR</th><th>BG</th><th>VA Recommends</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>IPR-1W7Q3RA</td>
+          <td>Aisha Patel</td>
+          <td>3601 W Sahara #207</td>
+          <td><span class="pill green">3.4×</span></td>
+          <td><span class="pill green">720</span></td>
+          <td><span class="pill green">Clean</span></td>
+          <td><span class="pill green">Clear</span></td>
+          <td><span class="pill green">Approve</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="showDecision('IPR-1W7Q3RA')">Decide</button></td>
+        </tr>
+        <tr>
+          <td>IPR-8X2P5KB</td>
+          <td>Marcus Williams</td>
+          <td>2440 Vegas Drive</td>
+          <td><span class="pill green">3.1×</span></td>
+          <td><span class="pill amber">678</span></td>
+          <td><span class="pill green">Clean</span></td>
+          <td><span class="pill green">Clear</span></td>
+          <td><span class="pill amber">Approve w/ conditions</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="showDecision('IPR-8X2P5KB')">Decide</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-section">
+    <h2>🔁 Counter-offers awaiting review</h2>
+    <table class="dash-table">
+      <thead><tr><th>App</th><th>Applicant</th><th>Original</th><th>Counter</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>IPR-2K7B9X3</td>
+          <td>Sarah Chen</td>
+          <td>$1,850/mo · 1mo dep · 12mo</td>
+          <td>$1,800/mo · 1mo dep · 12mo + waive pet fee</td>
+          <td><button class="btn btn-outline btn-sm" onclick="alert('In v1: review counter terms, accept/reject/counter-counter.')">Review</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="dash-section">
+    <h2>🏠 Properties</h2>
+    <table class="dash-table">
+      <thead><tr><th>Address</th><th>Status</th><th>Days on market</th><th>Apps in flight</th></tr></thead>
+      <tbody>
+        <tr><td>3601 W Sahara #207</td><td><span class="pill green">Listed</span></td><td>12</td><td>3</td></tr>
+        <tr><td>2440 Vegas Drive</td><td><span class="pill green">Listed</span></td><td>4</td><td>1</td></tr>
+        <tr><td>9100 Decatur #11</td><td><span class="pill green">Listed</span></td><td>21</td><td>0</td></tr>
+        <tr><td>1822 Twain #15</td><td><span class="pill navy">App in progress</span></td><td>9</td><td>2</td></tr>
+        <tr><td>5525 Tropicana #88</td><td><span class="pill navy">Leased</span></td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Decision modal -->
+<div id="decisionModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:2rem;border-radius:6px;max-width:560px;width:92%;">
+    <h2>Decision · <span id="decAppId"></span></h2>
+    <p>VA Recommendation: <strong id="decRec"></strong></p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0;">
+      <button class="btn btn-primary" onclick="finishDecision('approve')">✓ Approve</button>
+      <button class="btn btn-outline" onclick="finishDecision('approve_with_conditions')">~ Approve with Conditions</button>
+      <button class="btn btn-outline" style="border-color:#B0342B;color:#B0342B;" onclick="finishDecision('deny')">✗ Deny</button>
+    </div>
+    <textarea id="decNotes" rows="3" placeholder="Decision notes (required for deny — FCRA reason codes)…" style="width:100%;padding:.6rem;border:1px solid var(--line);border-radius:4px;box-sizing:border-box;"></textarea>
+    <div style="text-align:right;margin-top:1rem;">
+      <button class="btn btn-outline" onclick="document.getElementById('decisionModal').style.display='none';">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+let currentApp = null;
+function showDecision(appId) {
+  currentApp = appId;
+  document.getElementById('decAppId').textContent = appId;
+  document.getElementById('decRec').textContent = appId === 'IPR-1W7Q3RA' ? 'Approve' : 'Approve with Conditions';
+  document.getElementById('decisionModal').style.display = 'flex';
+}
+function finishDecision(decision) {
+  alert('Decision recorded: ' + decision + '\n\nIn v1: triggers term sheet generation (approve/conditions) or FCRA denial letter (deny). Notifications fire to applicant + agents per the matrix in the deep-dives doc.');
+  document.getElementById('decisionModal').style.display = 'none';
+}
+(async () => {
+  const u = await window.investproAuth.requireRole('broker');
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+})();
+</script>
+</body>
+</html>
