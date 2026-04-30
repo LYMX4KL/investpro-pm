@@ -43,26 +43,18 @@
         <input type="password" name="password" required autocomplete="current-password" minlength="4" />
         <div class="form-help"><a href="reset.html">Forgot password?</a></div>
       </div>
+      <!-- Role picker is shown ONLY for external users (tenant / owner / applicant).
+           Staff and agent roles are assigned by management in the database — those users
+           don't need to pick anything; the system routes them to the correct dashboard
+           automatically based on their account. -->
       <div class="form-group">
         <label>I'm a…</label>
         <select name="role">
-          <optgroup label="External">
-            <option value="tenant">Tenant</option>
-            <option value="owner">Property Owner</option>
-            <option value="applicant">Applicant</option>
-            <option value="agent_showing">Real Estate Agent</option>
-          </optgroup>
-          <optgroup label="InvestPro Staff">
-            <option value="broker">Broker</option>
-            <option value="va">Application VA</option>
-            <option value="accounting">Accounting</option>
-            <option value="compliance">Compliance</option>
-            <option value="leasing">Leasing Coordinator</option>
-            <option value="pm_service">Property Manager / Maintenance</option>
-            <option value="admin_onsite">Front Desk / Admin</option>
-          </optgroup>
+          <option value="tenant">Tenant</option>
+          <option value="owner">Property Owner</option>
+          <option value="applicant">Applicant</option>
         </select>
-        <div class="form-help">(Used in demo mode to choose the dashboard. With real Supabase auth, your role comes from your profile.)</div>
+        <div class="form-help">Staff and agents: ignore this — your dashboard is set automatically from your account.</div>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Log in</button>
     </form>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>User Management — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="../css/dashboard.css" />
+<style>
+  .users-table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: #fff; }
+  .users-table th, .users-table td { padding: .75rem .9rem; text-align: left; border-bottom: 1px solid #e6eaf2; vertical-align: middle; }
+  .users-table th { background: #f7f8fb; font-weight: 700; color: #1F4FC1; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+  .users-table tr:hover { background: #fafbfd; }
+  .role-select { padding: .35rem .5rem; border: 1px solid #DDE3F0; border-radius: 4px; font: inherit; background: #fff; }
+  .role-select.dirty { border-color: #5FAB22; background: #f3faf0; }
+  .save-btn { padding: .35rem .7rem; font-size: .8rem; background: #5FAB22; color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-weight: 600; }
+  .save-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .pill-staff    { background: #DDE6F7; color: #1F4FC1; padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+  .pill-agent    { background: #FBE7C9; color: #8A5A00; padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+  .pill-external { background: #E5EFE0; color: #3F7A18; padding: .15rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+  .filters { display: flex; gap: .5rem; margin: 1rem 0; flex-wrap: wrap; }
+  .filter-chip { padding: .35rem .9rem; border: 1px solid #DDE3F0; border-radius: 999px; cursor: pointer; background: #fff; font-size: .85rem; font-weight: 600; color: #555; }
+  .filter-chip.active { background: #1F4FC1; color: #fff; border-color: #1F4FC1; }
+  .audit-row { font-size: .8rem; color: #666; }
+  .empty-state { text-align: center; padding: 2.5rem; color: #888; }
+</style>
+</head>
+<body class="dashboard-body" data-default-role="broker">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>User Management</strong> · Roles & Permissions</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+  <div class="dash-title">
+    <h1>User Management</h1>
+    <a id="backToDash" href="#" class="btn btn-outline">← Back to Dashboard</a>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <div class="dash-section">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h2>Team Members</h2>
+        <p class="muted" style="margin:.3rem 0 0;">
+          Change a person's <strong>role</strong> to reassign their dashboard. Use the <strong>permission toggles</strong> to grant
+          temporary access to sensitive data (PII, screening) without changing their role —
+          handy when duties move around due to availability. Click <strong>Save</strong> to apply.
+        </p>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="staff">Internal staff</button>
+      <button class="filter-chip" data-filter="agent">Agents</button>
+      <button class="filter-chip" data-filter="external">Tenants / Owners / Applicants</button>
+    </div>
+
+    <div id="loading-state" class="empty-state">Loading users…</div>
+
+    <table class="users-table" id="usersTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Current Role</th>
+          <th>Change Role</th>
+          <th title="Override: see applicant docs, income, SSN, ID — even if their role normally cannot">View PII</th>
+          <th title="Override: see credit/background/eviction screening reports">View Screening</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="usersBody"></tbody>
+    </table>
+
+    <div id="empty-state" class="empty-state" style="display:none;">No users match this filter.</div>
+  </div>
+
+  <div class="dash-section">
+    <h2>Role Reference</h2>
+    <p class="muted">Quick reminder of what each role can see and do:</p>
+    <table class="users-table">
+      <thead>
+        <tr><th>Role</th><th>Sees Applicant Docs/PII</th><th>Operational Access</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Broker</strong></td><td>✅ All apps</td><td>Everything + role management</td></tr>
+        <tr><td><strong>VA (Application VA)</strong></td><td>✅ Apps assigned to them</td><td>Application processing</td></tr>
+        <tr><td><strong>Compliance</strong></td><td>✅ All apps</td><td>FCRA / fair-housing review + role management</td></tr>
+        <tr><td><strong>Accounting</strong></td><td>✅ All apps</td><td>Rent ledger, deposits, owner draws</td></tr>
+        <tr><td><strong>Admin / Front Desk</strong></td><td>✅ All apps</td><td>Phones, scheduling, intake</td></tr>
+        <tr><td><strong>Leasing</strong></td><td>❌ Status + dates only</td><td>Showings, calendar, leases (post-signed), comms</td></tr>
+        <tr><td><strong>PM / Maintenance</strong></td><td>❌ Status + dates only</td><td>Inspections, work orders, leases (post-signed)</td></tr>
+        <tr><td><strong>Listing Agent</strong></td><td>❌ Status only (own listings)</td><td>Their listings + status updates</td></tr>
+        <tr><td><strong>Showing Agent</strong></td><td>❌ Status only (own apps)</td><td>Their applicants + status updates</td></tr>
+        <tr><td><strong>Tenant / Owner / Applicant</strong></td><td>Their own only</td><td>Self-service portal</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="../js/main.js"></script>
+<script src="../js/auth.js"></script>
+<script type="module">
+(async function () {
+  // Gate: only broker + compliance get in
+  const u = await window.investproAuth.requireRole(['broker', 'compliance']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backToDash').href = window.investproAuth.homeForRole(u.role);
+
+  // Demo mode? Show a friendly notice.
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('banner-area').innerHTML =
+      '<div class="banner banner-info">Demo mode — User Management is read-only without a real Supabase backend.</div>';
+    document.getElementById('loading-state').textContent = 'No users to show in demo mode.';
+    return;
+  }
+
+  // Load Supabase client (same import path as auth.js uses)
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  // Re-read URL+key from auth.js (they're not exported, so we read this file once)
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // Role catalog — must match db/001_extensions_enums.sql user_role enum
+  const ALL_ROLES = [
+    { value: 'broker',        label: 'Broker',                       group: 'staff' },
+    { value: 'va',            label: 'Application VA',               group: 'staff' },
+    { value: 'accounting',    label: 'Accounting',                   group: 'staff' },
+    { value: 'compliance',    label: 'Compliance',                   group: 'staff' },
+    { value: 'leasing',       label: 'Leasing Coordinator',          group: 'staff' },
+    { value: 'pm_service',    label: 'Property Manager / Service',   group: 'staff' },
+    { value: 'admin_onsite',  label: 'Front Desk / Admin',           group: 'staff' },
+    { value: 'agent_listing', label: 'Listing Agent',                group: 'agent' },
+    { value: 'agent_showing', label: 'Showing Agent',                group: 'agent' },
+    { value: 'tenant',        label: 'Tenant',                       group: 'external' },
+    { value: 'owner',         label: 'Property Owner',               group: 'external' },
+    { value: 'applicant',     label: 'Applicant',                    group: 'external' }
+  ];
+  const ROLE_LABEL = Object.fromEntries(ALL_ROLES.map(r => [r.value, r.label]));
+  const ROLE_GROUP = Object.fromEntries(ALL_ROLES.map(r => [r.value, r.group]));
+
+  // Fetch all profiles (including extra_permissions for the toggle columns)
+  const { data: users, error } = await supa
+    .from('profiles')
+    .select('id, full_name, email, role, phone, extra_permissions')
+    .order('role', { ascending: true })
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    document.getElementById('loading-state').innerHTML =
+      '<div class="banner banner-error">Couldn\'t load users: ' + error.message + '</div>';
+    return;
+  }
+
+  let currentFilter = 'all';
+
+  function pillClass(role) {
+    const g = ROLE_GROUP[role];
+    if (g === 'staff')    return 'pill-staff';
+    if (g === 'agent')    return 'pill-agent';
+    if (g === 'external') return 'pill-external';
+    return '';
+  }
+
+  function render() {
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = '';
+    const filtered = users.filter(usr => {
+      if (currentFilter === 'all') return true;
+      return ROLE_GROUP[usr.role] === currentFilter;
+    });
+
+    if (filtered.length === 0) {
+      document.getElementById('usersTable').style.display = 'none';
+      document.getElementById('empty-state').style.display = '';
+      return;
+    }
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('usersTable').style.display = '';
+    document.getElementById('loading-state').style.display = 'none';
+
+    filtered.forEach(usr => {
+      const tr = document.createElement('tr');
+
+      // Build the role-change dropdown
+      const optionsHtml = ALL_ROLES
+        .map(r => `<option value="${r.value}" ${r.value === usr.role ? 'selected' : ''}>${r.label}</option>`)
+        .join('');
+
+      // Read existing permission overrides (extra_permissions JSONB)
+      const perms = usr.extra_permissions || {};
+      const piiOn       = perms.view_pii === true;
+      const screeningOn = perms.view_screening === true;
+
+      // Roles that get view_pii by default (locked toggle, not editable)
+      const ROLE_HAS_PII_DEFAULT       = ['broker','accounting','compliance','admin_onsite','va'];
+      const ROLE_HAS_SCREENING_DEFAULT = ['broker','va','compliance'];
+      const piiByRole       = ROLE_HAS_PII_DEFAULT.includes(usr.role);
+      const screeningByRole = ROLE_HAS_SCREENING_DEFAULT.includes(usr.role);
+
+      function permCellHtml(field, isOn, byRole) {
+        if (byRole) {
+          return `<td title="Granted by role default — cannot be revoked here. Change the role to remove."><span style="color:#5FAB22;font-weight:700;">✓ by role</span></td>`;
+        }
+        return `<td>
+          <label style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;">
+            <input type="checkbox" class="perm-toggle"
+                   data-user-id="${usr.id}" data-perm="${field}"
+                   data-original="${isOn ? '1' : '0'}"
+                   ${isOn ? 'checked' : ''} />
+            <span style="font-size:.8rem;color:${isOn ? '#5FAB22' : '#888'};font-weight:600;">${isOn ? 'Granted' : 'Off'}</span>
+          </label>
+        </td>`;
+      }
+
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(usr.full_name || '(no name)')}</strong></td>
+        <td>${escapeHtml(usr.email || '')}</td>
+        <td><span class="${pillClass(usr.role)}">${ROLE_LABEL[usr.role] || usr.role}</span></td>
+        <td>
+          <select class="role-select" data-user-id="${usr.id}" data-original="${usr.role}">
+            ${optionsHtml}
+          </select>
+        </td>
+        ${permCellHtml('view_pii',       piiOn,       piiByRole)}
+        ${permCellHtml('view_screening', screeningOn, screeningByRole)}
+        <td>
+          <button class="save-btn" data-save-id="${usr.id}" disabled>Save</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Wire change handlers (role + permission toggles)
+    function refreshDirty(userId) {
+      const row = tbody.querySelector(`.save-btn[data-save-id="${userId}"]`)?.closest('tr');
+      if (!row) return;
+      const sel = row.querySelector('.role-select');
+      const roleDirty = sel && sel.value !== sel.dataset.original;
+      const permDirty = Array.from(row.querySelectorAll('.perm-toggle')).some(t => {
+        return (t.checked ? '1' : '0') !== t.dataset.original;
+      });
+      if (sel) sel.classList.toggle('dirty', roleDirty);
+      const btn = row.querySelector('.save-btn');
+      if (btn) btn.disabled = !(roleDirty || permDirty);
+    }
+
+    tbody.querySelectorAll('.role-select').forEach(sel => {
+      sel.addEventListener('change', () => refreshDirty(sel.dataset.userId));
+    });
+    tbody.querySelectorAll('.perm-toggle').forEach(toggle => {
+      toggle.addEventListener('change', () => {
+        // Update label colour live
+        const label = toggle.parentElement.querySelector('span');
+        if (label) {
+          label.textContent = toggle.checked ? 'Granted' : 'Off';
+          label.style.color = toggle.checked ? '#5FAB22' : '#888';
+        }
+        refreshDirty(toggle.dataset.userId);
+      });
+    });
+
+    tbody.querySelectorAll('.save-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.saveId;
+        const sel = tbody.querySelector(`.role-select[data-user-id="${id}"]`);
+        const newRole = sel.value;
+        const oldRole = sel.dataset.original;
+        const userRow = users.find(x => x.id === id);
+
+        // Safety check — don't let broker accidentally demote themselves
+        if (id === u.id && oldRole === 'broker' && newRole !== 'broker') {
+          if (!confirm('You\'re about to change your OWN role from Broker. You\'ll lose admin access. Continue?')) {
+            sel.value = oldRole;
+            sel.classList.remove('dirty');
+            btn.disabled = true;
+            return;
+          }
+        }
+
+        // Read the current state of the permission toggles for this row
+        const row = btn.closest('tr');
+        const newPerms = { ...(userRow.extra_permissions || {}) };
+        let permChanges = [];
+        row.querySelectorAll('.perm-toggle').forEach(t => {
+          const key = t.dataset.perm;
+          const wasOn = t.dataset.original === '1';
+          const nowOn = t.checked;
+          if (nowOn !== wasOn) {
+            permChanges.push((nowOn ? 'granted ' : 'revoked ') + key);
+          }
+          if (nowOn) newPerms[key] = true;
+          else       delete newPerms[key];   // keep object clean
+        });
+
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        // Build the patch — only send fields that actually changed
+        const patch = {};
+        if (newRole !== oldRole) patch.role = newRole;
+        if (permChanges.length)  patch.extra_permissions = newPerms;
+
+        const { error: upErr } = await supa
+          .from('profiles')
+          .update(patch)
+          .eq('id', id);
+
+        if (upErr) {
+          document.getElementById('banner-area').innerHTML =
+            '<div class="banner banner-error">Couldn\'t update ' + escapeHtml(userRow.email) + ': ' + escapeHtml(upErr.message) + '</div>';
+          btn.disabled = false;
+          btn.textContent = 'Save';
+          return;
+        }
+
+        // Update local state + UI
+        userRow.role = newRole;
+        userRow.extra_permissions = newPerms;
+        sel.dataset.original = newRole;
+        sel.classList.remove('dirty');
+        btn.textContent = 'Saved ✓';
+
+        // Build a friendly summary of what changed
+        const summary = [];
+        if (newRole !== oldRole) summary.push('role: <em>' + ROLE_LABEL[oldRole] + '</em> → <em>' + ROLE_LABEL[newRole] + '</em>');
+        if (permChanges.length)  summary.push('permissions: ' + permChanges.join(', '));
+        document.getElementById('banner-area').innerHTML =
+          '<div class="banner banner-success">Updated <strong>' + escapeHtml(userRow.full_name || userRow.email) +
+          '</strong> — ' + summary.join('; ') + '.</div>';
+        setTimeout(() => { btn.textContent = 'Save'; }, 1800);
+        // Re-render to update the "Current Role" pill and lock-state of perm cells
+        setTimeout(render, 600);
+      });
+    });
+  }
+
+  // Filter chip behavior
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

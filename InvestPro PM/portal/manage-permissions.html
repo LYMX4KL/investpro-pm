@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Manage Permissions — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+<link rel="stylesheet" href="../css/dashboard.css" />
+<style>
+  .perm-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  .perm-table th, .perm-table td { padding: .85rem .75rem; border-bottom: 1px solid #DDE3F0; text-align: left; vertical-align: middle; }
+  .perm-table th { background: #F7F8FB; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: #555A6B; }
+  .perm-table tr:hover { background: #F7F8FB; }
+  .role-pill { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 600; background: #E8EEFC; color: #1F4FC1; }
+  .role-pill.broker { background: #FFF3CD; color: #856404; }
+  .role-pill.applicant, .role-pill.tenant, .role-pill.owner { background: #F0F4F8; color: #555A6B; }
+  .toggle-switch { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; }
+  .toggle-switch input { position: absolute; opacity: 0; pointer-events: none; }
+  .toggle-track { width: 44px; height: 24px; background: #BBB; border-radius: 999px; position: relative; transition: background .2s; }
+  .toggle-thumb { width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left .2s; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .toggle-switch.on .toggle-track { background: #5FAB22; }
+  .toggle-switch.on .toggle-thumb { left: 23px; }
+  .toggle-switch.disabled { opacity: .5; cursor: not-allowed; }
+  .help-card { background: #F7F8FB; border-left: 4px solid #1F4FC1; padding: 1rem 1.25rem; margin-bottom: 1.5rem; border-radius: 4px; }
+  .help-card h3 { margin: 0 0 .4rem 0; color: #1F4FC1; }
+  .help-card p { margin: .2rem 0; font-size: .9rem; color: #555A6B; }
+  .save-status { font-size: .85rem; margin-left: .6rem; }
+  .save-status.saving { color: #555A6B; }
+  .save-status.saved { color: #5FAB22; }
+  .save-status.error { color: #B0342B; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Manage Permissions</strong> · Office Admin</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width: 1100px;">
+  <div class="dash-title">
+    <h1>Manage Permissions</h1>
+    <a href="#" id="backLink" class="btn btn-outline">← Back to Dashboard</a>
+  </div>
+
+  <div class="help-card">
+    <h3>How this works</h3>
+    <p><strong>PII Access ON</strong> — this person can see applicant documents, income, ID, SSN, and screening reports.</p>
+    <p><strong>PII Access OFF</strong> — this person sees only application status and key dates. They are physically blocked from seeing applicant personal info.</p>
+    <p>Flip the switch as duties shift. Changes take effect immediately on the user's next page load.</p>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <div id="loading">Loading users…</div>
+
+  <table class="perm-table" id="permTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role (dashboard)</th>
+        <th>PII Access</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="permBody"></tbody>
+  </table>
+</main>
+
+<script src="../js/main.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+(async function () {
+  // Only broker and compliance can use this page
+  const u = await window.investproAuth.requireRole(['broker', 'compliance']);
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
+
+  const banner = document.getElementById('banner-area');
+  const tbody  = document.getElementById('permBody');
+  const table  = document.getElementById('permTable');
+  const loading = document.getElementById('loading');
+
+  // Demo mode — show a friendly notice
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to manage real permissions.</div>';
+    return;
+  }
+
+  // Get the same Supabase client auth.js uses
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  // Pull keys from auth.js source (same trick reset-password.html uses)
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // Load all profiles (only broker/compliance can read all per RLS)
+  const { data: profiles, error } = await supa
+    .from('profiles')
+    .select('id, full_name, email, role, pii_access')
+    .order('role', { ascending: true })
+    .order('email', { ascending: true });
+
+  if (error) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-error">Could not load users: ' + error.message + '</div>';
+    return;
+  }
+
+  if (!profiles || profiles.length === 0) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">No users found.</div>';
+    return;
+  }
+
+  // Group internal staff first, then agents, then external (tenant/owner/applicant)
+  const groupOrder = {
+    broker: 1, va: 2, accounting: 3, compliance: 4, leasing: 5,
+    pm_service: 6, admin_onsite: 7,
+    agent_listing: 8, agent_showing: 9,
+    owner: 10, tenant: 11, applicant: 12
+  };
+  profiles.sort((a, b) => (groupOrder[a.role] || 99) - (groupOrder[b.role] || 99));
+
+  // Render rows
+  loading.style.display = 'none';
+  table.style.display = '';
+  for (const p of profiles) {
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    tdName.textContent = p.full_name || '(no name)';
+    tr.appendChild(tdName);
+
+    const tdEmail = document.createElement('td');
+    tdEmail.style.fontSize = '.85rem';
+    tdEmail.style.color = '#555A6B';
+    tdEmail.textContent = p.email || '';
+    tr.appendChild(tdEmail);
+
+    const tdRole = document.createElement('td');
+    const pill = document.createElement('span');
+    pill.className = 'role-pill ' + p.role;
+    pill.textContent = p.role.replace('_', ' ');
+    tdRole.appendChild(pill);
+    tr.appendChild(tdRole);
+
+    const tdToggle = document.createElement('td');
+    const toggle = document.createElement('label');
+    toggle.className = 'toggle-switch' + (p.pii_access ? ' on' : '');
+    // Disable: can't change broker's row if you're compliance; can't change own row to OFF
+    const isBroker = p.role === 'broker';
+    const isSelf = p.id === u.id;
+    const cantChange = (u.role === 'compliance' && isBroker);
+    if (cantChange) toggle.classList.add('disabled');
+    toggle.innerHTML = `
+      <input type="checkbox" ${p.pii_access ? 'checked' : ''} ${cantChange ? 'disabled' : ''}/>
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span style="font-size:.85rem; color:#555A6B;">${p.pii_access ? 'ON' : 'OFF'}</span>
+    `;
+    tdToggle.appendChild(toggle);
+    const status = document.createElement('span');
+    status.className = 'save-status';
+    tdToggle.appendChild(status);
+    tr.appendChild(tdToggle);
+
+    const tdNote = document.createElement('td');
+    tdNote.style.fontSize = '.8rem';
+    tdNote.style.color = '#888';
+    if (isBroker)         tdNote.textContent = 'Broker · always has access';
+    else if (isSelf)      tdNote.textContent = '(your own row)';
+    else if (cantChange)  tdNote.textContent = 'Compliance cannot change broker';
+    tr.appendChild(tdNote);
+
+    if (!cantChange) {
+      toggle.addEventListener('click', async (e) => {
+        if (toggle.classList.contains('disabled')) return;
+        e.preventDefault();
+        const checkbox = toggle.querySelector('input');
+        const labelSpan = toggle.querySelector('span:last-child');
+        const newVal = !checkbox.checked;
+
+        // Confirm if turning OFF for someone with sensitive access
+        if (!newVal && p.pii_access && ['accounting','compliance','admin_onsite','va'].includes(p.role)) {
+          if (!confirm(`Turn OFF PII access for ${p.full_name || p.email}?\n\nThey will no longer be able to see applicant documents, income, or screening info.`)) {
+            return;
+          }
+        }
+
+        toggle.classList.add('disabled');
+        status.textContent = 'Saving…';
+        status.className = 'save-status saving';
+
+        const { error: upErr } = await supa
+          .from('profiles')
+          .update({ pii_access: newVal })
+          .eq('id', p.id);
+
+        toggle.classList.remove('disabled');
+
+        if (upErr) {
+          status.textContent = 'Failed: ' + upErr.message;
+          status.className = 'save-status error';
+          return;
+        }
+
+        // Update local state + UI
+        p.pii_access = newVal;
+        checkbox.checked = newVal;
+        toggle.classList.toggle('on', newVal);
+        labelSpan.textContent = newVal ? 'ON' : 'OFF';
+        status.textContent = '✓ Saved';
+        status.className = 'save-status saved';
+        setTimeout(() => { status.textContent = ''; }, 2000);
+      });
+    }
+
+    tbody.appendChild(tr);
+  }
+})();
+</script>
+</body>
+</html>

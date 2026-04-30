@@ -28,7 +28,7 @@
   <div class="auth-card">
     <div class="center">
       <h1>Create Account</h1>
-      <p class="muted">Owners and tenants of InvestPro-managed properties.</p>
+      <p class="muted">For applicants, tenants, owners, and outside agents.</p>
     </div>
 
     <div id="banner-area"></div>
@@ -39,10 +39,17 @@
         <div class="form-group">
           <label>I am a…</label>
           <select name="role" required>
-            <option value="tenant">Tenant</option>
+            <option value="applicant">Applicant (track my rental application)</option>
+            <option value="tenant">Tenant (current resident)</option>
             <option value="owner">Property Owner</option>
+            <option value="agent_showing">Real Estate Agent (showing)</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label>Phone (optional)</label>
+        <input type="tel" name="phone" autocomplete="tel" placeholder="(702) 555-1212" />
+        <div class="form-help">We'll text you status updates if you opt in later.</div>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -76,20 +83,30 @@
     const fd = new FormData(e.target);
     const banner = document.getElementById('banner-area');
     banner.innerHTML = '';
+    const role = fd.get('role');
     const res = await window.investproAuth.signUp({
       email: fd.get('email'),
       password: fd.get('password'),
       fullName: fd.get('full_name'),
-      role: fd.get('role')
+      phone: fd.get('phone') || null,
+      role: role
     });
     if (!res.ok) {
       banner.innerHTML = '<div class="banner banner-error">' + (res.error || 'Sign-up failed.') + '</div>';
       return;
     }
     if (res.demo) {
-      location.href = (fd.get('role') === 'owner') ? 'owner-dashboard.html' : 'tenant-dashboard.html';
+      // Demo mode: route directly to the role's dashboard
+      location.href = window.investproAuth.homeForRole(role);
     } else {
-      banner.innerHTML = '<div class="banner banner-success">Account created! Please check your email to confirm, then <a href="login.html">log in</a>.</div>';
+      // Real Supabase mode: depending on Supabase project settings, the user
+      // may need to confirm their email before they can log in. Show success +
+      // direct them to the login page either way.
+      banner.innerHTML =
+        '<div class="banner banner-success">' +
+        '✓ Account created! Check your email for a confirmation link, then ' +
+        '<a href="login.html">log in here</a>.' +
+        '</div>';
     }
   });
 </script>
