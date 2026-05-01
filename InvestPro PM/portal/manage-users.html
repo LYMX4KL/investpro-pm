@@ -44,10 +44,73 @@
 <main class="dash-main">
   <div class="dash-title">
     <h1>User Management</h1>
-    <a id="backToDash" href="#" class="btn btn-outline">← Back to Dashboard</a>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <button id="inviteUserBtn" class="btn btn-primary">+ Invite User</button>
+      <a id="backToDash" href="#" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
   </div>
 
   <div id="banner-area"></div>
+
+  <!-- Invite User modal -->
+  <div id="inviteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
+    <div style="background:#fff; border-radius:8px; max-width:520px; width:100%; padding:1.5rem 1.75rem; box-shadow:0 8px 32px rgba(0,0,0,.2);">
+      <h2 style="margin:0 0 .25rem 0; font-family: Georgia, serif; color:#1F4FC1;">Invite a new user</h2>
+      <p style="margin:0 0 1.25rem 0; font-size:.9rem; color:#555A6B;">
+        We'll email them a link. They'll click it, set their own password, and land on their dashboard. No password handling needed on your end.
+      </p>
+
+      <div style="display:grid; gap:.85rem;">
+        <label style="display:block;">
+          <span style="display:block; font-weight:600; font-size:.85rem; margin-bottom:.25rem;">Full name *</span>
+          <input id="invFullName" type="text" placeholder="Jane Doe" style="width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:4px; font:inherit;" />
+        </label>
+
+        <label style="display:block;">
+          <span style="display:block; font-weight:600; font-size:.85rem; margin-bottom:.25rem;">Email *</span>
+          <input id="invEmail" type="email" placeholder="jane@example.com" style="width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:4px; font:inherit;" />
+        </label>
+
+        <label style="display:block;">
+          <span style="display:block; font-weight:600; font-size:.85rem; margin-bottom:.25rem;">Phone <span style="color:#888;font-weight:400;">(optional)</span></span>
+          <input id="invPhone" type="tel" placeholder="(702) 555-1234" style="width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:4px; font:inherit;" />
+        </label>
+
+        <label style="display:block;">
+          <span style="display:block; font-weight:600; font-size:.85rem; margin-bottom:.25rem;">Role *</span>
+          <select id="invRole" style="width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:4px; font:inherit; background:#fff;">
+            <optgroup label="Internal staff">
+              <option value="broker">Broker</option>
+              <option value="va">Application VA</option>
+              <option value="accounting">Accounting</option>
+              <option value="compliance">Compliance</option>
+              <option value="leasing">Leasing Coordinator</option>
+              <option value="pm_service">Property Manager / Service</option>
+              <option value="admin_onsite">Front Desk / Admin</option>
+            </optgroup>
+            <optgroup label="Agents">
+              <option value="agent_listing">Listing Agent</option>
+              <option value="agent_showing" selected>Showing Agent</option>
+            </optgroup>
+            <optgroup label="External">
+              <option value="vendor">Vendor (recurring 3rd-party)</option>
+              <option value="owner">Property Owner</option>
+              <option value="tenant">Tenant</option>
+              <option value="applicant">Applicant</option>
+            </optgroup>
+          </select>
+          <small id="invRoleHint" style="display:block; margin-top:.35rem; color:#555A6B; font-size:.8rem;">Showing agents can be assigned to inspections.</small>
+        </label>
+
+        <div id="invStatus" style="font-size:.9rem; min-height:1.2em;"></div>
+      </div>
+
+      <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.25rem;">
+        <button id="invCancelBtn" class="btn btn-outline">Cancel</button>
+        <button id="invSendBtn" class="btn btn-primary">Send invite email</button>
+      </div>
+    </div>
+  </div>
 
   <div class="dash-section">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
@@ -115,8 +178,8 @@
 <script src="../js/auth.js"></script>
 <script type="module">
 (async function () {
-  // Gate: only broker + compliance get in
-  const u = await window.investproAuth.requireRole(['broker', 'compliance']);
+  // Gate: broker + compliance + admin_onsite (admin can invite + see roster)
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
   if (!u) return;
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
@@ -151,7 +214,8 @@
     { value: 'agent_showing', label: 'Showing Agent',                group: 'agent' },
     { value: 'tenant',        label: 'Tenant',                       group: 'external' },
     { value: 'owner',         label: 'Property Owner',               group: 'external' },
-    { value: 'applicant',     label: 'Applicant',                    group: 'external' }
+    { value: 'applicant',     label: 'Applicant',                    group: 'external' },
+    { value: 'vendor',        label: 'Vendor (3rd-party)',           group: 'external' }
   ];
   const ROLE_LABEL = Object.fromEntries(ALL_ROLES.map(r => [r.value, r.label]));
   const ROLE_GROUP = Object.fromEntries(ALL_ROLES.map(r => [r.value, r.group]));
@@ -366,6 +430,159 @@
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ---------------------------------------------------------------
+  // Invite User modal
+  // ---------------------------------------------------------------
+  // Only broker / compliance / admin_onsite are allowed on the server.
+  // Hide the button entirely if caller is anyone else (the requireRole gate
+  // above already restricts entry to broker/compliance, but we leave the
+  // server check authoritative).
+  const ROLE_HINTS = {
+    broker:        'Has full admin access. Use sparingly.',
+    va:            'Application VA — processes new rental applications.',
+    accounting:    'Accounting / bookkeeping. Sees ledgers, deposits, owner statements.',
+    compliance:    'Compliance / office manager. Can manage users + assign inspections.',
+    leasing:       'Leasing coordinator. Can manage properties + assign inspections.',
+    pm_service:    'Property manager / service team. Performs inspections + work orders.',
+    admin_onsite:  'Front desk admin. Can assign inspections.',
+    agent_listing: 'Listing agent. Can claim pre-listing & rent-ready inspections.',
+    agent_showing: 'Showing agent. Brings applicants. Can claim showing-stage inspections.',
+    vendor:        'Recurring 3rd-party vendor (cleaner, handyman, exterminator). Sees only their assigned work.',
+    owner:         'Property owner. Self-service portal — sees their portfolio + statements.',
+    tenant:        'Active tenant. Pays rent, submits work orders.',
+    applicant:     'Applicant. Tracks their application status.'
+  };
+
+  const inviteBtn   = document.getElementById('inviteUserBtn');
+  const inviteModal = document.getElementById('inviteModal');
+  const invFullName = document.getElementById('invFullName');
+  const invEmail    = document.getElementById('invEmail');
+  const invPhone    = document.getElementById('invPhone');
+  const invRole     = document.getElementById('invRole');
+  const invRoleHint = document.getElementById('invRoleHint');
+  const invStatus   = document.getElementById('invStatus');
+  const invCancel   = document.getElementById('invCancelBtn');
+  const invSend     = document.getElementById('invSendBtn');
+
+  function setInvStatus(msg, kind) {
+    invStatus.textContent = msg || '';
+    invStatus.style.color =
+      kind === 'error' ? '#B0342B' :
+      kind === 'success' ? '#5FAB22' :
+      '#555A6B';
+  }
+
+  function openInviteModal() {
+    invFullName.value = '';
+    invEmail.value = '';
+    invPhone.value = '';
+    invRole.value = 'agent_showing';
+    invRoleHint.textContent = ROLE_HINTS['agent_showing'];
+    setInvStatus('');
+    invSend.disabled = false;
+    invSend.textContent = 'Send invite email';
+    inviteModal.style.display = 'flex';
+    setTimeout(() => invFullName.focus(), 50);
+  }
+
+  function closeInviteModal() {
+    inviteModal.style.display = 'none';
+  }
+
+  inviteBtn.addEventListener('click', openInviteModal);
+  invCancel.addEventListener('click', closeInviteModal);
+  inviteModal.addEventListener('click', (e) => {
+    if (e.target === inviteModal) closeInviteModal();
+  });
+  invRole.addEventListener('change', () => {
+    invRoleHint.textContent = ROLE_HINTS[invRole.value] || '';
+  });
+
+  invSend.addEventListener('click', async () => {
+    const fullName = invFullName.value.trim();
+    const email    = invEmail.value.trim().toLowerCase();
+    const phone    = invPhone.value.trim();
+    const role     = invRole.value;
+
+    if (!fullName) { setInvStatus('Full name is required.', 'error'); invFullName.focus(); return; }
+    if (!email || !email.includes('@')) { setInvStatus('Valid email is required.', 'error'); invEmail.focus(); return; }
+    if (!role) { setInvStatus('Role is required.', 'error'); return; }
+
+    invSend.disabled = true;
+    invSend.textContent = 'Sending…';
+    setInvStatus('Sending invite to ' + email + '…');
+
+    try {
+      // Get the caller's access token to attach as Authorization
+      const { data: sessData } = await supa.auth.getSession();
+      const accessToken = sessData?.session?.access_token;
+      if (!accessToken) {
+        setInvStatus('You appear signed out. Refresh the page and sign in again.', 'error');
+        invSend.disabled = false;
+        invSend.textContent = 'Send invite email';
+        return;
+      }
+
+      const res = await fetch('/.netlify/functions/invite-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        },
+        body: JSON.stringify({ full_name: fullName, email, phone, role })
+      });
+
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok || !result.ok) {
+        setInvStatus(result.error || ('Server returned ' + res.status), 'error');
+        invSend.disabled = false;
+        invSend.textContent = 'Send invite email';
+        return;
+      }
+
+      setInvStatus('✓ Invite sent! ' + email + ' will get an email shortly.', 'success');
+      // Show banner on main page
+      document.getElementById('banner-area').innerHTML =
+        '<div class="banner banner-success">📧 Invite sent to <strong>' + escapeHtml(email) +
+        '</strong> as <strong>' + escapeHtml(ROLE_LABEL[role] || role) + '</strong>. ' +
+        (result.profile_updated === false ? '<br/>⚠ Note: ' + escapeHtml(result.warning || '') : '') +
+        '</div>';
+
+      // Push the new user into local state + re-render the table
+      users.push({
+        id: result.user_id,
+        full_name: fullName,
+        email: email,
+        role: role,
+        phone: phone,
+        extra_permissions: {}
+      });
+      // Re-sort by role+name to keep table organized
+      users.sort((a, b) => {
+        if (a.role !== b.role) return String(a.role).localeCompare(String(b.role));
+        return String(a.full_name || '').localeCompare(String(b.full_name || ''));
+      });
+      render();
+
+      // Auto-close modal after 1.5s on success
+      setTimeout(closeInviteModal, 1400);
+
+    } catch (err) {
+      console.error('invite error', err);
+      setInvStatus('Network error: ' + err.message, 'error');
+      invSend.disabled = false;
+      invSend.textContent = 'Send invite email';
+    }
+  });
+
+  // Hide the invite button if caller's role isn't allowed to invite
+  // (server enforces this too; this is just UX)
+  const ALLOWED_INVITERS = ['broker', 'compliance', 'admin_onsite'];
+  if (!ALLOWED_INVITERS.includes(u.role)) {
+    inviteBtn.style.display = 'none';
   }
 
   render();
