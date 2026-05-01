@@ -24,7 +24,11 @@
 <main class="dash-main">
   <div class="dash-title">
     <h1>Welcome back, <span id="agentName">Agent</span></h1>
-    <button class="btn btn-primary" onclick="showShareModal()">🔗 Generate Share Link</button>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;" id="agentActionsRow">
+      <a href="../inspections/list.html" class="btn btn-outline">📋 My Inspections</a>
+      <a href="../manage-users.html" id="manageShowingAgentsBtn" class="btn btn-outline" style="display:none;">👥 Invite Showing Agents</a>
+      <button class="btn btn-primary" onclick="showShareModal()">🔗 Generate Share Link</button>
+    </div>
   </div>
 
   <div class="dash-banner info" id="agentVerifyBanner" style="display:none;">
@@ -103,6 +107,13 @@ function copyGenerated() { navigator.clipboard.writeText(document.getElementById
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('agentName').textContent = u.name.split(' ')[0] || u.name;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  // Listing agents see the "Invite Showing Agents" button — they're allowed
+  // to onboard their own showing agents without going through staff.
+  if (u.role === 'agent_listing') {
+    const btn = document.getElementById('manageShowingAgentsBtn');
+    if (btn) btn.style.display = '';
+  }
 
   // Show verification banner in demo mode (in v1 with Supabase, read agents.mls_verified)
   if (window.investproAuth.isDemoMode()) {
