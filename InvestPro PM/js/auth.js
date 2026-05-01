@@ -361,7 +361,7 @@ function openFeedbackModal(user) {
         return;
       }
       const sb = await getFeedbackSupa();
-      const { error } = await sb.from('feedback').insert({
+      const payload = {
         user_id: user.id || null,
         user_name: user.name || null,
         user_email: user.email || null,
@@ -370,8 +370,22 @@ function openFeedbackModal(user) {
         page_title: document.title,
         user_agent: navigator.userAgent,
         category, message
-      });
+      };
+      const { error } = await sb.from('feedback').insert(payload);
       if (error) throw error;
+
+      // Fire-and-forget email notification to Kenny via Netlify function.
+      // We don't await/block on this — if the email fails, the feedback
+      // is already safely stored in Supabase. The function reads
+      // RESEND_API_KEY from Netlify env vars and uses Resend's free tier.
+      try {
+        fetch('/.netlify/functions/feedback-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      } catch {}
+
       banner.style.display = 'block';
       banner.style.background = '#D1FAE5';
       banner.style.color = '#065F46';
