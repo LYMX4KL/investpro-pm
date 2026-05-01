@@ -43,19 +43,12 @@
         <input type="password" name="password" required autocomplete="current-password" minlength="4" />
         <div class="form-help"><a href="reset.html">Forgot password?</a></div>
       </div>
-      <!-- Role picker is shown ONLY for external users (tenant / owner / applicant).
-           Staff and agent roles are assigned by management in the database — those users
-           don't need to pick anything; the system routes them to the correct dashboard
-           automatically based on their account. -->
-      <div class="form-group">
-        <label>I'm a…</label>
-        <select name="role">
-          <option value="tenant">Tenant</option>
-          <option value="owner">Property Owner</option>
-          <option value="applicant">Applicant</option>
-        </select>
-        <div class="form-help">Staff and agents: ignore this — your dashboard is set automatically from your account.</div>
-      </div>
+      <!-- Role dropdown removed 2026-04-30: role comes from each user's account profile in Supabase,
+           so the dropdown was purely cosmetic and confusing reviewers (Helen reported it as a bug).
+           Demo mode falls back to email-pattern detection (see guessRoleFromEmail in auth.js). -->
+      <p class="form-help" style="text-align:center;margin: -.5rem 0 1rem;color:#6B7280;">
+        Your dashboard is set automatically based on your account.
+      </p>
       <button type="submit" class="btn btn-primary btn-block">Log in</button>
     </form>
 
@@ -87,8 +80,8 @@
     if (window.investproAuth.isDemoMode()) {
       banner.innerHTML = '<div class="banner banner-info">Demo mode is on. Any email + password (4+ chars) will log you in. See <a href="../README.md">README</a> to enable real Supabase auth.</div>';
     }
-    // Hint role for demo mode via body attribute
-    document.body.dataset.defaultRole = fd.get('role');
+    // No role hint needed — auth.js reads the user's role from their profile
+    // in real Supabase mode, and falls back to guessRoleFromEmail() in demo mode.
     const res = await window.investproAuth.signIn({
       email: fd.get('email'),
       password: fd.get('password')

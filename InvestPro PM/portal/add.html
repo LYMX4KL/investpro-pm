@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Property — InvestPro PM</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+</head>
+<body class="dashboard-body">
+<header class="dash-header"><div class="dash-header-inner">
+  <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+  <nav class="dash-breadcrumb"><a href="list.html" style="color:var(--ink-soft);text-decoration:none;">Properties</a> · <strong id="pageTitle">Add Property</strong></nav>
+  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+</div></header>
+<main class="dash-main">
+  <div class="dash-title"><h1 id="formTitle">Add a property (manual entry)</h1></div>
+
+  <form id="propertyForm" class="dash-section" style="max-width:800px;">
+
+    <h2>Address</h2>
+    <div class="form-group"><label>Address Line 1 <span class="required">*</span></label>
+      <input type="text" name="address_line1" required placeholder="3601 W Sahara Ave" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>Unit / Apt #</label><input type="text" name="address_line2" placeholder="#207" /></div>
+      <div class="form-group"><label>City</label><input type="text" name="city" value="Las Vegas" required /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>State</label><input type="text" name="state" value="NV" maxlength="2" required /></div>
+      <div class="form-group"><label>ZIP <span class="required">*</span></label><input type="text" name="zip" required placeholder="89102" /></div>
+    </div>
+
+    <h2 style="margin-top:2rem;">Pricing &amp; Listing</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Monthly Rent <span class="required">*</span></label>
+        <input type="number" name="monthly_rent" required min="0" step="50" placeholder="1850" /></div>
+      <div class="form-group"><label>Security Deposit (defaults to 1 month rent)</label>
+        <input type="number" name="security_deposit_amount" min="0" step="50" placeholder="1850" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pet Fee (non-refundable)</label>
+        <input type="number" name="pet_deposit_amount" min="0" step="25" placeholder="300" /></div>
+      <div class="form-group"><label>Pet Rent / month</label>
+        <input type="number" name="pet_rent_monthly" min="0" step="5" placeholder="35" /></div>
+    </div>
+    <div class="form-group"><label>Listing Status</label>
+      <select name="status">
+        <option value="listed">Listed (accepting applications)</option>
+        <option value="vacant">Vacant (not yet listed)</option>
+        <option value="off_market">Off-market</option>
+        <option value="leased">Leased</option>
+      </select>
+    </div>
+
+    <h2 style="margin-top:2rem;">Property Details</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Property Type</label>
+        <select name="property_type">
+          <option value="">Select…</option>
+          <option value="condo">Condo / Townhome</option>
+          <option value="sfh">Single-family home</option>
+          <option value="duplex">Duplex / Triplex</option>
+          <option value="apartment">Apartment</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Year Built</label><input type="number" name="year_built" min="1900" max="2030" placeholder="2008" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Bedrooms</label><input type="number" name="bedrooms" min="0" max="10" step="1" placeholder="2" /></div>
+      <div class="form-group"><label>Bathrooms</label><input type="number" name="bathrooms" min="0" max="10" step="0.5" placeholder="2" /></div>
+      <div class="form-group"><label>Square Feet</label><input type="number" name="sqft" min="100" max="20000" placeholder="1120" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Parking</label>
+        <input type="text" name="parking" placeholder="1 covered space" /></div>
+      <div class="form-group"><label>Pet Policy</label>
+        <select name="pets_allowed">
+          <option value="case_by_case">Case-by-case (default)</option>
+          <option value="none">No pets</option>
+          <option value="cats">Cats OK</option>
+          <option value="dogs">Dogs OK</option>
+          <option value="both">Cats &amp; dogs OK</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Pool?</label>
+        <select name="has_pool"><option value="false">No</option><option value="true">Yes</option></select>
+      </div>
+      <div class="form-group"><label>HOA Name (optional)</label>
+        <input type="text" name="hoa_name" /></div>
+    </div>
+
+    <h2 style="margin-top:2rem;">Listing Description</h2>
+    <div class="form-group"><label>Description (shown on the listing page)</label>
+      <textarea name="description" rows="4" placeholder="Modern 2BD/2BA condo on West Sahara — quick access to Strip + Summerlin. Updated kitchen, in-unit laundry, secure parking, community pool."></textarea>
+    </div>
+
+    <h2 style="margin-top:2rem;">Owner &amp; Agent (optional for now)</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Owner Name</label><input type="text" name="owner_name" placeholder="If you have an owner record, enter their name" /></div>
+      <div class="form-group"><label>Listing Agent Name</label><input type="text" name="listing_agent_name" placeholder="Often Kenny himself" /></div>
+    </div>
+
+    <h2 style="margin-top:2rem;">NV Law Compliance</h2>
+    <div class="form-group">
+      <label class="checkbox-row">
+        <input type="checkbox" name="sewer_trash_included" checked />
+        Sewer &amp; trash are <strong>included in the monthly rent</strong> (NV law — required as of 2026)
+      </label>
+    </div>
+
+    <div style="display:flex;gap:.6rem;margin-top:2rem;flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary">💾 Save Property</button>
+      <a href="list.html" class="btn btn-outline">Cancel</a>
+      <button type="button" class="btn btn-outline" id="deleteBtn" style="display:none;margin-left:auto;border-color:#B0342B;color:#B0342B;">🗑 Delete</button>
+    </div>
+  </form>
+
+  <div class="dash-banner success" id="savedBanner" style="display:none;margin-top:1rem;">
+    ✓ Saved! <strong>Apply link:</strong> <code id="applyLink"></code>
+    <button class="btn btn-outline btn-sm" onclick="copyApplyLink()" style="margin-left:.5rem;">Copy</button>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script src="../../js/properties-store.js"></script>
+<script>
+let editingId = null;
+
+(async () => {
+  const u = await window.investproAuth.requireRole(['broker', 'leasing', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  // Edit mode?
+  const params = new URLSearchParams(location.search);
+  editingId = params.get('id');
+  if (editingId) {
+    document.getElementById('pageTitle').textContent = 'Edit Property';
+    document.getElementById('formTitle').textContent = 'Edit property';
+    document.getElementById('deleteBtn').style.display = '';
+    const existing = await window.propertiesStore.get(editingId);
+    if (existing) populateForm(existing);
+  }
+
+  document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const obj = {};
+    fd.forEach((v, k) => {
+      if (v === 'true') obj[k] = true;
+      else if (v === 'false') obj[k] = false;
+      else if (k === 'sewer_trash_included') obj['sewer_trash_included_in_rent'] = e.target.elements[k].checked;
+      else obj[k] = v || null;
+    });
+    obj.sewer_trash_included_in_rent = e.target.elements.sewer_trash_included.checked;
+
+    // Default security deposit = monthly rent if not set
+    if (!obj.security_deposit_amount && obj.monthly_rent) {
+      obj.security_deposit_amount = obj.monthly_rent;
+    }
+    obj.listing_at = obj.listing_at || new Date().toISOString().slice(0, 10);
+
+    let id;
+    if (editingId) {
+      await window.propertiesStore.update(editingId, obj);
+      id = editingId;
+    } else {
+      id = await window.propertiesStore.create(obj);
+      editingId = id;
+    }
+    const url = `${location.origin}/forms/rental-application.html?property=${id}`;
+    document.getElementById('applyLink').textContent = url;
+    const banner = document.getElementById('savedBanner');
+    banner.style.display = '';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (!editingId) location.href = `add.html?id=${id}&saved=1`;
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', async () => {
+    if (!editingId) return;
+    if (!confirm('Delete this property? This cannot be undone.')) return;
+    await window.propertiesStore.delete(editingId);
+    location.href = 'list.html';
+  });
+
+  if (params.get('saved') === '1') {
+    setTimeout(() => {
+      const banner = document.getElementById('savedBanner');
+      const url = `${location.origin}/forms/rental-application.html?property=${editingId}`;
+      document.getElementById('applyLink').textContent = url;
+      banner.style.display = '';
+    }, 100);
+  }
+})();
+
+function populateForm(obj) {
+  const form = document.getElementById('propertyForm');
+  Object.entries(obj).forEach(([k, v]) => {
+    const el = form.elements[k];
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!v;
+    else if (typeof v === 'boolean') el.value = v ? 'true' : 'false';
+    else el.value = v == null ? '' : v;
+  });
+  // Map sewer_trash_included_in_rent to checkbox
+  const sewerCheckbox = form.elements.sewer_trash_included;
+  if (sewerCheckbox) sewerCheckbox.checked = obj.sewer_trash_included_in_rent !== false;
+}
+
+function copyApplyLink() {
+  const url = document.getElementById('applyLink').textContent;
+  navigator.clipboard.writeText(url).then(() => alert('Copied!'));
+}
+</script>
+</body>
+</html>
