@@ -178,8 +178,9 @@
 <script src="../js/auth.js"></script>
 <script type="module">
 (async function () {
-  // Gate: broker + compliance + admin_onsite (admin can invite + see roster)
-  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  // Gate: broker + compliance + admin_onsite + agent_listing
+  // (listing agents have a restricted view — can only invite showing agents)
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite', 'agent_listing']);
   if (!u) return;
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
@@ -580,9 +581,37 @@
 
   // Hide the invite button if caller's role isn't allowed to invite
   // (server enforces this too; this is just UX)
-  const ALLOWED_INVITERS = ['broker', 'compliance', 'admin_onsite'];
+  const ALLOWED_INVITERS = ['broker', 'compliance', 'admin_onsite', 'agent_listing'];
   if (!ALLOWED_INVITERS.includes(u.role)) {
     inviteBtn.style.display = 'none';
+  }
+
+  // Listing agents only see showing-agent option in the role dropdown,
+  // and the rest of the page is informational (no role-change powers).
+  if (u.role === 'agent_listing') {
+    // Restrict role dropdown
+    const allOptions = invRole.querySelectorAll('option, optgroup');
+    allOptions.forEach(el => {
+      if (el.tagName === 'OPTION' && el.value !== 'agent_showing') {
+        el.remove();
+      } else if (el.tagName === 'OPTGROUP' && el.label !== 'Agents') {
+        el.remove();
+      }
+    });
+    invRole.value = 'agent_showing';
+    invRoleHint.textContent = ROLE_HINTS['agent_showing'];
+
+    // Hide the role-change selects in the table — listing agents shouldn't change others' roles
+    document.querySelectorAll('.role-select, .save-btn, .perm-toggle').forEach(el => {
+      el.disabled = true;
+      el.title = 'Only your broker/compliance can change roles or permissions';
+    });
+
+    // Add a banner explaining their scope
+    document.getElementById('banner-area').innerHTML =
+      '<div class="banner banner-info" style="background:#DBEAFE;color:#1E40AF;padding:.75rem 1rem;border-radius:6px;margin-bottom:1rem;">' +
+      'You can <strong>invite showing agents</strong> here. Other role changes and PII permissions are managed by Kenny or Mandy.' +
+      '</div>';
   }
 
   render();
