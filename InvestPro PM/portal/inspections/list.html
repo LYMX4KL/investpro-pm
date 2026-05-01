@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspections — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .stat-row { display:flex; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat-box { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:.85rem 1.1rem; min-width:120px; flex:1; }
+  .stat-box .label { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:600; }
+  .stat-box .value { font-size:1.7rem; font-weight:700; color:#1F4FC1; line-height:1.1; }
+  .stat-box.red .value   { color:#B0342B; }
+  .stat-box.amber .value { color:#92400E; }
+  .stat-box.green .value { color:#065F46; }
+  .filter-row { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .filter-row select, .filter-row input { padding:.45rem .6rem; border:1px solid #DDE3F0; border-radius:4px; font-size:.9rem; font-family:inherit; }
+  .insp-table { width:100%; border-collapse:collapse; font-size:.92rem; }
+  .insp-table th, .insp-table td { padding:.7rem .65rem; border-bottom:1px solid #DDE3F0; vertical-align:top; text-align:left; }
+  .insp-table th { background:#F7F8FB; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; }
+  .insp-table tr:hover { background:#F7F8FB; }
+  .pill { display:inline-block; padding:.18rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .pill.scheduled { background:#DBEAFE; color:#1E40AF; }
+  .pill.in_progress { background:#FEF3C7; color:#92400E; }
+  .pill.submitted { background:#E0E7FF; color:#3730A3; }
+  .pill.reviewed { background:#D1FAE5; color:#065F46; }
+  .pill.overdue { background:#FEE2E2; color:#B0342B; }
+  .pill.deemed_perfect { background:#D1FAE5; color:#065F46; }
+  .pill.t-pre_move_in_agent { background:#F3E8FF; color:#6B21A8; }
+  .pill.t-pre_move_in       { background:#DBEAFE; color:#1E40AF; }
+  .pill.t-rent_ready        { background:#D1FAE5; color:#065F46; }
+  .pill.t-move_in_tenant    { background:#FEF3C7; color:#92400E; }
+  .pill.t-move_out_tenant   { background:#FCE7F3; color:#9D174D; }
+  .pill.t-move_out_pm       { background:#FEE2E2; color:#B0342B; }
+  .pill.t-annual            { background:#E0E7FF; color:#3730A3; }
+  .open-row { background: #FFFBEB; }
+  @media (max-width: 700px) {
+    .insp-table { font-size: .82rem; }
+    .insp-table th, .insp-table td { padding:.5rem .4rem; }
+    .hide-sm { display: none; }
+  }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Inspections</strong></nav>
+    <div class="dash-user">
+      <a href="#" id="backLink" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1200px;">
+  <div class="dash-title">
+    <h1>Inspections</h1>
+    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      <a href="assign.html" id="assignBtn" class="btn btn-primary" style="display:none;">+ New Assignment</a>
+    </div>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading inspections…</div>
+
+  <div id="content" style="display:none;">
+    <div class="stat-row" id="stats"></div>
+
+    <div class="filter-row">
+      <select id="filter-mine">
+        <option value="all">All inspections</option>
+        <option value="mine">My inspections</option>
+        <option value="open">Open / unclaimed</option>
+      </select>
+      <select id="filter-type">
+        <option value="">All types</option>
+        <option value="pre_move_in_agent">Pre-Move-In (Agent)</option>
+        <option value="pre_move_in">Pre-Move-In (PM)</option>
+        <option value="rent_ready">Rent Ready</option>
+        <option value="move_in_tenant">Move-In (Tenant)</option>
+        <option value="annual">Annual</option>
+        <option value="move_out_tenant">Move-Out (Tenant)</option>
+        <option value="move_out_pm">Move-Out (PM)</option>
+      </select>
+      <select id="filter-status">
+        <option value="">All statuses</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="in_progress">In progress</option>
+        <option value="submitted">Submitted</option>
+        <option value="reviewed">Reviewed</option>
+        <option value="overdue">Overdue</option>
+        <option value="deemed_perfect">Deemed perfect</option>
+      </select>
+      <input type="search" id="filter-search" placeholder="🔎 Search by title, property, inspector…" style="flex:1; min-width:220px;" />
+    </div>
+
+    <table class="insp-table" id="inspTable">
+      <thead>
+        <tr>
+          <th>Title / Property</th>
+          <th>Type</th>
+          <th class="hide-sm">Assignee</th>
+          <th class="hide-sm">Scheduled</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="inspBody"></tbody>
+    </table>
+
+    <p id="inspEmpty" style="display:none; padding:2rem; text-align:center; color:#6B7280;">No inspections match your filters.</p>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  const u = await window.investproAuth.requireAuth();
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
+
+  // Show "+ New Assignment" only to assigners
+  const ASSIGNER_ROLES = ['broker', 'compliance', 'admin_onsite'];
+  if (ASSIGNER_ROLES.includes(u.role)) {
+    document.getElementById('assignBtn').style.display = '';
+  }
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to see real inspections.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  let allInspections = [];
+  let propertyMap = {};
+  let inspectorMap = {};
+
+  async function loadInspections() {
+    const { data, error } = await supa
+      .from('inspections')
+      .select('*')
+      .order('scheduled_for', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error) {
+      banner.innerHTML = '<div class="banner banner-error">Could not load inspections: ' + error.message + '</div>';
+      loading.style.display = 'none';
+      return;
+    }
+    allInspections = data || [];
+
+    // Lookup properties + inspector profiles in batch
+    const propIds = [...new Set(allInspections.map(i => i.property_id).filter(Boolean))];
+    const inspectorIds = [...new Set(allInspections.map(i => i.inspector_profile_id).filter(Boolean))];
+
+    if (propIds.length) {
+      const { data: props } = await supa.from('properties').select('id, address_line1, address_line2, city').in('id', propIds);
+      (props || []).forEach(p => {
+        propertyMap[p.id] = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'Las Vegas'}`;
+      });
+    }
+
+    if (inspectorIds.length) {
+      const { data: profs } = await supa.from('profiles').select('id, full_name, role').in('id', inspectorIds);
+      (profs || []).forEach(p => { inspectorMap[p.id] = p; });
+    }
+
+    loading.style.display = 'none';
+    content.style.display = '';
+    renderStats();
+    renderTable();
+  }
+
+  function renderStats() {
+    const counts = { total: 0, mine: 0, open: 0, overdue: 0, submitted: 0 };
+    const today = new Date();
+    for (const i of allInspections) {
+      counts.total++;
+      if (i.inspector_profile_id === u.id) counts.mine++;
+      if (!i.inspector_profile_id && i.status === 'scheduled' &&
+          (i.assigned_to_roles || []).includes(u.role)) counts.open++;
+      if (i.status === 'overdue' ||
+          (i.deadline_at && new Date(i.deadline_at) < today &&
+           ['scheduled', 'in_progress'].includes(i.status))) counts.overdue++;
+      if (i.status === 'submitted') counts.submitted++;
+    }
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-box"><div class="label">Total</div><div class="value">${counts.total}</div></div>
+      <div class="stat-box amber"><div class="label">Open queue (you can claim)</div><div class="value">${counts.open}</div></div>
+      <div class="stat-box"><div class="label">Mine</div><div class="value">${counts.mine}</div></div>
+      <div class="stat-box red"><div class="label">Overdue</div><div class="value">${counts.overdue}</div></div>
+      <div class="stat-box green"><div class="label">Submitted</div><div class="value">${counts.submitted}</div></div>
+    `;
+  }
+
+  const TYPE_LABELS = {
+    pre_move_in_agent: 'Pre-Move-In (Agent)',
+    pre_move_in:       'Pre-Move-In (PM)',
+    rent_ready:        'Rent Ready',
+    move_in_tenant:    'Move-In (Tenant)',
+    annual:            'Annual',
+    move_out_tenant:   'Move-Out (Tenant)',
+    move_out_pm:       'Move-Out (PM)'
+  };
+
+  function renderTable() {
+    const mine   = document.getElementById('filter-mine').value;
+    const type   = document.getElementById('filter-type').value;
+    const status = document.getElementById('filter-status').value;
+    const q      = (document.getElementById('filter-search').value || '').toLowerCase();
+    const tbody  = document.getElementById('inspBody');
+    const empty  = document.getElementById('inspEmpty');
+    tbody.innerHTML = '';
+
+    const filtered = allInspections.filter(i => {
+      if (mine === 'mine' && i.inspector_profile_id !== u.id) return false;
+      if (mine === 'open' && (i.inspector_profile_id || i.status !== 'scheduled' || !(i.assigned_to_roles || []).includes(u.role))) return false;
+      if (type && i.inspection_type !== type) return false;
+      if (status && i.status !== status) return false;
+      if (q) {
+        const haystack = (i.title || '') + ' ' + (propertyMap[i.property_id] || '') + ' ' + (inspectorMap[i.inspector_profile_id]?.full_name || '');
+        if (!haystack.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      empty.style.display = '';
+      document.getElementById('inspTable').style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    document.getElementById('inspTable').style.display = '';
+
+    for (const i of filtered) {
+      const tr = document.createElement('tr');
+      const isOpen = !i.inspector_profile_id && i.status === 'scheduled' && (i.assigned_to_roles || []).includes(u.role);
+      if (isOpen) tr.classList.add('open-row');
+
+      const propLabel = propertyMap[i.property_id] || '—';
+      const titleLabel = i.title ? `<strong>${escapeHtml(i.title)}</strong><br/><span style="font-size:.82rem; color:#6B7280;">${escapeHtml(propLabel)}</span>` : `<strong>${escapeHtml(propLabel)}</strong>`;
+      const inspector = i.inspector_profile_id ? (inspectorMap[i.inspector_profile_id]?.full_name || '(unknown)') :
+        (i.assigned_to_roles && i.assigned_to_roles.length ? `<em style="color:#92400E;">Open: ${i.assigned_to_roles.join(', ')}</em>` : '(unassigned)');
+      const scheduled = i.scheduled_for ? new Date(i.scheduled_for).toLocaleDateString() : '—';
+
+      const actionBtn = isOpen
+        ? `<button class="btn btn-primary btn-sm" data-claim="${i.id}">Claim</button>`
+        : (i.inspector_profile_id === u.id && ['scheduled','in_progress'].includes(i.status)
+            ? `<a class="btn btn-primary btn-sm" href="perform.html?id=${i.id}">Continue</a>`
+            : `<a class="btn btn-outline btn-sm" href="view.html?id=${i.id}">View</a>`);
+
+      tr.innerHTML = `
+        <td>${titleLabel}</td>
+        <td><span class="pill t-${i.inspection_type}">${TYPE_LABELS[i.inspection_type] || i.inspection_type}</span></td>
+        <td class="hide-sm">${inspector}</td>
+        <td class="hide-sm">${scheduled}</td>
+        <td><span class="pill ${i.status}">${(i.status||'').replace('_',' ')}</span></td>
+        <td>${actionBtn}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Wire Claim buttons
+    tbody.querySelectorAll('button[data-claim]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.claim;
+        btn.disabled = true;
+        btn.textContent = 'Claiming…';
+        const { data, error } = await supa.rpc('claim_inspection', { p_inspection_id: id });
+        if (error) {
+          alert('Claim failed: ' + error.message);
+          btn.disabled = false;
+          btn.textContent = 'Claim';
+          return;
+        }
+        if (data === false) {
+          alert('Could not claim — someone else may have grabbed it first, or your role is not on the assignment list.');
+          await loadInspections();
+          return;
+        }
+        // Successfully claimed → jump straight to perform.html
+        location.href = `perform.html?id=${id}`;
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.getElementById('filter-mine').addEventListener('change', renderTable);
+  document.getElementById('filter-type').addEventListener('change', renderTable);
+  document.getElementById('filter-status').addEventListener('change', renderTable);
+  document.getElementById('filter-search').addEventListener('input', renderTable);
+
+  await loadInspections();
+})();
+</script>
+</body>
+</html>

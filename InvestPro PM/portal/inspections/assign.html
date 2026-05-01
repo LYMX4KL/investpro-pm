@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Assign Inspection — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .assign-card { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:1.5rem; max-width:720px; }
+  .assign-card h2 { font-family:'Playfair Display', Georgia, serif; color:#1F4FC1; margin:0 0 1rem; }
+  .form-group { margin-bottom:1.1rem; }
+  .form-group label { display:block; font-weight:600; color:#1F4FC1; font-size:.9rem; margin-bottom:.3rem; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; padding:.55rem .65rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.95rem;
+  }
+  .form-group .help { font-size:.8rem; color:#6B7280; margin-top:.25rem; }
+  .role-grid { display:grid; grid-template-columns: 1fr 1fr; gap:.5rem; padding:.5rem .75rem; background:#F7F8FB; border-radius:4px; }
+  .role-grid label { display:flex; align-items:center; gap:.4rem; font-weight:400; font-size:.9rem; color:#1F2937; cursor:pointer; }
+  .mode-toggle { display:flex; gap:.5rem; margin-bottom:.5rem; }
+  .mode-toggle button { padding:.5rem 1rem; border:1px solid #DDE3F0; background:#fff; border-radius:4px; cursor:pointer; font-family:inherit; }
+  .mode-toggle button.active { background:#1F4FC1; color:#fff; border-color:#1F4FC1; }
+  .banner-info { background:#DBEAFE; color:#1E40AF; padding:.6rem .85rem; border-radius:4px; font-size:.9rem; margin-bottom:1rem; }
+  .banner-error { background:#FEE2E2; color:#B0342B; padding:.6rem .85rem; border-radius:4px; font-size:.9rem; margin-bottom:1rem; }
+  .banner-success { background:#D1FAE5; color:#065F46; padding:.6rem .85rem; border-radius:4px; font-size:.9rem; margin-bottom:1rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><a href="list.html" style="color:var(--ink-soft); text-decoration:none;">Inspections</a> · <strong>Assign</strong></nav>
+    <div class="dash-user">
+      <a href="list.html" class="btn btn-outline btn-sm">← Back to list</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:800px;">
+  <div class="dash-title"><h1>Assign New Inspection</h1></div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading…</div>
+
+  <div class="assign-card" id="content" style="display:none;">
+    <form id="assignForm">
+      <div class="form-group">
+        <label>Inspection title (optional)</label>
+        <input type="text" id="title" placeholder="e.g. Annual safety check — Spring 2026" />
+        <div class="help">A friendly name. If you leave it blank, the property address + type is shown.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Property *</label>
+        <select id="property" required>
+          <option value="">— select a property —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Inspection type *</label>
+        <select id="type" required>
+          <option value="">— select —</option>
+          <option value="pre_move_in_agent">Pre-Move-In (Listing Agent walkthrough)</option>
+          <option value="pre_move_in">Pre-Move-In (PM/Service baseline)</option>
+          <option value="rent_ready">Rent Ready (final pre-tenant verification)</option>
+          <option value="move_in_tenant">Move-In (by tenant after key release)</option>
+          <option value="annual">Annual inspection</option>
+          <option value="move_out_tenant">Move-Out (by tenant before leaving)</option>
+          <option value="move_out_pm">Move-Out (by PM/Service for deposit decisions)</option>
+        </select>
+        <div class="help" id="typeHelp"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Scheduled for</label>
+        <input type="date" id="scheduledFor" />
+        <div class="help">When you want the inspection performed. Optional — assigner can set later.</div>
+      </div>
+
+      <div class="form-group">
+        <label>Assignment mode *</label>
+        <div class="mode-toggle">
+          <button type="button" id="modeOpen" class="active">Open queue (any of these roles can claim)</button>
+          <button type="button" id="modeSpecific">Assign to specific person</button>
+        </div>
+
+        <!-- Open mode: select roles -->
+        <div id="rolesBlock">
+          <div class="role-grid">
+            <label><input type="checkbox" name="role" value="agent_listing" /> Listing Agent</label>
+            <label><input type="checkbox" name="role" value="agent_showing" /> Showing Agent</label>
+            <label><input type="checkbox" name="role" value="pm_service" /> PM / Service</label>
+            <label><input type="checkbox" name="role" value="leasing" /> Leasing</label>
+            <label><input type="checkbox" name="role" value="admin_onsite" /> Front Desk / Admin</label>
+            <label><input type="checkbox" name="role" value="tenant" /> Tenant</label>
+          </div>
+          <div class="help">Anyone with these roles can pick up the assignment from the inspections list.</div>
+        </div>
+
+        <!-- Specific mode: select person -->
+        <div id="personBlock" style="display:none;">
+          <select id="specificPerson">
+            <option value="">— select a person —</option>
+          </select>
+          <div class="help">Locks the inspection to one specific person. Only they can perform it.</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notes for the inspector (optional)</label>
+        <textarea id="assignmentNotes" rows="3" placeholder="Any special instructions, like 'Coordinate with current tenant for Tuesday access' or 'Check pool equipment carefully'"></textarea>
+      </div>
+
+      <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.5rem;">
+        <a href="list.html" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Create Assignment</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  // Only specific roles can ASSIGN inspections
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to assign real inspections.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // Load properties
+  const { data: properties } = await supa.from('properties').select('id, address_line1, address_line2, city').order('address_line1');
+  const propSel = document.getElementById('property');
+  for (const p of (properties || [])) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'Las Vegas'}`;
+    propSel.appendChild(opt);
+  }
+
+  // Load all profiles (for specific assignment)
+  const { data: profiles } = await supa.from('profiles').select('id, full_name, role').order('full_name');
+  const personSel = document.getElementById('specificPerson');
+  for (const p of (profiles || [])) {
+    if (!p.full_name) continue;
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.full_name} (${p.role.replace('_', ' ')})`;
+    personSel.appendChild(opt);
+  }
+
+  loading.style.display = 'none';
+  content.style.display = '';
+
+  // Type → suggested roles mapping
+  const TYPE_DEFAULT_ROLES = {
+    pre_move_in_agent: ['agent_listing', 'agent_showing'],
+    pre_move_in:       ['pm_service'],
+    rent_ready:        ['agent_listing', 'pm_service'],
+    move_in_tenant:    ['tenant'],
+    annual:            ['pm_service'],
+    move_out_tenant:   ['tenant'],
+    move_out_pm:       ['pm_service']
+  };
+
+  const TYPE_HELP = {
+    pre_move_in_agent: 'Listing agent walks the property before listing — identifies repairs/cleaning needed.',
+    pre_move_in:       'PM/Service documents condition with photos before keys release. Tenant compares against this.',
+    rent_ready:        'Final verification right before tenant moves in. Cleaning, safety, systems all confirmed.',
+    move_in_tenant:    'Tenant returns this within 3 business days of key release. Auto-deemed perfect if not returned.',
+    annual:            'Yearly check by PM. Smoke detectors, HVAC, plumbing, tenant compliance.',
+    move_out_tenant:   'Tenant\'s exit walkthrough notes.',
+    move_out_pm:       'PM\'s final inspection. Compares to pre-move-in. Drives deposit return calculation.'
+  };
+
+  document.getElementById('type').addEventListener('change', (e) => {
+    const t = e.target.value;
+    document.getElementById('typeHelp').textContent = TYPE_HELP[t] || '';
+    // Pre-check the suggested roles
+    const suggested = TYPE_DEFAULT_ROLES[t] || [];
+    document.querySelectorAll('input[name="role"]').forEach(cb => {
+      cb.checked = suggested.includes(cb.value);
+    });
+  });
+
+  // Mode toggle
+  let mode = 'open';
+  document.getElementById('modeOpen').addEventListener('click', () => {
+    mode = 'open';
+    document.getElementById('modeOpen').classList.add('active');
+    document.getElementById('modeSpecific').classList.remove('active');
+    document.getElementById('rolesBlock').style.display = '';
+    document.getElementById('personBlock').style.display = 'none';
+  });
+  document.getElementById('modeSpecific').addEventListener('click', () => {
+    mode = 'specific';
+    document.getElementById('modeSpecific').classList.add('active');
+    document.getElementById('modeOpen').classList.remove('active');
+    document.getElementById('rolesBlock').style.display = 'none';
+    document.getElementById('personBlock').style.display = '';
+  });
+
+  // Submit
+  document.getElementById('assignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    banner.innerHTML = '';
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+
+    const property_id = document.getElementById('property').value;
+    const inspection_type = document.getElementById('type').value;
+    const title = document.getElementById('title').value.trim() || null;
+    const scheduled_for = document.getElementById('scheduledFor').value || null;
+    const assignment_notes = document.getElementById('assignmentNotes').value.trim() || null;
+
+    if (!property_id || !inspection_type) {
+      banner.innerHTML = '<div class="banner-error">Property and type are required.</div>';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Assignment';
+      return;
+    }
+
+    const payload = {
+      property_id,
+      inspection_type,
+      title,
+      scheduled_for: scheduled_for ? new Date(scheduled_for).toISOString() : null,
+      assignment_notes,
+      assigned_by_id: u.id,
+      assigned_at: new Date().toISOString(),
+      status: 'scheduled'
+    };
+
+    if (mode === 'specific') {
+      const personId = document.getElementById('specificPerson').value;
+      if (!personId) {
+        banner.innerHTML = '<div class="banner-error">Pick a specific person, or switch to Open queue mode.</div>';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Assignment';
+        return;
+      }
+      payload.inspector_profile_id = personId;
+      const profile = profiles.find(p => p.id === personId);
+      if (profile) payload.inspector_role = profile.role;
+      payload.assigned_to_roles = [];
+    } else {
+      const roles = Array.from(document.querySelectorAll('input[name="role"]:checked')).map(cb => cb.value);
+      if (roles.length === 0) {
+        banner.innerHTML = '<div class="banner-error">Pick at least one role that can claim this inspection, or switch to Specific mode.</div>';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Assignment';
+        return;
+      }
+      payload.assigned_to_roles = roles;
+      payload.inspector_profile_id = null;
+    }
+
+    const { data, error } = await supa.from('inspections').insert(payload).select('id').single();
+    if (error) {
+      banner.innerHTML = '<div class="banner-error">Save failed: ' + error.message + '</div>';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Assignment';
+      return;
+    }
+
+    banner.innerHTML = '<div class="banner-success">✓ Inspection created. Redirecting…</div>';
+    setTimeout(() => { location.href = 'list.html'; }, 800);
+  });
+})();
+</script>
+</body>
+</html>

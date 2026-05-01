@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspection — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  body { background:#F7F8FB; }
+  .perform-wrap { max-width:760px; margin:0 auto; padding:1rem; }
+  .header-card { background:#fff; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .header-card h1 { margin:0 0 .25rem; font-family:'Playfair Display', Georgia, serif; color:#1F4FC1; font-size:1.4rem; line-height:1.2; }
+  .header-card .meta { color:#6B7280; font-size:.85rem; }
+  .save-status { font-size:.85rem; padding:.2rem .55rem; border-radius:999px; }
+  .save-status.saved { background:#D1FAE5; color:#065F46; }
+  .save-status.saving { background:#FEF3C7; color:#92400E; }
+  .save-status.error { background:#FEE2E2; color:#B0342B; }
+
+  details.area { background:#fff; border-radius:8px; margin-bottom:.75rem; box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden; }
+  details.area > summary { padding:.9rem 1.1rem; cursor:pointer; font-weight:600; color:#1F4FC1; list-style:none; font-size:1.05rem; display:flex; justify-content:space-between; align-items:center; }
+  details.area > summary::-webkit-details-marker { display:none; }
+  details.area > summary::after { content:'▼'; font-size:.7rem; color:#6B7280; transition:transform .2s; }
+  details.area[open] > summary::after { transform:rotate(180deg); }
+  details.area > summary .area-progress { font-size:.8rem; font-weight:400; color:#6B7280; }
+  .area-body { padding: 0 1.1rem 1rem; }
+
+  .item-card { padding:.75rem 0; border-top:1px solid #EEF1F8; }
+  .item-card:first-child { border-top:0; }
+  .item-name { font-weight:600; color:#1F2937; margin-bottom:.5rem; font-size:.95rem; }
+
+  .condition-row { display:grid; grid-template-columns:repeat(5, 1fr); gap:.4rem; margin-bottom:.5rem; }
+  .condition-row label { display:flex; flex-direction:column; align-items:center; gap:.2rem; padding:.4rem .2rem; border:1px solid #DDE3F0; border-radius:6px; cursor:pointer; font-size:.7rem; color:#555A6B; text-align:center; min-height:46px; justify-content:center; }
+  .condition-row label.good      { border-color:#86EFAC; }
+  .condition-row label.fair      { border-color:#FCD34D; }
+  .condition-row label.damaged   { border-color:#FCA5A5; }
+  .condition-row label.missing   { border-color:#A78BFA; }
+  .condition-row label.na        { border-color:#D1D5DB; }
+  .condition-row input[type=radio] { display:none; }
+  .condition-row label.selected.good      { background:#D1FAE5; color:#065F46; font-weight:700; }
+  .condition-row label.selected.fair      { background:#FEF3C7; color:#92400E; font-weight:700; }
+  .condition-row label.selected.damaged   { background:#FEE2E2; color:#B0342B; font-weight:700; }
+  .condition-row label.selected.missing   { background:#EDE9FE; color:#5B21B6; font-weight:700; }
+  .condition-row label.selected.na        { background:#E5E7EB; color:#374151; font-weight:700; }
+
+  .item-notes { width:100%; padding:.5rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.9rem; resize:vertical; min-height:50px; }
+
+  .photo-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+  .photo-thumb { position:relative; width:72px; height:72px; border-radius:4px; overflow:hidden; border:1px solid #DDE3F0; }
+  .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+  .photo-thumb .remove-btn { position:absolute; top:2px; right:2px; background:rgba(0,0,0,.6); color:#fff; border:0; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:.75rem; line-height:1; }
+  .add-photo-btn { width:72px; height:72px; border:2px dashed #93C5FD; background:#EFF6FF; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; color:#1E40AF; font-size:.7rem; gap:.15rem; }
+  .add-photo-btn input { display:none; }
+
+  .submit-bar { position:sticky; bottom:0; background:#fff; padding:1rem; margin:1rem -1rem -1rem; border-top:1px solid #DDE3F0; display:flex; gap:.5rem; justify-content:space-between; align-items:center; }
+  .read-only-banner { background:#DBEAFE; color:#1E40AF; padding:.75rem 1rem; border-radius:6px; margin-bottom:1rem; font-size:.9rem; }
+  .perform-banner { padding:.75rem 1rem; border-radius:6px; margin-bottom:1rem; font-size:.9rem; }
+  .perform-banner.error { background:#FEE2E2; color:#B0342B; }
+  .perform-banner.success { background:#D1FAE5; color:#065F46; }
+  .perform-banner.info { background:#DBEAFE; color:#1E40AF; }
+</style>
+</head>
+<body>
+
+<div class="perform-wrap">
+  <div class="header-card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+      <div>
+        <h1 id="title">Loading inspection…</h1>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:.4rem; align-items:flex-end;">
+        <a href="list.html" class="btn btn-outline btn-sm">← List</a>
+        <span class="save-status" id="saveStatus" style="display:none;"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading…</div>
+
+  <div id="content" style="display:none;">
+    <div id="readOnlyNote" class="read-only-banner" style="display:none;"></div>
+
+    <div id="overallNotesCard" class="header-card">
+      <label style="font-weight:600; color:#1F4FC1; display:block; margin-bottom:.4rem;">Overall notes / summary</label>
+      <textarea id="overallNotes" class="item-notes" placeholder="Anything that doesn't fit a specific item — overall property condition, weather during inspection, special context…" style="min-height:70px;"></textarea>
+    </div>
+
+    <div id="areas"></div>
+
+    <div class="submit-bar" id="submitBar" style="display:none;">
+      <span style="color:#6B7280; font-size:.85rem;">Auto-saves as you work.</span>
+      <button id="submitBtn" class="btn btn-primary">Submit Inspection</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  const u = await window.investproAuth.requireAuth();
+  if (!u) return;
+
+  const params = new URLSearchParams(location.search);
+  const inspectionId = params.get('id');
+  if (!inspectionId) {
+    document.getElementById('loading').textContent = 'No inspection ID provided.';
+    return;
+  }
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="perform-banner info">Demo mode — connect Supabase to perform inspections.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // Load inspection
+  const { data: inspection, error: insErr } = await supa
+    .from('inspections')
+    .select('*')
+    .eq('id', inspectionId)
+    .maybeSingle();
+
+  if (insErr || !inspection) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="perform-banner error">Could not load inspection: ' + (insErr?.message || 'not found') + '</div>';
+    return;
+  }
+
+  // Resolve property + assigner labels
+  const [{ data: property }, { data: assigner }] = await Promise.all([
+    inspection.property_id ? supa.from('properties').select('id, address_line1, address_line2, city').eq('id', inspection.property_id).maybeSingle() : { data: null },
+    inspection.assigned_by_id ? supa.from('profiles').select('id, full_name').eq('id', inspection.assigned_by_id).maybeSingle() : { data: null }
+  ]);
+
+  // Page header
+  const propLabel = property ? `${property.address_line1}${property.address_line2 ? ' ' + property.address_line2 : ''}, ${property.city || 'Las Vegas'}` : '(property not found)';
+  const TYPE_LABELS = {
+    pre_move_in_agent: 'Pre-Move-In (Agent)',
+    pre_move_in:       'Pre-Move-In (PM)',
+    rent_ready:        'Rent Ready',
+    move_in_tenant:    'Move-In (Tenant)',
+    annual:            'Annual',
+    move_out_tenant:   'Move-Out (Tenant)',
+    move_out_pm:       'Move-Out (PM)'
+  };
+  document.getElementById('title').textContent = inspection.title || `${TYPE_LABELS[inspection.inspection_type]} — ${propLabel}`;
+  document.getElementById('meta').innerHTML =
+    `<strong>${TYPE_LABELS[inspection.inspection_type]}</strong> · ${propLabel} · status: ${inspection.status}` +
+    (assigner ? ` · assigned by ${assigner.full_name}` : '');
+
+  // Editability
+  const editable = (
+    ['scheduled', 'in_progress'].includes(inspection.status)
+    && inspection.inspector_profile_id === u.id
+  );
+  if (!editable) {
+    document.getElementById('readOnlyNote').style.display = '';
+    if (inspection.status === 'submitted' || inspection.status === 'reviewed') {
+      document.getElementById('readOnlyNote').textContent = `📖 This inspection has been ${inspection.status}. View only.`;
+    } else if (!inspection.inspector_profile_id) {
+      document.getElementById('readOnlyNote').innerHTML = '🛠️ This inspection has no inspector yet. Go to the <a href="list.html">inspections list</a> to claim it.';
+    } else if (inspection.inspector_profile_id !== u.id) {
+      document.getElementById('readOnlyNote').textContent = '👀 You are not the assigned inspector. View only.';
+    }
+  }
+
+  // Load or create items from template
+  let { data: items } = await supa
+    .from('inspection_items')
+    .select('*')
+    .eq('inspection_id', inspectionId)
+    .order('sort_order');
+
+  if ((!items || items.length === 0) && editable) {
+    // Fetch template for this type
+    const templateKey = `inspection_template_${inspection.inspection_type}`;
+    let { data: tmplRow } = await supa.from('app_config').select('value').eq('key', templateKey).maybeSingle();
+
+    // Fall back to default checklist if no per-type template
+    if (!tmplRow) {
+      const { data: defaultRow } = await supa.from('app_config').select('value').eq('key', 'inspection_default_checklist').maybeSingle();
+      tmplRow = defaultRow;
+    }
+
+    if (tmplRow && Array.isArray(tmplRow.value)) {
+      const rows = [];
+      let order = 0;
+      for (const area of tmplRow.value) {
+        for (const itemName of (area.items || [])) {
+          rows.push({
+            inspection_id: inspectionId,
+            area: area.area,
+            item: itemName,
+            condition: 'good',
+            notes: null,
+            photo_paths: [],
+            sort_order: order++
+          });
+        }
+      }
+      if (rows.length) {
+        const { data: inserted } = await supa.from('inspection_items').insert(rows).select();
+        items = inserted || [];
+      }
+    }
+
+    // Mark inspection as in_progress
+    if (inspection.status === 'scheduled') {
+      await supa.from('inspections').update({ status: 'in_progress', started_at: new Date().toISOString() }).eq('id', inspectionId);
+      inspection.status = 'in_progress';
+    }
+  }
+
+  loading.style.display = 'none';
+  content.style.display = '';
+
+  if (editable) {
+    document.getElementById('submitBar').style.display = '';
+  } else {
+    document.getElementById('overallNotesCard').style.display = inspection.overall_notes ? '' : 'none';
+  }
+
+  // Group items by area
+  const byArea = {};
+  for (const it of (items || [])) {
+    if (!byArea[it.area]) byArea[it.area] = [];
+    byArea[it.area].push(it);
+  }
+
+  // Render
+  const areasEl = document.getElementById('areas');
+  const overallEl = document.getElementById('overallNotes');
+  overallEl.value = inspection.overall_notes || '';
+  if (!editable) overallEl.disabled = true;
+
+  for (const areaName of Object.keys(byArea)) {
+    const areaItems = byArea[areaName];
+    const det = document.createElement('details');
+    det.className = 'area';
+    det.innerHTML = `
+      <summary>
+        <span>${escapeHtml(areaName)}</span>
+        <span class="area-progress" data-area="${escapeHtml(areaName)}"></span>
+      </summary>
+      <div class="area-body"></div>
+    `;
+    const body = det.querySelector('.area-body');
+
+    for (const it of areaItems) {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.dataset.itemId = it.id;
+      card.innerHTML = `
+        <div class="item-name">${escapeHtml(it.item)}</div>
+        <div class="condition-row">
+          ${['good','fair','damaged','missing','na'].map(c => `
+            <label class="${c} ${it.condition === c ? 'selected' : ''}">
+              <input type="radio" name="cond_${it.id}" value="${c}" ${it.condition === c ? 'checked' : ''} ${editable ? '' : 'disabled'} />
+              <span>${c === 'na' ? 'N/A' : c[0].toUpperCase() + c.slice(1)}</span>
+            </label>
+          `).join('')}
+        </div>
+        <textarea class="item-notes" data-field="notes" placeholder="Notes (optional)" ${editable ? '' : 'disabled'}>${escapeHtml(it.notes || '')}</textarea>
+        <div class="photo-row" data-photos></div>
+      `;
+      body.appendChild(card);
+      renderPhotos(card.querySelector('[data-photos]'), it, editable);
+    }
+
+    areasEl.appendChild(det);
+  }
+
+  updateAreaProgress();
+  if (areasEl.firstElementChild) areasEl.firstElementChild.open = true;
+
+  // Save status helper
+  const saveStatusEl = document.getElementById('saveStatus');
+  let saveTimer = null;
+  function showSaving() {
+    saveStatusEl.style.display = '';
+    saveStatusEl.className = 'save-status saving';
+    saveStatusEl.textContent = 'Saving…';
+  }
+  function showSaved() {
+    saveStatusEl.className = 'save-status saved';
+    saveStatusEl.textContent = '✓ Saved';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveStatusEl.style.display = 'none'; }, 1500);
+  }
+  function showError(msg) {
+    saveStatusEl.style.display = '';
+    saveStatusEl.className = 'save-status error';
+    saveStatusEl.textContent = '✗ ' + (msg || 'Save failed');
+  }
+
+  // Per-item save (debounced)
+  const debouncers = new Map();
+  function debouncedSave(itemId, patch) {
+    clearTimeout(debouncers.get(itemId));
+    debouncers.set(itemId, setTimeout(async () => {
+      showSaving();
+      const { error } = await supa.from('inspection_items').update(patch).eq('id', itemId);
+      if (error) showError(error.message);
+      else showSaved();
+      updateAreaProgress();
+    }, 400));
+  }
+
+  if (editable) {
+    // Wire condition radios
+    areasEl.addEventListener('change', async (e) => {
+      const target = e.target;
+      if (target.matches('input[type="radio"][name^="cond_"]')) {
+        const itemId = target.name.replace('cond_', '');
+        const newCondition = target.value;
+        // Visual update
+        const row = target.closest('.condition-row');
+        row.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+        target.closest('label').classList.add('selected');
+        debouncedSave(itemId, { condition: newCondition });
+      }
+    });
+
+    // Wire notes
+    areasEl.addEventListener('input', (e) => {
+      if (e.target.matches('textarea[data-field="notes"]')) {
+        const itemId = e.target.closest('.item-card').dataset.itemId;
+        debouncedSave(itemId, { notes: e.target.value || null });
+      }
+    });
+
+    // Wire overall notes
+    let overallTimer = null;
+    overallEl.addEventListener('input', () => {
+      clearTimeout(overallTimer);
+      overallTimer = setTimeout(async () => {
+        showSaving();
+        const { error } = await supa.from('inspections').update({ overall_notes: overallEl.value || null }).eq('id', inspectionId);
+        if (error) showError(error.message);
+        else showSaved();
+      }, 500);
+    });
+
+    // Wire submit
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      if (!confirm('Submit this inspection? You won\'t be able to edit it after submitting.')) return;
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'Submitting…';
+      const { error } = await supa.from('inspections').update({
+        status: 'submitted',
+        submitted_at: new Date().toISOString()
+      }).eq('id', inspectionId);
+      if (error) {
+        banner.innerHTML = '<div class="perform-banner error">Submit failed: ' + error.message + '</div>';
+        btn.disabled = false; btn.textContent = 'Submit Inspection';
+        return;
+      }
+      banner.innerHTML = '<div class="perform-banner success">✓ Inspection submitted! Redirecting…</div>';
+      setTimeout(() => { location.href = 'list.html'; }, 1200);
+    });
+  }
+
+  function updateAreaProgress() {
+    const areaCards = document.querySelectorAll('details.area');
+    areaCards.forEach(det => {
+      const items = det.querySelectorAll('.item-card');
+      let damaged = 0, missing = 0;
+      items.forEach(c => {
+        const sel = c.querySelector('input[type="radio"]:checked');
+        if (sel) {
+          if (sel.value === 'damaged') damaged++;
+          else if (sel.value === 'missing') missing++;
+        }
+      });
+      const summary = det.querySelector('.area-progress');
+      const issues = damaged + missing;
+      if (issues > 0) {
+        summary.textContent = `⚠ ${issues} issue${issues > 1 ? 's' : ''}`;
+        summary.style.color = '#B0342B';
+      } else {
+        summary.textContent = `${items.length} items`;
+        summary.style.color = '#6B7280';
+      }
+    });
+  }
+
+  function renderPhotos(container, item, editable) {
+    container.innerHTML = '';
+    const paths = Array.isArray(item.photo_paths) ? item.photo_paths : [];
+
+    for (const path of paths) {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.innerHTML = `<img alt="photo" data-path="${escapeHtml(path)}" />`;
+      if (editable) {
+        thumb.innerHTML += `<button type="button" class="remove-btn" title="Remove photo">×</button>`;
+      }
+      container.appendChild(thumb);
+      // Lazy load signed URL
+      supa.storage.from('signed-documents').createSignedUrl(path, 3600).then(({ data }) => {
+        if (data?.signedUrl) thumb.querySelector('img').src = data.signedUrl;
+      });
+
+      if (editable) {
+        thumb.querySelector('.remove-btn').addEventListener('click', async () => {
+          if (!confirm('Remove this photo?')) return;
+          const newPaths = paths.filter(p => p !== path);
+          const { error } = await supa.from('inspection_items').update({ photo_paths: newPaths }).eq('id', item.id);
+          if (error) { alert('Could not remove: ' + error.message); return; }
+          item.photo_paths = newPaths;
+          renderPhotos(container, item, editable);
+        });
+      }
+    }
+
+    if (editable) {
+      const addBtn = document.createElement('label');
+      addBtn.className = 'add-photo-btn';
+      addBtn.innerHTML = `<span style="font-size:1.4rem;">📷</span><span>Add</span><input type="file" accept="image/*" capture="environment" />`;
+      addBtn.querySelector('input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const ts = Date.now();
+        const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, '_');
+        const path = `inspections/${item.inspection_id}/${item.id}/${ts}_${safeName}`;
+        addBtn.querySelector('span:last-child').textContent = '⏳';
+        const { error: upErr } = await supa.storage.from('signed-documents').upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) {
+          alert('Upload failed: ' + upErr.message);
+          addBtn.querySelector('span:last-child').textContent = 'Add';
+          return;
+        }
+        const newPaths = [...(item.photo_paths || []), path];
+        const { error: updErr } = await supa.from('inspection_items').update({ photo_paths: newPaths }).eq('id', item.id);
+        if (updErr) {
+          alert('Could not save photo: ' + updErr.message);
+          addBtn.querySelector('span:last-child').textContent = 'Add';
+          return;
+        }
+        item.photo_paths = newPaths;
+        renderPhotos(container, item, editable);
+      });
+      container.appendChild(addBtn);
+    }
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+})();
+</script>
+</body>
+</html>
