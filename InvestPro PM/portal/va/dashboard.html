@@ -22,6 +22,21 @@
   </div>
 </header>
 <main class="dash-main">
+  <!-- IMPORTANT NOTICE about what's real vs. placeholder on this page.
+       Until we build the real Application Work Queue (planned for v1.x),
+       the cards below are sample data to demonstrate the layout. The
+       Screening Queue button above is the only thing wired to real
+       applications. Helen + Neil reported this was confusing 2026-05-01. -->
+  <div style="background:#FFF3CD; border:1px solid #F1D88A; border-left:4px solid #C9A227; padding:1rem 1.25rem; border-radius:4px; margin: 0 0 1.25rem;">
+    <strong style="color:#856404;">📌 Heads up — this dashboard is partial.</strong>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555A6B;">
+      The cards below (Sarah Chen, Marcus Williams, etc.) are <strong>sample data</strong> to show the layout — clicking them just shows a placeholder note explaining what each feature will do once built. This is normal, not a bug.
+    </p>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555A6B;">
+      <strong>For real work right now</strong>, click <a href="screening.html" style="color:#1F4FC1; font-weight:600;">🛡️ Screening Queue</a> — it loads real applications from the database.
+    </p>
+  </div>
+
   <div class="dash-title">
     <h1>Application Work Queue</h1>
     <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
@@ -40,11 +55,11 @@
   <div class="kanban">
     <div class="kanban-column">
       <h3>📥 Payment confirmed <span class="count">2</span></h3>
-      <div class="kanban-card" onclick="alert('In v1: opens application detail with Documents tab.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens application detail with Documents tab.')">
         <div class="title">IPR-2K7B9X3</div>
         <div class="meta">Sarah Chen · 3601 W Sahara #207 · 2 hrs ago</div>
       </div>
-      <div class="kanban-card" onclick="alert('In v1: opens application detail.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens application detail.')">
         <div class="title">IPR-3M9P2QR</div>
         <div class="meta">Marcus Williams · 2440 Vegas Drive · 5 hrs ago</div>
       </div>
@@ -52,7 +67,7 @@
 
     <div class="kanban-column">
       <h3>📑 Doc Review <span class="count">1</span></h3>
-      <div class="kanban-card" onclick="alert('In v1: opens detail.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens detail.')">
         <div class="title">IPR-7H2K4XA</div>
         <div class="meta">Jenny Park · 1822 Twain · paystub re-upload requested</div>
       </div>
@@ -60,15 +75,15 @@
 
     <div class="kanban-column">
       <h3>📤 Verifications Out <span class="count">3</span></h3>
-      <div class="kanban-card" onclick="alert('In v1: shows VOR/VOE/Credit status.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: shows VOR/VOE/Credit status.')">
         <div class="title">IPR-9F4Q2VW</div>
         <div class="meta">VOR sent 26h ago · VOE waiting</div>
       </div>
-      <div class="kanban-card" onclick="alert('In v1: shows status.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: shows status.')">
         <div class="title">IPR-2N8B6ZC</div>
         <div class="meta">Credit ✓ · VOE returned · VOR pending</div>
       </div>
-      <div class="kanban-card overdue" onclick="alert('In v1: opens with Call Landlord task highlighted.')">
+      <div class="kanban-card overdue" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens with Call Landlord task highlighted.')">
         <div class="title">IPR-5J3K9HM ⏰</div>
         <div class="meta">VOR: 50 hrs since send (over 48hr SLA)</div>
       </div>
@@ -76,11 +91,11 @@
 
     <div class="kanban-column">
       <h3>🤖 Summary Draft <span class="count">2</span></h3>
-      <div class="kanban-card" onclick="alert('In v1: opens AI-drafted Screening Summary for VA review.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens AI-drafted Screening Summary for VA review.')">
         <div class="title">IPR-1W7Q3RA</div>
         <div class="meta">AI summary ready · Income 3.4× ✓ · Credit 678</div>
       </div>
-      <div class="kanban-card" onclick="alert('In v1: opens AI-drafted Screening Summary.')">
+      <div class="kanban-card" onclick="alert('📋 Sample card (not a real application). Coming in v1.x: opens AI-drafted Screening Summary.')">
         <div class="title">IPR-8X2P5KB</div>
         <div class="meta">AI summary ready · Income 3.1× ✓ · Credit 720</div>
       </div>
