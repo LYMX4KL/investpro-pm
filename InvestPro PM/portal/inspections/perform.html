@@ -400,30 +400,55 @@
     });
   }
 
-  function renderPhotos(container, item, editable) {
+  // Photos are now first-class rows in inspection_photos (db/025).
+  // We INSERT a row per upload; soft-delete via is_removed flag (no actual deletion).
+  // Each photo carries snapshot metadata for court-printable export.
+  async function renderPhotos(container, item, editable) {
     container.innerHTML = '';
-    const paths = Array.isArray(item.photo_paths) ? item.photo_paths : [];
 
-    for (const path of paths) {
+    // Fetch active (not-removed) photos for this item
+    const { data: photos, error } = await supa.from('inspection_photos')
+      .select('id, storage_path, caption, uploaded_by_name, uploaded_by_role, display_timestamp')
+      .eq('inspection_item_id', item.id)
+      .eq('is_removed', false)
+      .order('uploaded_at', { ascending: true });
+
+    if (error) {
+      container.innerHTML = '<div style="color:#B0342B;font-size:.85rem;">Could not load photos: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+
+    for (const photo of (photos || [])) {
       const thumb = document.createElement('div');
       thumb.className = 'photo-thumb';
-      thumb.innerHTML = `<img alt="photo" data-path="${escapeHtml(path)}" />`;
+      const tsLabel = photo.display_timestamp
+        ? new Date(photo.display_timestamp).toLocaleString()
+        : '';
+      thumb.innerHTML = `
+        <img alt="photo" data-path="${escapeHtml(photo.storage_path)}" />
+        <div class="photo-meta" style="font-size:.7rem;color:#fff;background:rgba(0,0,0,.55);padding:.1rem .3rem;position:absolute;bottom:0;left:0;right:0;">
+          ${escapeHtml(tsLabel)} · ${escapeHtml(photo.uploaded_by_name || '')}
+        </div>
+      `;
       if (editable) {
         thumb.innerHTML += `<button type="button" class="remove-btn" title="Remove photo">×</button>`;
       }
+      thumb.style.position = 'relative';
       container.appendChild(thumb);
+
       // Lazy load signed URL
-      supa.storage.from('signed-documents').createSignedUrl(path, 3600).then(({ data }) => {
+      supa.storage.from('signed-documents').createSignedUrl(photo.storage_path, 3600).then(({ data }) => {
         if (data?.signedUrl) thumb.querySelector('img').src = data.signedUrl;
       });
 
       if (editable) {
         thumb.querySelector('.remove-btn').addEventListener('click', async () => {
-          if (!confirm('Remove this photo?')) return;
-          const newPaths = paths.filter(p => p !== path);
-          const { error } = await supa.from('inspection_items').update({ photo_paths: newPaths }).eq('id', item.id);
-          if (error) { alert('Could not remove: ' + error.message); return; }
-          item.photo_paths = newPaths;
+          const reason = prompt('Reason for removing this photo? (optional but recommended for the audit log)') || null;
+          if (reason === null && !confirm('Remove this photo without a reason?')) return;
+          const { error: rmErr } = await supa.from('inspection_photos')
+            .update({ is_removed: true, removal_reason: reason })
+            .eq('id', photo.id);
+          if (rmErr) { alert('Could not remove: ' + rmErr.message); return; }
           renderPhotos(container, item, editable);
         });
       }
@@ -440,20 +465,33 @@
         const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, '_');
         const path = `inspections/${item.inspection_id}/${item.id}/${ts}_${safeName}`;
         addBtn.querySelector('span:last-child').textContent = '⏳';
-        const { error: upErr } = await supa.storage.from('signed-documents').upload(path, file, { contentType: file.type, upsert: false });
+
+        // 1. Upload binary to storage
+        const { error: upErr } = await supa.storage.from('signed-documents')
+          .upload(path, file, { contentType: file.type, upsert: false });
         if (upErr) {
           alert('Upload failed: ' + upErr.message);
           addBtn.querySelector('span:last-child').textContent = 'Add';
           return;
         }
-        const newPaths = [...(item.photo_paths || []), path];
-        const { error: updErr } = await supa.from('inspection_items').update({ photo_paths: newPaths }).eq('id', item.id);
-        if (updErr) {
-          alert('Could not save photo: ' + updErr.message);
+
+        // 2. Insert audited row in inspection_photos
+        // (display_timestamp gets set by trigger to inspection.started_at)
+        const captionPrompt = prompt('Optional short caption for this photo (helpful for court export):') || null;
+        const { error: insErr } = await supa.from('inspection_photos').insert({
+          inspection_id: item.inspection_id,
+          inspection_item_id: item.id,
+          storage_path: path,
+          caption: captionPrompt,
+          uploaded_by_id: u.id,
+          uploaded_by_name: u.name      // snapshot — never re-joined live
+        });
+        if (insErr) {
+          alert('Photo uploaded but record failed: ' + insErr.message);
           addBtn.querySelector('span:last-child').textContent = 'Add';
           return;
         }
-        item.photo_paths = newPaths;
+
         renderPhotos(container, item, editable);
       });
       container.appendChild(addBtn);

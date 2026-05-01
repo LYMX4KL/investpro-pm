@@ -130,9 +130,11 @@
 <script src="../../js/auth.js"></script>
 <script>
 (async function () {
-  // Only specific roles can ASSIGN inspections
-  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  // Roles allowed to assign inspections (managers + listing agents).
+  // Listing agents see a restricted view: own listings only, listing-stage types only.
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite', 'agent_listing']);
   if (!u) return;
+  const isListingAgent = u.role === 'agent_listing';
 
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
@@ -153,13 +155,34 @@
   const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
   const supa = createClient(url, key);
 
-  // Load properties
-  const { data: properties } = await supa.from('properties').select('id, address_line1, address_line2, city').order('address_line1');
+  // Load properties.
+  // For listing agents: filter to their own listings (RLS already enforces this,
+  // but we add an explicit filter so an empty list shows a helpful message).
+  let propertyQuery = supa.from('properties').select('id, address_line1, address_line2, city, listing_agent_id').order('address_line1');
+  if (isListingAgent) {
+    // RLS will already restrict, but filter explicitly for clearer empty state
+    const { data: myAgent } = await supa.from('agents').select('id').eq('profile_id', u.id).maybeSingle();
+    if (myAgent && myAgent.id) {
+      propertyQuery = propertyQuery.eq('listing_agent_id', myAgent.id);
+    } else {
+      // Listing agent doesn't have an agent row yet — they have no properties to pick.
+      // Show an empty list with a helpful message.
+      banner.innerHTML = '<div class="banner-info">You are not yet linked to any property listings. Ask Kenny or Mandy to set you as the listing agent on a property first.</div>';
+    }
+  }
+  const { data: properties } = await propertyQuery;
   const propSel = document.getElementById('property');
   for (const p of (properties || [])) {
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'Las Vegas'}`;
+    propSel.appendChild(opt);
+  }
+  if (isListingAgent && (!properties || properties.length === 0)) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '(no properties — ask broker to add you as listing agent)';
+    opt.disabled = true;
     propSel.appendChild(opt);
   }
 
@@ -172,6 +195,17 @@
     opt.value = p.id;
     opt.textContent = `${p.full_name} (${p.role.replace('_', ' ')})`;
     personSel.appendChild(opt);
+  }
+
+  // Restrict inspection types for listing agents (only listing-stage types)
+  if (isListingAgent) {
+    const typeSel = document.getElementById('type');
+    const ALLOWED_LISTING_TYPES = ['pre_move_in_agent', 'rent_ready'];
+    Array.from(typeSel.options).forEach(opt => {
+      if (opt.value && !ALLOWED_LISTING_TYPES.includes(opt.value)) {
+        opt.remove();
+      }
+    });
   }
 
   loading.style.display = 'none';

@@ -131,7 +131,9 @@
   document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
 
   // Show "+ New Assignment" only to assigners
-  const ASSIGNER_ROLES = ['broker', 'compliance', 'admin_onsite'];
+  // Listing agents can also assign — restricted to their own listings + listing-stage types
+  // (assign.html enforces those restrictions, and RLS policy in db/024 backstops it)
+  const ASSIGNER_ROLES = ['broker', 'compliance', 'admin_onsite', 'agent_listing'];
   if (ASSIGNER_ROLES.includes(u.role)) {
     document.getElementById('assignBtn').style.display = '';
   }
