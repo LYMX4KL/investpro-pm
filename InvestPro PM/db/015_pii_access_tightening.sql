@@ -1,0 +1,13 @@
+-- ============================================================
+-- This file has been REPLACED.
+-- ============================================================
+-- The early draft of this migration used hardcoded role lists. After Kenny's
+-- feedback that "duties get moved around among team members based on their
+-- abilities and availabilities," we switched to a flexible per-user flag model.
+--
+-- USE THIS FILE INSTEAD:
+--   db/015_flexible_pii_access.sql
+--
+-- Do NOT run this file. It is kept only as a reference.
+-- ============================================================
+SELECT 'Use db/015_flexible_pii_access.sql instead' AS deprecated_notice;

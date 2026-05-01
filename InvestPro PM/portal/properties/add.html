@@ -14,10 +14,16 @@
 <header class="dash-header"><div class="dash-header-inner">
   <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
   <nav class="dash-breadcrumb"><a href="list.html" style="color:var(--ink-soft);text-decoration:none;">Properties</a> · <strong id="pageTitle">Add Property</strong></nav>
-  <div class="dash-user"><span id="userBadge" class="muted small">Loading…</span><button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button></div>
+  <div class="dash-user">
+    <a href="#" id="backToDashLink" class="btn btn-outline btn-sm">← Dashboard</a>
+    <span id="userBadge" class="muted small">Loading…</span>
+    <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+  </div>
 </div></header>
 <main class="dash-main">
   <div class="dash-title"><h1 id="formTitle">Add a property (manual entry)</h1></div>
+  <!-- Save error / success banner -->
+  <div id="saveBanner" style="display:none; max-width:800px; margin:0 0 1rem; padding:.85rem 1.1rem; border-radius:6px; font-size:.95rem;"></div>
 
   <form id="propertyForm" class="dash-section" style="max-width:800px;">
 
@@ -132,11 +138,33 @@
 <script>
 let editingId = null;
 
+function showSaveBanner(msg, kind) {
+  const b = document.getElementById('saveBanner');
+  b.style.display = '';
+  b.textContent = msg;
+  if (kind === 'error') {
+    b.style.background = '#FEE2E2';
+    b.style.color = '#B0342B';
+    b.style.border = '1px solid #FCA5A5';
+  } else if (kind === 'info') {
+    b.style.background = '#DBEAFE';
+    b.style.color = '#1E40AF';
+    b.style.border = '1px solid #93C5FD';
+  } else {
+    b.style.background = '#D1FAE5';
+    b.style.color = '#065F46';
+    b.style.border = '1px solid #6EE7B7';
+  }
+  b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 (async () => {
   const u = await window.investproAuth.requireRole(['broker', 'leasing', 'admin_onsite']);
   if (!u) return;
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  // Wire the "← Dashboard" button to land on the user's role-specific dashboard
+  document.getElementById('backToDashLink').href = window.investproAuth.homeForRole(u.role);
 
   // Edit mode?
   const params = new URLSearchParams(location.search);
@@ -151,6 +179,7 @@ let editingId = null;
 
   document.getElementById('propertyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     const fd = new FormData(e.target);
     const obj = {};
     fd.forEach((v, k) => {
@@ -167,21 +196,46 @@ let editingId = null;
     }
     obj.listing_at = obj.listing_at || new Date().toISOString().slice(0, 10);
 
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '⏳ Saving…';
+    showSaveBanner('Saving property…', 'info');
+
     let id;
-    if (editingId) {
-      await window.propertiesStore.update(editingId, obj);
-      id = editingId;
-    } else {
-      id = await window.propertiesStore.create(obj);
-      editingId = id;
+    try {
+      if (editingId) {
+        await window.propertiesStore.update(editingId, obj);
+        id = editingId;
+      } else {
+        id = await window.propertiesStore.create(obj);
+        editingId = id;
+      }
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      const detail = err?.message || err?.toString() || 'Unknown error';
+      let hint = '';
+      if (/permission|policy|RLS/i.test(detail)) {
+        hint = ' (Looks like a permissions issue — your role may not have insert permission on properties.)';
+      } else if (/violates|null value|not-null/i.test(detail)) {
+        hint = ' (One of the required fields is missing or invalid.)';
+      } else if (/duplicate/i.test(detail)) {
+        hint = ' (This property already exists.)';
+      }
+      showSaveBanner('❌ Save failed: ' + detail + hint, 'error');
+      console.error('Save property error:', err);
+      return;
     }
+
     const url = `${location.origin}/forms/rental-application.html?property=${id}`;
     document.getElementById('applyLink').textContent = url;
-    const banner = document.getElementById('savedBanner');
-    banner.style.display = '';
-    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const successBanner = document.getElementById('savedBanner');
+    successBanner.style.display = '';
+    showSaveBanner('✓ Property saved.', 'success');
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
 
-    if (!editingId) location.href = `add.html?id=${id}&saved=1`;
+    if (!params.get('id')) location.href = `add.html?id=${id}&saved=1`;
   });
 
   document.getElementById('deleteBtn').addEventListener('click', async () => {

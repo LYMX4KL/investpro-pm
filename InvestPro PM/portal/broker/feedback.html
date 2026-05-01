@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Feedback — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .fb-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .fb-filters select, .fb-filters input { padding:.45rem .6rem; border:1px solid #DDE3F0; border-radius:4px; font-size:.9rem; font-family:inherit; }
+  .fb-table { width:100%; border-collapse:collapse; font-size:.92rem; }
+  .fb-table th, .fb-table td { padding:.7rem .65rem; border-bottom:1px solid #DDE3F0; vertical-align:top; text-align:left; }
+  .fb-table th { background:#F7F8FB; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; }
+  .fb-table tr:hover { background:#F7F8FB; }
+  .pill { display:inline-block; padding:.18rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .pill.bug { background:#FEE2E2; color:#B0342B; }
+  .pill.suggestion { background:#FEF3C7; color:#92400E; }
+  .pill.question { background:#DBEAFE; color:#1E40AF; }
+  .pill.praise { background:#D1FAE5; color:#065F46; }
+  .pill.general { background:#F3F4F6; color:#374151; }
+  .pill.status-new { background:#FEE2E2; color:#B0342B; }
+  .pill.status-in_progress { background:#FEF3C7; color:#92400E; }
+  .pill.status-resolved { background:#D1FAE5; color:#065F46; }
+  .pill.status-wontfix { background:#E5E7EB; color:#4B5563; }
+  .fb-msg { color:#1F2937; line-height:1.4; max-width:540px; }
+  .fb-meta { color:#6B7280; font-size:.78rem; margin-top:.25rem; }
+  .stat-row { display:flex; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat-box { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:.85rem 1.1rem; min-width:120px; }
+  .stat-box .label { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:600; }
+  .stat-box .value { font-size:1.6rem; font-weight:700; color:#1F4FC1; line-height:1.1; }
+  .stat-box.red .value { color:#B0342B; }
+  .stat-box.amber .value { color:#92400E; }
+  .stat-box.green .value { color:#065F46; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1000; align-items:center; justify-content:center; padding:1rem; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:8px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; padding:1.75rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Feedback</strong> · From the team</nav>
+    <div class="dash-user">
+      <a href="#" id="backLink" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1180px;">
+  <div class="dash-title">
+    <h1>Feedback</h1>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading feedback…</div>
+
+  <div id="content" style="display:none;">
+    <div class="stat-row" id="stats"></div>
+
+    <div class="fb-filters">
+      <select id="filter-status">
+        <option value="">All statuses</option>
+        <option value="new">New</option>
+        <option value="in_progress">In progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="wontfix">Won't fix</option>
+      </select>
+      <select id="filter-category">
+        <option value="">All types</option>
+        <option value="bug">🐛 Bug</option>
+        <option value="suggestion">💡 Suggestion</option>
+        <option value="question">❓ Question</option>
+        <option value="praise">🌟 Praise</option>
+        <option value="general">📝 General</option>
+      </select>
+      <input type="search" id="filter-search" placeholder="🔎 Search messages…" />
+    </div>
+
+    <table class="fb-table" id="fbTable">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>Type</th>
+          <th>Message</th>
+          <th>Page</th>
+          <th>Status</th>
+          <th>When</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="fbBody"></tbody>
+    </table>
+
+    <p id="fbEmpty" style="display:none; padding:2rem; text-align:center; color:#6B7280;">No feedback matches your filters.</p>
+  </div>
+</main>
+
+<!-- Detail / resolve modal -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal">
+    <h2 id="modalTitle" style="margin:0 0 .5rem; color:#1F4FC1;">Feedback Detail</h2>
+    <div id="modalMeta" style="color:#6B7280; font-size:.85rem; margin-bottom:1rem;"></div>
+    <div id="modalMessage" style="background:#F7F8FB; padding:1rem; border-radius:4px; line-height:1.5; white-space:pre-wrap; margin-bottom:1.25rem;"></div>
+
+    <h3 style="font-size:1rem; color:#1F4FC1; margin:0 0 .5rem;">Update status</h3>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="modalStatus" style="width:100%; padding:.55rem; border:1px solid #DDE3F0; border-radius:4px;">
+        <option value="new">New</option>
+        <option value="in_progress">In progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="wontfix">Won't fix</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Resolution notes (visible to broker + compliance)</label>
+      <textarea id="modalNotes" rows="3" style="width:100%; padding:.55rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit;"></textarea>
+    </div>
+
+    <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem;">
+      <button id="modalCancel" class="btn btn-outline">Close</button>
+      <button id="modalSave" class="btn btn-primary">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance']);
+  if (!u) return;
+
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
+
+  const banner = document.getElementById('banner-area');
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('content');
+
+  if (window.investproAuth.isDemoMode()) {
+    loading.style.display = 'none';
+    banner.innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to see real feedback.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sourceText = await fetch('/js/auth.js').then(r => r.text());
+  const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  let allFeedback = [];
+
+  async function loadFeedback() {
+    const { data, error } = await supa
+      .from('feedback')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) {
+      banner.innerHTML = '<div class="banner banner-error">Could not load feedback: ' + error.message + '</div>';
+      loading.style.display = 'none';
+      return;
+    }
+    allFeedback = data || [];
+    loading.style.display = 'none';
+    content.style.display = '';
+    renderStats();
+    renderTable();
+  }
+
+  function renderStats() {
+    const counts = { new: 0, in_progress: 0, resolved: 0, wontfix: 0, total: allFeedback.length, bug: 0 };
+    for (const f of allFeedback) {
+      counts[f.status] = (counts[f.status] || 0) + 1;
+      if (f.category === 'bug') counts.bug++;
+    }
+    const stats = document.getElementById('stats');
+    stats.innerHTML = `
+      <div class="stat-box"><div class="label">Total</div><div class="value">${counts.total}</div></div>
+      <div class="stat-box red"><div class="label">New</div><div class="value">${counts.new}</div></div>
+      <div class="stat-box amber"><div class="label">In progress</div><div class="value">${counts.in_progress}</div></div>
+      <div class="stat-box green"><div class="label">Resolved</div><div class="value">${counts.resolved}</div></div>
+      <div class="stat-box red"><div class="label">Bugs (all)</div><div class="value">${counts.bug}</div></div>
+    `;
+  }
+
+  function renderTable() {
+    const sf = document.getElementById('filter-status').value;
+    const cf = document.getElementById('filter-category').value;
+    const q  = (document.getElementById('filter-search').value || '').toLowerCase();
+    const tbody = document.getElementById('fbBody');
+    const empty = document.getElementById('fbEmpty');
+    tbody.innerHTML = '';
+
+    const filtered = allFeedback.filter(f =>
+      (!sf || f.status === sf) &&
+      (!cf || f.category === cf) &&
+      (!q || (f.message || '').toLowerCase().includes(q) ||
+              (f.user_name || '').toLowerCase().includes(q) ||
+              (f.user_email || '').toLowerCase().includes(q))
+    );
+
+    if (filtered.length === 0) {
+      empty.style.display = '';
+      document.getElementById('fbTable').style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    document.getElementById('fbTable').style.display = '';
+
+    for (const f of filtered) {
+      const tr = document.createElement('tr');
+      const when = f.created_at ? new Date(f.created_at) : null;
+      const whenStr = when ? when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '';
+      const pageShort = (f.page_url || '').replace(/^https?:\/\/[^\/]+/, '').replace(/\?.*$/, '') || '—';
+      tr.innerHTML = `
+        <td><strong>${f.user_name || '(unknown)'}</strong><div class="fb-meta">${f.user_role || ''}</div></td>
+        <td><span class="pill ${f.category}">${f.category}</span></td>
+        <td><div class="fb-msg">${escapeHtml(f.message).slice(0, 220)}${f.message.length > 220 ? '…' : ''}</div></td>
+        <td><code style="font-size:.75rem; color:#6B7280;">${pageShort}</code></td>
+        <td><span class="pill status-${f.status}">${(f.status||'').replace('_', ' ')}</span></td>
+        <td style="font-size:.8rem; color:#6B7280;">${whenStr}</td>
+        <td><button class="btn btn-outline btn-sm" data-id="${f.id}">View</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll('button[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => openDetail(btn.dataset.id));
+    });
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  let currentId = null;
+  function openDetail(id) {
+    const f = allFeedback.find(x => x.id === id);
+    if (!f) return;
+    currentId = id;
+    document.getElementById('modalTitle').textContent = `Feedback from ${f.user_name || '(unknown)'}`;
+    const when = f.created_at ? new Date(f.created_at).toLocaleString() : '';
+    document.getElementById('modalMeta').innerHTML = `
+      <strong>${f.user_email || ''}</strong> · ${f.user_role || ''} · ${when}<br/>
+      Page: <code>${f.page_url || '—'}</code><br/>
+      Type: <span class="pill ${f.category}">${f.category}</span>
+    `;
+    document.getElementById('modalMessage').textContent = f.message;
+    document.getElementById('modalStatus').value = f.status || 'new';
+    document.getElementById('modalNotes').value = f.resolution_notes || '';
+    document.getElementById('detailModal').classList.add('show');
+  }
+
+  document.getElementById('modalCancel').addEventListener('click', () => {
+    document.getElementById('detailModal').classList.remove('show');
+  });
+
+  document.getElementById('modalSave').addEventListener('click', async () => {
+    if (!currentId) return;
+    const newStatus = document.getElementById('modalStatus').value;
+    const notes = document.getElementById('modalNotes').value;
+    const update = { status: newStatus, resolution_notes: notes || null };
+    if (newStatus === 'resolved' || newStatus === 'wontfix') {
+      update.resolved_at = new Date().toISOString();
+      update.resolved_by = u.id;
+    } else {
+      update.resolved_at = null;
+      update.resolved_by = null;
+    }
+    const { error } = await supa.from('feedback').update(update).eq('id', currentId);
+    if (error) {
+      alert('Save failed: ' + error.message);
+      return;
+    }
+    document.getElementById('detailModal').classList.remove('show');
+    await loadFeedback();
+  });
+
+  document.getElementById('filter-status').addEventListener('change', renderTable);
+  document.getElementById('filter-category').addEventListener('change', renderTable);
+  document.getElementById('filter-search').addEventListener('input', renderTable);
+
+  await loadFeedback();
+})();
+</script>
+</body>
+</html>

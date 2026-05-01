@@ -149,7 +149,8 @@ window.propertiesStore = {
       return newProp.id;
     }
     const sb = await getSupa();
-    const { data, error } = await sb.from('properties').insert(obj).select('id').single();
+    const cleanObj = filterToDbColumns(obj);
+    const { data, error } = await sb.from('properties').insert(cleanObj).select('id').single();
     if (error) throw error;
     return data.id;
   },
@@ -166,7 +167,8 @@ window.propertiesStore = {
       return;
     }
     const sb = await getSupa();
-    const { error } = await sb.from('properties').update(obj).eq('id', id);
+    const cleanObj = filterToDbColumns(obj);
+    const { error } = await sb.from('properties').update(cleanObj).eq('id', id);
     if (error) throw error;
   },
 
@@ -193,13 +195,52 @@ window.propertiesStore = {
 };
 
 // Lazy-load Supabase client (only used in real mode)
+//
+// auth.js declares SUPABASE_URL / SUPABASE_ANON_KEY as `const`, which means
+// they are NOT global vars — they live in their script's scope. So we fetch
+// auth.js as text and regex-extract the values. Same pattern as the other
+// portal pages (manage-permissions.html, vendor-settings.html, etc.).
+let _supaInstance = null;
 async function getSupa() {
+  if (_supaInstance) return _supaInstance;
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  // Pull keys from auth.js — they're set there once
-  return createClient(
-    typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : window.SUPABASE_URL,
-    typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY
-  );
+  let sourceText;
+  try {
+    sourceText = await fetch('/js/auth.js').then(r => r.text());
+  } catch (e) {
+    throw new Error('Could not load auth.js to read Supabase credentials');
+  }
+  const urlMatch = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/);
+  const keyMatch = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/);
+  if (!urlMatch || !keyMatch) {
+    throw new Error('Could not parse Supabase credentials from auth.js');
+  }
+  _supaInstance = createClient(urlMatch[1], keyMatch[1]);
+  return _supaInstance;
+}
+
+/* Properties table column whitelist — anything else in the form is dropped on
+ * insert/update so we don't get DB errors for unknown columns like
+ * "owner_name" or "listing_agent_name" (those are name-strings the form
+ * collects for reference; the DB has owner_id/listing_agent_id UUIDs that
+ * we'll wire up in a later phase). */
+const PROPERTIES_DB_COLUMNS = new Set([
+  'address_line1', 'address_line2', 'city', 'state', 'zip',
+  'property_type', 'bedrooms', 'bathrooms', 'sqft', 'year_built', 'parking',
+  'monthly_rent', 'security_deposit_amount', 'pet_deposit_amount', 'pet_rent_monthly',
+  'pets_allowed', 'hoa_name', 'hoa_dues', 'has_pool', 'sewer_trash_included_in_rent',
+  'mls_listing_id', 'owner_id', 'listing_agent_id', 'pm_group',
+  'status', 'days_on_market_started_at', 'default_lease_signing_window_days',
+  'listing_at', 'description', 'features', 'photos_override'
+]);
+
+/** Strip form-only fields the DB doesn't know about. */
+function filterToDbColumns(obj) {
+  const out = {};
+  for (const k in obj) {
+    if (PROPERTIES_DB_COLUMNS.has(k)) out[k] = obj[k];
+  }
+  return out;
 }
 
 /** Helper: format a property as a one-line label. */

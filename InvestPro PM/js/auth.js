@@ -198,6 +198,7 @@ window.investproAuth = {
       location.href = homeForRole(u.role);
       return null;
     }
+    injectPortalChrome(u);
     return u;
   },
 
@@ -205,9 +206,195 @@ window.investproAuth = {
   async requireAuth() {
     const u = await this.currentUser();
     if (!u) { location.href = '/portal/login.html'; return null; }
+    injectPortalChrome(u);
     return u;
   }
 };
+
+/* ----------------------- Auto-injected portal chrome -----------------------
+ * Runs after a successful requireRole/requireAuth call. Adds two things to
+ * every dashboard automatically (no need to edit each dashboard.html file):
+ *   • A "Change Password" link in the header user area
+ *   • A floating "Send Feedback" button in the bottom-right corner
+ *
+ * Both are skipped silently if their parent containers aren't present, so this
+ * is safe to call on any page.
+ */
+function injectPortalChrome(user) {
+  // 1) Add a "Manage Permissions" link for broker + compliance (office admin role)
+  //    Only injected for these two roles; everyone else skips this block.
+  try {
+    if (user && (user.role === 'broker' || user.role === 'compliance')) {
+      const dashUser = document.querySelector('.dash-user');
+      if (dashUser && !document.getElementById('managePermsLink')) {
+        // Don't show this link if we're already on the manage-permissions page itself
+        if (!location.pathname.endsWith('/manage-permissions.html')) {
+          const mpLink = document.createElement('a');
+          mpLink.id = 'managePermsLink';
+          mpLink.href = '/portal/manage-permissions.html';
+          mpLink.className = 'btn btn-outline btn-sm';
+          mpLink.style.marginRight = '.4rem';
+          mpLink.textContent = '🛡️ Permissions';
+          mpLink.title = 'Manage who can see applicant PII';
+          dashUser.insertBefore(mpLink, dashUser.firstChild);
+        }
+      }
+    }
+  } catch (e) { /* non-fatal */ }
+
+  // 2) Add a "Change Password" link next to the userBadge / Sign-out button
+  try {
+    const dashUser = document.querySelector('.dash-user');
+    if (dashUser && !document.getElementById('changePwLink')) {
+      const cpLink = document.createElement('a');
+      cpLink.id = 'changePwLink';
+      cpLink.href = '/portal/change-password.html';
+      cpLink.className = 'btn btn-outline btn-sm';
+      cpLink.style.marginRight = '.4rem';
+      cpLink.textContent = '🔑 Change Password';
+      const signOutBtn = document.getElementById('signOutBtn');
+      if (signOutBtn) dashUser.insertBefore(cpLink, signOutBtn);
+      else            dashUser.appendChild(cpLink);
+    }
+  } catch (e) { /* non-fatal */ }
+
+  // 3) Add a floating "Send Feedback" button bottom-right that opens a modal
+  //    submitting to the feedback table in Supabase. Replaced the old mailto:
+  //    button so all feedback lands in one place, viewable on the broker
+  //    Feedback admin page.
+  try {
+    if (document.getElementById('feedbackFab')) return;
+    const fab = document.createElement('button');
+    fab.id = 'feedbackFab';
+    fab.type = 'button';
+    fab.title = 'Send feedback about this page';
+    fab.style.cssText = `
+      position: fixed; bottom: 18px; right: 18px; z-index: 9998;
+      background: #1F4FC1; color: #fff; padding: .7rem 1.1rem;
+      border: 0; border-radius: 999px;
+      font: 600 .85rem 'Source Sans Pro', Arial, sans-serif;
+      letter-spacing: .03em; cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,.22);
+    `;
+    fab.textContent = '✉️ Send Feedback';
+    fab.addEventListener('click', () => openFeedbackModal(user));
+    if (document.body) document.body.appendChild(fab);
+    else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(fab));
+  } catch (e) { /* non-fatal */ }
+}
+
+/* ----------------------- Feedback modal -----------------------
+ * In-site replacement for the old mailto button. Submits to the
+ * `feedback` table in Supabase. All authenticated users can submit;
+ * broker + compliance read everything on /portal/broker/feedback.html.
+ */
+function openFeedbackModal(user) {
+  if (document.getElementById('feedbackModalBg')) return;
+
+  const bg = document.createElement('div');
+  bg.id = 'feedbackModalBg';
+  bg.style.cssText = `
+    position: fixed; inset: 0; background: rgba(20,52,137,.55); z-index: 10000;
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    font-family: 'Source Sans Pro', Arial, sans-serif;
+  `;
+  bg.innerHTML = `
+    <div style="background:#fff; border-radius:8px; max-width:520px; width:100%; padding:1.75rem; box-shadow: 0 18px 48px rgba(0,0,0,.25);">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem;">
+        <h2 style="margin:0; font-family:'Playfair Display', Georgia, serif; color:#1F4FC1; font-size:1.4rem;">Send Feedback</h2>
+        <button id="fbClose" type="button" style="background:none; border:0; font-size:1.5rem; cursor:pointer; color:#888; line-height:1;">×</button>
+      </div>
+      <p style="margin:0 0 1rem; color:#555A6B; font-size:.9rem;">
+        We read every one. Bug, suggestion, or just a question — anything helps.
+      </p>
+      <div id="fbBanner" style="display:none; padding:.6rem .8rem; border-radius:4px; margin-bottom:.75rem; font-size:.9rem;"></div>
+      <form id="fbForm">
+        <div style="margin-bottom:.85rem;">
+          <label style="display:block; font-weight:600; color:#1F4FC1; margin-bottom:.3rem; font-size:.9rem;">Type</label>
+          <select id="fbCategory" style="width:100%; padding:.55rem .65rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.95rem;">
+            <option value="bug">🐛 Bug — something is broken</option>
+            <option value="suggestion">💡 Suggestion — improve something</option>
+            <option value="question">❓ Question — how does this work?</option>
+            <option value="praise">🌟 Praise — this part works great</option>
+            <option value="general" selected>📝 General — anything else</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-weight:600; color:#1F4FC1; margin-bottom:.3rem; font-size:.9rem;">Your message</label>
+          <textarea id="fbMessage" rows="5" required placeholder="What did you see? What would you change?" style="width:100%; padding:.55rem .65rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.95rem; resize:vertical;"></textarea>
+          <div style="font-size:.8rem; color:#6B7280; margin-top:.3rem;">
+            We'll automatically include the page URL, your role, and the current time so we can reproduce the issue.
+          </div>
+        </div>
+        <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+          <button type="button" id="fbCancel" style="padding:.55rem 1rem; background:#fff; color:#555A6B; border:1px solid #DDE3F0; border-radius:4px; font-weight:600; cursor:pointer; font-family:inherit;">Cancel</button>
+          <button type="submit" id="fbSubmit" style="padding:.55rem 1.1rem; background:#5FAB22; color:#fff; border:0; border-radius:4px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; cursor:pointer; font-family:inherit; font-size:.85rem;">Send Feedback</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(bg);
+
+  function closeModal() { bg.remove(); }
+  document.getElementById('fbClose').addEventListener('click', closeModal);
+  document.getElementById('fbCancel').addEventListener('click', closeModal);
+  bg.addEventListener('click', (e) => { if (e.target === bg) closeModal(); });
+
+  document.getElementById('fbForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('fbSubmit');
+    const banner = document.getElementById('fbBanner');
+    const message = document.getElementById('fbMessage').value.trim();
+    const category = document.getElementById('fbCategory').value;
+    if (!message) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    banner.style.display = 'none';
+
+    try {
+      // Demo mode falls back to mailto so feedback never gets lost
+      if (typeof window.investproAuth !== 'undefined' && window.investproAuth.isDemoMode()) {
+        const subject = encodeURIComponent(`Portal feedback — ${document.title}`);
+        const body = encodeURIComponent(`Category: ${category}\nFrom: ${user.name || user.email} (${user.role})\nPage: ${location.href}\n\n${message}`);
+        location.href = `mailto:zhongkennylin@gmail.com?subject=${subject}&body=${body}`;
+        return;
+      }
+      const sb = await getFeedbackSupa();
+      const { error } = await sb.from('feedback').insert({
+        user_id: user.id || null,
+        user_name: user.name || null,
+        user_email: user.email || null,
+        user_role: user.role || null,
+        page_url: location.href,
+        page_title: document.title,
+        user_agent: navigator.userAgent,
+        category, message
+      });
+      if (error) throw error;
+      banner.style.display = 'block';
+      banner.style.background = '#D1FAE5';
+      banner.style.color = '#065F46';
+      banner.textContent = '✓ Thanks! Your feedback was sent to Kenny.';
+      setTimeout(closeModal, 1500);
+    } catch (err) {
+      banner.style.display = 'block';
+      banner.style.background = '#FEE2E2';
+      banner.style.color = '#B0342B';
+      banner.textContent = '✗ Could not send: ' + (err.message || err);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Feedback';
+    }
+  });
+}
+
+let _fbSupa = null;
+async function getFeedbackSupa() {
+  if (_fbSupa) return _fbSupa;
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  _fbSupa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return _fbSupa;
+}
 
 /* ----------------------- Helpers ----------------------- */
 /** Demo mode only: try to infer a role from a placeholder staff email

@@ -23,10 +23,10 @@
  */
 
 (function () {
-  const GATE_ENABLED      = false;  // temporarily off to allow Supabase password reset flow — re-enable after testing
-  const PREVIEW_PASSWORD  = 'investpro2026';     // change me!
-  const PREVIEW_VERSION   = 'v1.0-launch-test';  // shown in the corner badge so reviewers know which build they're seeing
-  const STORAGE_KEY       = 'investpro_gate_v3'; // bump this string to force everyone to re-enter
+  const GATE_ENABLED      = true;                // ON during soft-launch testing — turn OFF when going fully public
+  const PREVIEW_PASSWORD  = 'investpro2026';     // share with team via Slack/text; change here + redeploy to rotate
+  const PREVIEW_VERSION   = 'v1.1-soft-launch';  // shown in the corner badge so reviewers know which build they're seeing
+  const STORAGE_KEY       = 'investpro_gate_v4'; // bump this string to force everyone to re-enter
 
   if (!GATE_ENABLED) return;
 
