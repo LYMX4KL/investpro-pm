@@ -24,13 +24,17 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-const ALLOWED_INVITER_ROLES = ['broker', 'compliance', 'admin_onsite'];
+const ALLOWED_INVITER_ROLES = ['broker', 'compliance', 'admin_onsite', 'agent_listing'];
 
 const ALLOWED_NEW_ROLES = [
   'broker', 'va', 'accounting', 'compliance', 'leasing', 'pm_service',
   'admin_onsite', 'agent_listing', 'agent_showing', 'tenant', 'owner',
   'applicant', 'vendor'
 ];
+
+// Listing agents are restricted to inviting only showing agents.
+// (They shouldn't be able to add a new broker / VA / vendor.)
+const LISTING_AGENT_ALLOWED_NEW_ROLES = ['agent_showing'];
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -96,7 +100,15 @@ exports.handler = async (event) => {
     return json(401, { ok: false, error: 'Caller profile not found' });
   }
   if (!ALLOWED_INVITER_ROLES.includes(callerProfile.role)) {
-    return json(403, { ok: false, error: 'Only broker, compliance, or admin_onsite can invite users' });
+    return json(403, { ok: false, error: 'Only broker, compliance, admin_onsite, or agent_listing can invite users' });
+  }
+
+  // Listing agents are scoped: they may only invite showing agents
+  if (callerProfile.role === 'agent_listing' && !LISTING_AGENT_ALLOWED_NEW_ROLES.includes(role)) {
+    return json(403, {
+      ok: false,
+      error: 'Listing agents can only invite showing agents. Ask your broker or compliance to invite other roles.'
+    });
   }
 
   // ---- 3. Check email isn't already in use ----
