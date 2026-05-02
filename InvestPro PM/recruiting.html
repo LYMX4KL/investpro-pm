@@ -143,7 +143,12 @@
       </div>
 
       <div class="form-card mt-3" style="background:var(--white);">
-        <form data-validate action="#" method="post">
+        <div id="applyBanner" style="display:none; padding:.85rem 1.1rem; border-radius:6px; margin-bottom:1rem; font-size:.95rem;"></div>
+        <form id="applyForm">
+          <!-- Honeypot field — hidden from humans, bots fill it in. If filled, server discards. -->
+          <input type="text" name="website" tabindex="-1" autocomplete="off"
+                 style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true" />
+
           <div class="form-row">
             <div class="form-group">
               <label>First Name <span class="required">*</span></label>
@@ -196,9 +201,78 @@
             <label>Anything you'd like us to know?</label>
             <textarea name="message" placeholder="Goals, questions, etc."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Apply &amp; Schedule a Call</button>
+          <button type="submit" id="applySubmitBtn" class="btn btn-primary btn-block">Apply &amp; Schedule a Call</button>
         </form>
       </div>
+
+      <script>
+      (function(){
+        const form = document.getElementById('applyForm');
+        const banner = document.getElementById('applyBanner');
+        const btn = document.getElementById('applySubmitBtn');
+        const originalBtnText = btn.textContent;
+
+        function showBanner(msg, kind) {
+          banner.style.display = '';
+          banner.textContent = msg;
+          if (kind === 'error') {
+            banner.style.background = '#FEE2E2';
+            banner.style.color = '#B0342B';
+          } else {
+            banner.style.background = '#DBEAFE';
+            banner.style.color = '#1E40AF';
+          }
+        }
+
+        // Pull sponsor share code from ?sponsor=AGT-XXXX so we can attribute
+        const params = new URLSearchParams(window.location.search);
+        const sponsorShare = params.get('sponsor') || params.get('agent') || '';
+
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          banner.style.display = 'none';
+          btn.disabled = true;
+          btn.textContent = 'Submitting…';
+
+          const fd = new FormData(form);
+          const payload = {
+            first_name:        fd.get('first_name'),
+            last_name:         fd.get('last_name'),
+            email:             fd.get('email'),
+            phone:             fd.get('phone'),
+            licensed:          fd.get('licensed'),
+            current_brokerage: fd.get('current_brokerage'),
+            interest:          fd.get('interest'),
+            message:           fd.get('message'),
+            website:           fd.get('website'),  // honeypot
+            sponsor_share:     sponsorShare,
+            source_url:        window.location.href
+          };
+
+          try {
+            const res = await fetch('/.netlify/functions/apply-agent', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const result = await res.json().catch(() => ({}));
+            if (!res.ok || !result.ok) {
+              showBanner(result.error || ('Could not submit — please try again. (' + res.status + ')'), 'error');
+              btn.disabled = false;
+              btn.textContent = originalBtnText;
+              return;
+            }
+            // Success — redirect to thank-you page
+            window.location.href = '/forms/agent-application-submitted.html?id=' + encodeURIComponent(result.id || '');
+          } catch (err) {
+            console.error('apply error', err);
+            showBanner('Network error. Please check your connection and try again.', 'error');
+            btn.disabled = false;
+            btn.textContent = originalBtnText;
+          }
+        });
+      })();
+      </script>
     </div>
   </div>
 </section>
