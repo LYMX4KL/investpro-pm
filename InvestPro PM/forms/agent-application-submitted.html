@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Application Received — InvestPro Realty</title>
+<meta name="description" content="Thanks for applying to InvestPro Realty. We'll be in touch within 1 business day to schedule your intro call." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+<style>
+  .receipt-card { background:#fff; border:1px solid #DDE3F0; border-radius:8px; padding:2.25rem 2.5rem; max-width:680px; margin:2.5rem auto; box-shadow:0 4px 16px rgba(31,79,193,.06); }
+  .receipt-card .check { display:inline-flex; width:64px; height:64px; border-radius:50%; background:#D1FAE5; color:#065F46; align-items:center; justify-content:center; font-size:2rem; margin-bottom:1.25rem; }
+  .receipt-card h1 { font-family:'Playfair Display', Georgia, serif; color:#1F4FC1; margin:0 0 .75rem; }
+  .receipt-card .lead { font-size:1.1rem; color:#1F2937; margin-bottom:1.5rem; }
+  .next-steps { background:#F7F8FB; border-left:4px solid #1F4FC1; padding:1rem 1.25rem; border-radius:4px; margin-top:1.5rem; }
+  .next-steps h3 { color:#1F4FC1; margin:0 0 .5rem; font-size:1rem; }
+  .next-steps ol { margin:0; padding-left:1.25rem; color:#555A6B; font-size:.95rem; }
+  .next-steps li { margin-bottom:.4rem; }
+  .reference-id { font-size:.85rem; color:#6B7280; margin-top:1.5rem; padding-top:1rem; border-top:1px solid #E5E7EB; }
+  .actions { margin-top:2rem; display:flex; gap:.75rem; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../recruiting.html">Join InvestPro</a></li>
+      <li><a href="../about.html">About</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="receipt-card">
+      <div class="check" aria-hidden="true">✓</div>
+      <h1>Application received — thank you!</h1>
+      <p class="lead">We've got your information and Kenny (our broker) will personally review it. Most candidates hear back within <strong>1 business day</strong>.</p>
+
+      <div class="next-steps">
+        <h3>What happens next</h3>
+        <ol>
+          <li><strong>Quick screen.</strong> We'll review your background and Nevada licensing status.</li>
+          <li><strong>Intro call (30 min).</strong> Kenny walks you through the compensation plan, the Rapid Team Builder program if it fits, and answers questions.</li>
+          <li><strong>Onboarding.</strong> If we're a fit, you'll sign the Independent Contractor Agreement and we'll set up your agent portal, share link, and training.</li>
+          <li><strong>Day 1 ready.</strong> Most agents are taking listings within their first week.</li>
+        </ol>
+      </div>
+
+      <p style="margin-top:1.5rem; color:#555A6B; font-size:.95rem;">
+        Questions in the meantime? Email <a href="mailto:info@investprorealty.net" style="color:#1F4FC1;">info@investprorealty.net</a> or call <a href="tel:7028165555" style="color:#1F4FC1;">702-816-5555</a> and ask for Kenny.
+      </p>
+
+      <div class="actions">
+        <a href="../index.html" class="btn btn-outline">← Back to home</a>
+        <a href="../recruiting.html#comp" class="btn btn-light">Re-read the comp plan</a>
+      </div>
+
+      <div class="reference-id" id="referenceIdRow" style="display:none;">
+        <strong>Reference ID:</strong> <span id="referenceId"></span><br/>
+        Keep this for your records — Kenny may reference it on the call.
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../sales.html">Buy / Sell</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>For Agents</h4><ul><li><a href="../recruiting.html#comp">Compensation Plan</a></li><li><a href="../recruiting.html#apply">Apply to Join</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+  // Show the reference ID if it was passed in the URL
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (id) {
+    document.getElementById('referenceId').textContent = id;
+    document.getElementById('referenceIdRow').style.display = '';
+  }
+</script>
+</body>
+</html>
