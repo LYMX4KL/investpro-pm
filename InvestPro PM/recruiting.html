@@ -9,6 +9,15 @@
 <link rel="icon" type="image/png" href="images/favicon.png" />
 <script src="js/preview-gate.js"></script>
 <link rel="stylesheet" href="css/styles.css" />
+<style>
+  /* Responsive 5-step career ladder */
+  @media (max-width: 980px) {
+    .career-ladder { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 540px) {
+    .career-ladder { grid-template-columns: 1fr !important; }
+  }
+</style>
 </head>
 <body>
 
@@ -21,9 +30,11 @@
     <nav class="nav"><ul>
       <li><a href="index.html">Home</a></li><li><a href="property-management.html">Property Management</a></li>
       <li><a href="listings.html">Listings</a></li><li><a href="sales.html">Buy / Sell</a></li>
-      <li><a href="recruiting.html">Join InvestPro</a></li><li><a href="about.html">About</a></li>
+      <li><a href="recruiting.html" aria-current="page">Join InvestPro</a></li>
+      <li><a href="whyus.html">Why InvestPro</a></li>
+      <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
-      <li><a href="portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+      <li><a href="portal/login.html" class="btn btn-primary">Sign In</a></li>
     </ul></nav>
   </div>
 </header>
@@ -64,32 +75,75 @@
     <span class="eyebrow">Compensation Structure</span>
     <h2>The InvestPro Career Ladder</h2>
     <div class="divider"></div>
-    <p class="lead" style="max-width:780px;margin:0 auto 3rem;">A clear path from entry-level to Team Manager. Every level pays better — and adds new income streams on top of personal commission.</p>
+    <p class="lead" style="max-width:780px;margin:0 auto 3rem;">Five career levels. Each unlocks a higher commission split, deeper override participation, and bigger bonus-pool eligibility. Every dollar earned in commission, referral, spread, or override counts as <strong>1 point</strong> toward your next level.</p>
   </div>
 
   <div class="container">
-    <div class="ladder">
-      <div class="step">
-        <h4>Associate</h4>
-        <span class="pct">50%</span>
-        <p class="req">Entry Level<br />Personal commission only</p>
+    <div class="career-ladder" style="display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; max-width:1100px; margin:0 auto;">
+      <!-- Level 1 -->
+      <div class="career-step" style="background:#fff; border-top:4px solid #93C5FD; border-radius:6px; padding:1.5rem 1.25rem; box-shadow:0 2px 8px rgba(0,0,0,.05); position:relative;">
+        <div style="font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#6B7280; font-weight:600;">Level 1</div>
+        <h4 style="margin:.25rem 0 .5rem; color:#1F4FC1; font-size:1.1rem;">Associate</h4>
+        <div style="font-family:'Playfair Display',Georgia,serif; font-size:2.4rem; font-weight:700; color:#1F4FC1; line-height:1;">50<span style="font-size:1.4rem;">%</span></div>
+        <div style="font-size:.85rem; color:#6B7280; margin:.5rem 0 1rem;">Entry level — start here</div>
+        <ul style="font-size:.82rem; padding-left:1rem; margin:0; color:#374151; line-height:1.6;">
+          <li>Personal commission</li>
+          <li style="opacity:.4;">No overrides yet</li>
+          <li style="opacity:.4;">No bonus pools yet</li>
+        </ul>
       </div>
-      <div class="step">
-        <h4>Senior Associate</h4>
-        <span class="pct">65%</span>
-        <p class="req">30,000 closed points<br />+ Generational overrides<br />+ All-company bonus pool</p>
+      <!-- Level 2 -->
+      <div class="career-step" style="background:#fff; border-top:4px solid #60A5FA; border-radius:6px; padding:1.5rem 1.25rem; box-shadow:0 2px 8px rgba(0,0,0,.05);">
+        <div style="font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#6B7280; font-weight:600;">Level 2</div>
+        <h4 style="margin:.25rem 0 .5rem; color:#1F4FC1; font-size:1.1rem;">Senior Associate</h4>
+        <div style="font-family:'Playfair Display',Georgia,serif; font-size:2.4rem; font-weight:700; color:#1F4FC1; line-height:1;">65<span style="font-size:1.4rem;">%</span></div>
+        <div style="font-size:.85rem; color:#6B7280; margin:.5rem 0 1rem;">30,000 closed points</div>
+        <ul style="font-size:.82rem; padding-left:1rem; margin:0; color:#374151; line-height:1.6;">
+          <li><strong>Personal</strong> commission</li>
+          <li>+ <strong>Overrides</strong> (3 gens)</li>
+          <li>+ <strong>2% all-company pool</strong></li>
+        </ul>
       </div>
-      <div class="step">
-        <h4>Executive Associate</h4>
-        <span class="pct">75%</span>
-        <p class="req">75,000 closed points<br />+ Generational overrides<br />+ All-company bonus pool</p>
+      <!-- Level 3 -->
+      <div class="career-step" style="background:#fff; border-top:4px solid #1F4FC1; border-radius:6px; padding:1.5rem 1.25rem; box-shadow:0 2px 12px rgba(31,79,193,.12);">
+        <div style="font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#6B7280; font-weight:600;">Level 3</div>
+        <h4 style="margin:.25rem 0 .5rem; color:#1F4FC1; font-size:1.1rem;">Executive Associate</h4>
+        <div style="font-family:'Playfair Display',Georgia,serif; font-size:2.4rem; font-weight:700; color:#1F4FC1; line-height:1;">75<span style="font-size:1.4rem;">%</span></div>
+        <div style="font-size:.85rem; color:#6B7280; margin:.5rem 0 1rem;">75,000 closed points</div>
+        <ul style="font-size:.82rem; padding-left:1rem; margin:0; color:#374151; line-height:1.6;">
+          <li><strong>Personal</strong> commission</li>
+          <li>+ <strong>Overrides</strong> (3 gens)</li>
+          <li>+ <strong>2% all-company pool</strong></li>
+        </ul>
       </div>
-      <div class="step">
-        <h4>Team Manager</h4>
-        <span class="pct">80%</span>
-        <p class="req">75,000 closed points + Broker license<br />+ Generational overrides<br />+ Executive bonus pool</p>
+      <!-- Level 4 -->
+      <div class="career-step" style="background:#FFFCF1; border-top:4px solid #FFD66B; border-radius:6px; padding:1.5rem 1.25rem; box-shadow:0 2px 12px rgba(255,214,107,.25);">
+        <div style="font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#856404; font-weight:600;">Level 4 ⭐</div>
+        <h4 style="margin:.25rem 0 .5rem; color:#0E2A6B; font-size:1.1rem;">Team Manager</h4>
+        <div style="font-family:'Playfair Display',Georgia,serif; font-size:2.4rem; font-weight:700; color:#0E2A6B; line-height:1;">80<span style="font-size:1.4rem;">%</span></div>
+        <div style="font-size:.85rem; color:#856404; margin:.5rem 0 1rem;">75,000 pts + Broker license</div>
+        <ul style="font-size:.82rem; padding-left:1rem; margin:0; color:#374151; line-height:1.6;">
+          <li><strong>Personal</strong> commission</li>
+          <li>+ <strong>Overrides</strong> (3 gens)</li>
+          <li>+ <strong>2% all-company pool</strong></li>
+          <li>+ <strong>1% executive pool</strong></li>
+        </ul>
+      </div>
+      <!-- Level 5 -->
+      <div class="career-step" style="background:linear-gradient(135deg,#0E2A6B,#1F4FC1); color:#fff; border-top:4px solid #FFD66B; border-radius:6px; padding:1.5rem 1.25rem; box-shadow:0 4px 16px rgba(14,42,107,.3);">
+        <div style="font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">Level 5 🏆</div>
+        <h4 style="margin:.25rem 0 .5rem; color:#fff; font-size:1.1rem;">Branch Broker</h4>
+        <div style="font-family:'Playfair Display',Georgia,serif; font-size:2.4rem; font-weight:700; color:#FFD66B; line-height:1;">80<span style="font-size:1.4rem;">%</span></div>
+        <div style="font-size:.85rem; color:#DDE6F7; margin:.5rem 0 1rem;">+ leads a branch office</div>
+        <ul style="font-size:.82rem; padding-left:1rem; margin:0; color:#DDE6F7; line-height:1.6;">
+          <li>All Team Manager benefits</li>
+          <li>+ <strong style="color:#FFD66B;">1% of branch volume</strong></li>
+          <li>Brokerage ownership benefits without the overhead</li>
+        </ul>
       </div>
     </div>
+
+    <p class="muted center" style="margin-top:1rem; font-size:.85rem;">→ Move from level to level by hitting closed-point thresholds. Levels and overrides carry forward year over year — no resets.</p>
 
     <h3 class="mt-4 center">Generational Overrides</h3>
     <p class="muted center" style="max-width:720px;margin:0 auto 1.5rem;">As you build your downline, you earn a percentage of their commission for three generations — paid for as long as they keep producing.</p>
