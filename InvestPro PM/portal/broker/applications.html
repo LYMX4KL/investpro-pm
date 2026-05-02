@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agent Applications — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .ap-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .ap-filters select, .ap-filters input { padding:.45rem .6rem; border:1px solid #DDE3F0; border-radius:4px; font-size:.9rem; font-family:inherit; }
+  .ap-table { width:100%; border-collapse:collapse; font-size:.92rem; background:#fff; }
+  .ap-table th, .ap-table td { padding:.75rem .7rem; border-bottom:1px solid #E5E7EB; vertical-align:top; text-align:left; }
+  .ap-table th { background:#F7F8FB; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; font-weight:600; }
+  .ap-table tr { cursor:pointer; }
+  .ap-table tr:hover { background:#F7F8FB; }
+  .pill { display:inline-block; padding:.18rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .pill.status-new { background:#DBEAFE; color:#1E40AF; }
+  .pill.status-contacted { background:#FEF3C7; color:#92400E; }
+  .pill.status-scheduled { background:#FFE4B5; color:#7C2D12; }
+  .pill.status-joined { background:#D1FAE5; color:#065F46; }
+  .pill.status-declined { background:#E5E7EB; color:#4B5563; }
+  .pill.status-spam { background:#FEE2E2; color:#B0342B; }
+  .ap-name { font-weight:600; color:#1F2937; }
+  .ap-email { color:#6B7280; font-size:.82rem; margin-top:.15rem; }
+  .stat-row { display:flex; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat-box { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:.85rem 1.1rem; min-width:120px; flex:1; }
+  .stat-box .label { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:600; }
+  .stat-box .value { font-size:1.7rem; font-weight:700; color:#1F4FC1; line-height:1.1; }
+  .stat-box.amber .value { color:#92400E; }
+  .stat-box.green .value { color:#065F46; }
+  .stat-box.gray .value { color:#6B7280; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1000; align-items:flex-start; justify-content:center; padding:2rem 1rem; overflow-y:auto; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:8px; max-width:720px; width:100%; padding:1.75rem 2rem; box-shadow:0 12px 48px rgba(0,0,0,.25); }
+  .modal h2 { margin:0 0 .25rem; font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; }
+  .modal-meta { color:#6B7280; font-size:.85rem; margin-bottom:1.25rem; }
+  .modal-grid { display:grid; grid-template-columns:160px 1fr; gap:.5rem 1rem; font-size:.92rem; margin-bottom:1.25rem; }
+  .modal-grid .label { font-weight:600; color:#374151; }
+  .modal-grid .value { color:#1F2937; }
+  .modal-section { background:#F7F8FB; padding:.75rem 1rem; border-radius:6px; margin-bottom:1rem; font-size:.92rem; line-height:1.5; white-space:pre-wrap; }
+  .modal-actions { display:flex; gap:.5rem; flex-wrap:wrap; align-items:flex-end; padding-top:1rem; border-top:1px solid #E5E7EB; }
+  .modal-actions select, .modal-actions input, .modal-actions textarea { padding:.5rem .65rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.9rem; }
+  .empty-state { text-align:center; padding:3rem 2rem; color:#6B7280; }
+  .err { background:#FEE2E2; color:#B0342B; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .ok { background:#D1FAE5; color:#065F46; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Agent Applications</strong> · Recruiting Pipeline</nav>
+    <div class="dash-user">
+      <a href="#" id="backLink" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1180px;">
+  <div class="dash-title">
+    <h1>Agent Applications</h1>
+    <a href="https://investpro-realty.netlify.app/recruiting.html" target="_blank" class="btn btn-outline">View public form ↗</a>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-box"><div class="label">Total</div><div class="value" id="statTotal">—</div></div>
+    <div class="stat-box amber"><div class="label">New</div><div class="value" id="statNew">—</div></div>
+    <div class="stat-box"><div class="label">Contacted</div><div class="value" id="statContacted">—</div></div>
+    <div class="stat-box"><div class="label">Scheduled</div><div class="value" id="statScheduled">—</div></div>
+    <div class="stat-box green"><div class="label">Joined</div><div class="value" id="statJoined">—</div></div>
+    <div class="stat-box gray"><div class="label">Declined</div><div class="value" id="statDeclined">—</div></div>
+  </div>
+
+  <div class="ap-filters">
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="new" selected>New</option>
+      <option value="contacted">Contacted</option>
+      <option value="scheduled">Scheduled</option>
+      <option value="joined">Joined</option>
+      <option value="declined">Declined</option>
+      <option value="spam">Spam</option>
+    </select>
+    <input type="search" id="filterSearch" placeholder="🔎 Search name, email, brokerage…" style="min-width:280px;flex:1;" />
+    <button id="refreshBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+  </div>
+
+  <div id="loading">Loading applications…</div>
+
+  <table class="ap-table" id="apTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Applicant</th>
+        <th>Phone</th>
+        <th>Licensed</th>
+        <th>Interest</th>
+        <th>Sponsor</th>
+        <th>Status</th>
+        <th>Submitted</th>
+      </tr>
+    </thead>
+    <tbody id="apBody"></tbody>
+  </table>
+
+  <div id="emptyState" class="empty-state" style="display:none;">No applications match this filter.</div>
+</main>
+
+<!-- Detail modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modal">
+    <h2 id="modalName">Applicant</h2>
+    <div class="modal-meta" id="modalMeta">—</div>
+    <div id="modalErr" style="display:none;" class="err"></div>
+    <div id="modalOk" style="display:none;" class="ok"></div>
+
+    <div class="modal-grid">
+      <div class="label">Email</div>           <div class="value" id="mEmail">—</div>
+      <div class="label">Phone</div>           <div class="value" id="mPhone">—</div>
+      <div class="label">Licensed</div>        <div class="value" id="mLicensed">—</div>
+      <div class="label">Current brokerage</div><div class="value" id="mBrokerage">—</div>
+      <div class="label">Interest</div>        <div class="value" id="mInterest">—</div>
+      <div class="label">Sponsor</div>         <div class="value" id="mSponsor">—</div>
+      <div class="label">Source page</div>     <div class="value" id="mSource">—</div>
+    </div>
+
+    <div style="font-weight:600; margin-bottom:.4rem;">Their message</div>
+    <div class="modal-section" id="mMessage">—</div>
+
+    <div style="font-weight:600; margin-bottom:.4rem;">Resolution notes <span class="muted" style="font-weight:400;font-size:.8rem;">(internal — visible to staff only)</span></div>
+    <textarea id="mNotes" rows="3" style="width:100%; padding:.6rem .75rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.92rem; margin-bottom:1rem;"></textarea>
+
+    <div class="modal-actions">
+      <label style="display:flex; flex-direction:column; gap:.2rem; flex:1;">
+        <span style="font-size:.8rem; font-weight:600; color:#374151;">Status</span>
+        <select id="mStatus">
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="scheduled">Scheduled (intro call booked)</option>
+          <option value="joined">Joined ✓</option>
+          <option value="declined">Declined</option>
+          <option value="spam">Spam</option>
+        </select>
+      </label>
+      <button id="mSaveBtn" class="btn btn-primary">Save changes</button>
+      <button id="mCloseBtn" class="btn btn-outline">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script type="module">
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+  document.getElementById('backLink').href = window.investproAuth.homeForRole(u.role);
+
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('banner-area').innerHTML =
+      '<div class="banner banner-info">Demo mode — connect Supabase to see applications.</div>';
+    return;
+  }
+
+  // Load Supabase client (auth.js uses const, so we fetch + regex like the other pages)
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  let allApps = [];
+  let currentApp = null;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function statusPill(status) {
+    return `<span class="pill status-${status}">${status}</span>`;
+  }
+
+  async function loadAll() {
+    document.getElementById('loading').style.display = '';
+    document.getElementById('apTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    const { data, error } = await supa
+      .from('agent_applications')
+      .select('id, first_name, last_name, email, phone, licensed, current_brokerage, interest, message, status, resolution_notes, sponsor_agent_id, source_url, created_at')
+      .order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('loading').textContent = '';
+      document.getElementById('banner-area').innerHTML = '<div class="banner banner-error">Couldn\'t load: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    allApps = data || [];
+    refreshStats();
+    render();
+  }
+
+  function refreshStats() {
+    const counts = { total: allApps.length, new: 0, contacted: 0, scheduled: 0, joined: 0, declined: 0, spam: 0 };
+    for (const a of allApps) counts[a.status] = (counts[a.status] || 0) + 1;
+    document.getElementById('statTotal').textContent = counts.total;
+    document.getElementById('statNew').textContent = counts.new;
+    document.getElementById('statContacted').textContent = counts.contacted;
+    document.getElementById('statScheduled').textContent = counts.scheduled;
+    document.getElementById('statJoined').textContent = counts.joined;
+    document.getElementById('statDeclined').textContent = counts.declined;
+  }
+
+  function render() {
+    const status = document.getElementById('filterStatus').value;
+    const q = (document.getElementById('filterSearch').value || '').toLowerCase().trim();
+
+    let rows = allApps.slice();
+    if (status) rows = rows.filter(a => a.status === status);
+    if (q) {
+      rows = rows.filter(a => {
+        const hay = [a.first_name, a.last_name, a.email, a.current_brokerage, a.message].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    if (rows.length === 0) {
+      document.getElementById('apTable').style.display = 'none';
+      document.getElementById('emptyState').style.display = '';
+      return;
+    }
+
+    document.getElementById('apTable').style.display = '';
+    document.getElementById('emptyState').style.display = 'none';
+
+    const tbody = document.getElementById('apBody');
+    tbody.innerHTML = '';
+    for (const a of rows) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = a.id;
+      const submitted = new Date(a.created_at).toLocaleDateString() + ' ' + new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tr.innerHTML = `
+        <td>
+          <div class="ap-name">${escapeHtml((a.first_name || '') + ' ' + (a.last_name || ''))}</div>
+          <div class="ap-email">${escapeHtml(a.email || '')}</div>
+        </td>
+        <td>${escapeHtml(a.phone || '—')}</td>
+        <td>${escapeHtml(a.licensed || '—')}</td>
+        <td>${escapeHtml(a.interest || '—')}</td>
+        <td>${a.sponsor_agent_id ? '✓ tracked' : '—'}</td>
+        <td>${statusPill(a.status)}</td>
+        <td>${escapeHtml(submitted)}</td>
+      `;
+      tr.addEventListener('click', () => openModal(a));
+      tbody.appendChild(tr);
+    }
+  }
+
+  function openModal(a) {
+    currentApp = a;
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modalOk').style.display = 'none';
+    document.getElementById('modalName').textContent = (a.first_name || '') + ' ' + (a.last_name || '');
+    document.getElementById('modalMeta').textContent = 'Submitted ' + new Date(a.created_at).toLocaleString();
+    document.getElementById('mEmail').innerHTML = a.email ? `<a href="mailto:${escapeHtml(a.email)}" style="color:#1F4FC1;">${escapeHtml(a.email)}</a>` : '—';
+    document.getElementById('mPhone').innerHTML = a.phone ? `<a href="tel:${escapeHtml(a.phone)}" style="color:#1F4FC1;">${escapeHtml(a.phone)}</a>` : '—';
+    document.getElementById('mLicensed').textContent = a.licensed || '—';
+    document.getElementById('mBrokerage').textContent = a.current_brokerage || '—';
+    document.getElementById('mInterest').textContent = a.interest || '—';
+    document.getElementById('mSponsor').textContent = a.sponsor_agent_id ? '✓ Sponsor agent ID: ' + a.sponsor_agent_id : '— (no sponsor link)';
+    document.getElementById('mSource').innerHTML = a.source_url ? `<a href="${escapeHtml(a.source_url)}" target="_blank" rel="noopener" style="color:#1F4FC1;">${escapeHtml(a.source_url)}</a>` : '—';
+    document.getElementById('mMessage').textContent = a.message || '(no message)';
+    document.getElementById('mNotes').value = a.resolution_notes || '';
+    document.getElementById('mStatus').value = a.status;
+    document.getElementById('modalBg').classList.add('show');
+  }
+
+  function closeModal() {
+    currentApp = null;
+    document.getElementById('modalBg').classList.remove('show');
+  }
+
+  async function saveCurrent() {
+    if (!currentApp) return;
+    const newStatus = document.getElementById('mStatus').value;
+    const newNotes  = document.getElementById('mNotes').value.trim() || null;
+    document.getElementById('modalErr').style.display = 'none';
+    document.getElementById('modalOk').style.display = 'none';
+
+    const saveBtn = document.getElementById('mSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    const { error } = await supa
+      .from('agent_applications')
+      .update({ status: newStatus, resolution_notes: newNotes })
+      .eq('id', currentApp.id);
+
+    if (error) {
+      document.getElementById('modalErr').textContent = 'Save failed: ' + error.message;
+      document.getElementById('modalErr').style.display = '';
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save changes';
+      return;
+    }
+
+    // Update local state
+    const idx = allApps.findIndex(x => x.id === currentApp.id);
+    if (idx >= 0) {
+      allApps[idx].status = newStatus;
+      allApps[idx].resolution_notes = newNotes;
+    }
+    refreshStats();
+    render();
+
+    document.getElementById('modalOk').textContent = '✓ Saved.';
+    document.getElementById('modalOk').style.display = '';
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save changes';
+    setTimeout(closeModal, 800);
+  }
+
+  document.getElementById('filterStatus').addEventListener('change', render);
+  document.getElementById('filterSearch').addEventListener('input', render);
+  document.getElementById('refreshBtn').addEventListener('click', loadAll);
+  document.getElementById('mCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('mSaveBtn').addEventListener('click', saveCurrent);
+  document.getElementById('modalBg').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalBg')) closeModal();
+  });
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
