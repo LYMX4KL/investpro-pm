@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Downline — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .summary-card { background:linear-gradient(135deg,#0E2A6B,#1F4FC1); color:#fff; padding:1.75rem; border-radius:8px; margin-bottom:1.5rem; }
+  .summary-card .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-top:1rem; }
+  .summary-card .label { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600; }
+  .summary-card .num { font-family:'Playfair Display',Georgia,serif; font-size:2rem; font-weight:700; color:#fff; line-height:1.1; }
+  .summary-card .sub { font-size:.78rem; color:#DDE6F7; }
+
+  .legend { display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1.25rem; padding:.85rem 1.1rem; background:#F7F8FB; border-radius:6px; font-size:.85rem; color:#555A6B; }
+  .legend-dot { display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:.4rem; vertical-align:middle; }
+  .legend-dot.gen1 { background:#1F4FC1; }
+  .legend-dot.gen2 { background:#5FAB22; }
+  .legend-dot.gen3 { background:#FFD66B; }
+
+  .tree-root { font-family:'Source Sans Pro',sans-serif; }
+  .agent-node {
+    display:flex; align-items:center; gap:1rem;
+    padding:.85rem 1rem; background:#fff; border:1px solid #DDE3F0;
+    border-radius:8px; margin-bottom:.6rem; transition:transform .12s, border-color .12s;
+  }
+  .agent-node:hover { border-color:#1F4FC1; transform:translateX(2px); }
+  .agent-node.gen1 { border-left:4px solid #1F4FC1; }
+  .agent-node.gen2 { border-left:4px solid #5FAB22; }
+  .agent-node.gen3 { border-left:4px solid #FFD66B; }
+  .agent-node .gen-badge {
+    display:inline-block; font-size:.65rem; font-weight:700;
+    padding:.15rem .5rem; border-radius:999px; text-transform:uppercase; letter-spacing:.06em;
+  }
+  .agent-node.gen1 .gen-badge { background:#DBEAFE; color:#1E40AF; }
+  .agent-node.gen2 .gen-badge { background:#DCFCE7; color:#166534; }
+  .agent-node.gen3 .gen-badge { background:#FEF3C7; color:#92400E; }
+  .agent-node .info { flex:1; min-width:0; }
+  .agent-node .name { font-weight:700; color:#1F2937; font-size:.98rem; }
+  .agent-node .level { font-size:.85rem; color:#6B7280; }
+  .agent-node .stats { text-align:right; min-width:140px; }
+  .agent-node .stats .pts { font-family:'Playfair Display',Georgia,serif; font-size:1.1rem; font-weight:700; color:#1F4FC1; }
+  .agent-node .stats .pts-label { font-size:.7rem; color:#6B7280; text-transform:uppercase; letter-spacing:.05em; }
+  .agent-node .override-rate { color:#5FAB22; font-weight:600; font-size:.85rem; }
+
+  .gen-section { margin-bottom:2rem; }
+  .gen-header {
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:.85rem; padding-bottom:.5rem; border-bottom:2px solid #E5E7EB;
+  }
+  .gen-header h2 { margin:0; font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; font-size:1.3rem; }
+  .gen-header .count-pill {
+    display:inline-block; padding:.2rem .65rem; background:#F7F8FB;
+    border-radius:999px; font-size:.78rem; color:#6B7280; font-weight:600;
+  }
+
+  .tree-indent-2 { margin-left:2.5rem; padding-left:0; }
+  .tree-indent-3 { margin-left:5rem; padding-left:0; }
+
+  .empty-state { text-align:center; padding:3rem 2rem; color:#6B7280; background:#F7F8FB; border-radius:8px; }
+  .empty-state h3 { color:#1F4FC1; font-family:'Playfair Display',Georgia,serif; }
+  .empty-state .icon { font-size:2.5rem; margin-bottom:1rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>My Downline</strong> · 3-generation override tree</nav>
+    <div class="dash-user">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1100px;">
+  <div class="dash-title">
+    <h1>My Downline</h1>
+    <a href="#" id="copyShareLink" class="btn btn-primary btn-sm">📨 Copy recruiting link</a>
+  </div>
+
+  <div id="banner-area"></div>
+  <div id="loading">Loading your downline tree…</div>
+
+  <div id="content" style="display:none;">
+    <!-- Override summary card -->
+    <div class="summary-card">
+      <div style="font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">Override structure</div>
+      <h2 style="font-family:'Playfair Display',Georgia,serif; color:#fff; font-size:1.5rem; margin:.25rem 0;">3 generations of passive income</h2>
+      <p style="color:#DDE6F7; margin:.5rem 0 0; font-size:.92rem;">
+        For every dollar your downline earns, a percentage of their commission flows back to you — for as long as they keep producing.
+      </p>
+      <div class="grid3">
+        <div>
+          <div class="label">1st gen <span style="color:#fff;">5%</span></div>
+          <div class="num" id="gen1Count">0</div>
+          <div class="sub">direct recruits</div>
+        </div>
+        <div>
+          <div class="label">2nd gen <span style="color:#fff;">3%</span></div>
+          <div class="num" id="gen2Count">0</div>
+          <div class="sub">recruits' recruits</div>
+        </div>
+        <div>
+          <div class="label">3rd gen <span style="color:#fff;">1%</span></div>
+          <div class="num" id="gen3Count">0</div>
+          <div class="sub">three levels deep</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="legend-dot gen1"></span>1st generation (5% override)</span>
+      <span><span class="legend-dot gen2"></span>2nd generation (3% override)</span>
+      <span><span class="legend-dot gen3"></span>3rd generation (1% override)</span>
+    </div>
+
+    <div id="treeContainer"></div>
+
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <div class="icon">🌳</div>
+      <h3>Your downline starts with one share.</h3>
+      <p>Use your personal recruiting link to invite agents. Once they apply through your link and join, they'll appear here as 1st-generation recruits — and you'll earn 5% override on every deal they close.</p>
+      <p style="margin-top:1.5rem;">
+        <a href="#" id="copyShareLinkInline" class="btn btn-primary">📨 Copy your recruiting link</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script type="module">
+(async function () {
+  const u = await window.investproAuth.requireRole(['agent_listing', 'agent_showing', 'broker', 'compliance']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('banner-area').innerHTML = '<div class="banner banner-info">Demo mode — connect Supabase to see real downline.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // Find this user's agent row (the "root" of their tree)
+  const { data: myAgent } = await supa.from('agents')
+    .select('id, agent_share_code, current_level, points_ytd')
+    .eq('profile_id', u.id)
+    .maybeSingle();
+
+  if (!myAgent) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('banner-area').innerHTML =
+      '<div class="banner banner-info">Your agent record is not yet set up. Ask the broker to enable your agent profile (license, share code, etc.) so your downline tree can populate.</div>';
+    return;
+  }
+
+  // Set up share link copy
+  const shareUrl = `https://investprorealty.net/recruiting.html?sponsor=${encodeURIComponent(myAgent.agent_share_code || '')}`;
+  function copyShare(ev) {
+    if (ev) ev.preventDefault();
+    navigator.clipboard.writeText(shareUrl);
+    alert('Link copied:\n' + shareUrl);
+  }
+  document.getElementById('copyShareLink').addEventListener('click', copyShare);
+
+  // Pull the recursive downline view, filtered to this agent's chain
+  const { data: tree, error: treeErr } = await supa.from('v_agent_downline')
+    .select('agent_id, depth')
+    .eq('root_agent_id', myAgent.id)
+    .order('depth');
+  if (treeErr) {
+    document.getElementById('loading').textContent = 'Could not load tree: ' + treeErr.message;
+    return;
+  }
+
+  const downlineIds = (tree || []).map(t => t.agent_id);
+  let agentsMap = {};
+  if (downlineIds.length) {
+    const { data: agents } = await supa.from('agents')
+      .select(`id, current_level, points_ytd, sponsor_agent_id,
+               profiles(full_name, role, email)`)
+      .in('id', downlineIds);
+    for (const a of (agents || [])) agentsMap[a.id] = a;
+  }
+
+  // Build by-depth groupings
+  const byDepth = { 1: [], 2: [], 3: [] };
+  for (const t of (tree || [])) {
+    if (byDepth[t.depth]) {
+      const a = agentsMap[t.agent_id];
+      if (a) byDepth[t.depth].push(a);
+    }
+  }
+
+  document.getElementById('gen1Count').textContent = byDepth[1].length;
+  document.getElementById('gen2Count').textContent = byDepth[2].length;
+  document.getElementById('gen3Count').textContent = byDepth[3].length;
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = '';
+
+  const container = document.getElementById('treeContainer');
+
+  if (byDepth[1].length === 0 && byDepth[2].length === 0 && byDepth[3].length === 0) {
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('copyShareLinkInline').addEventListener('click', copyShare);
+    return;
+  }
+
+  const LEVEL_LABEL = {
+    associate: 'Associate', senior_associate: 'Senior Associate',
+    executive_associate: 'Executive Associate', team_manager: 'Team Manager ⭐',
+    branch_broker: 'Branch Broker 🏆'
+  };
+
+  function renderAgent(a, gen) {
+    const overrideRate = ['', '5%', '3%', '1%'][gen];
+    const overridePts = Math.round(Number(a.points_ytd || 0) * (gen === 1 ? 0.05 : gen === 2 ? 0.03 : 0.01));
+    return `
+      <div class="agent-node gen${gen}">
+        <span class="gen-badge">Gen ${gen}</span>
+        <div class="info">
+          <div class="name">${escapeHtml(a.profiles?.full_name || '(no name)')}</div>
+          <div class="level">${escapeHtml(LEVEL_LABEL[a.current_level] || a.current_level)} · ${escapeHtml((a.profiles?.role || '').replace('_',' '))}</div>
+        </div>
+        <div class="stats">
+          <div class="pts">${Number(a.points_ytd || 0).toLocaleString()}</div>
+          <div class="pts-label">pts YTD</div>
+          <div class="override-rate" title="Your override on this agent's production">+${overrideRate} → ${overridePts.toLocaleString()} pts to you</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let html = '';
+
+  for (let gen = 1; gen <= 3; gen++) {
+    if (byDepth[gen].length === 0) continue;
+    const indent = gen === 1 ? '' : (gen === 2 ? 'tree-indent-2' : 'tree-indent-3');
+    html += `<div class="gen-section ${indent}">`;
+    html += `<div class="gen-header"><h2>Generation ${gen}</h2><span class="count-pill">${byDepth[gen].length} agent${byDepth[gen].length === 1 ? '' : 's'}</span></div>`;
+    html += byDepth[gen].map(a => renderAgent(a, gen)).join('');
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+})();
+</script>
+</body>
+</html>
