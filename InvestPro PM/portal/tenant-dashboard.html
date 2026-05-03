@@ -43,13 +43,13 @@
 
     <section id="overview">
       <h1>Welcome, <span data-user-name>Tenant</span></h1>
-      <p class="muted" style="margin-top:-1rem;">3601 W Sahara Ave #207 — Las Vegas, NV 89102</p>
+      <p class="muted" style="margin-top:-1rem;" id="propAddr">Loading your lease…</p>
 
       <div class="kpi-grid">
-        <div class="kpi"><div class="label">Rent Due</div><div class="value">$1,850</div></div>
-        <div class="kpi"><div class="label">Due Date</div><div class="value">May 1</div></div>
-        <div class="kpi"><div class="label">Lease Ends</div><div class="value">Aug '26</div></div>
-        <div class="kpi"><div class="label">Open Tickets</div><div class="value">0</div></div>
+        <div class="kpi"><div class="label">Rent</div><div class="value" id="kpiRent">—</div></div>
+        <div class="kpi"><div class="label">Next Due</div><div class="value" id="kpiDue">—</div></div>
+        <div class="kpi"><div class="label">Lease Ends</div><div class="value" id="kpiEnds">—</div></div>
+        <div class="kpi"><div class="label">Open Tickets</div><div class="value" id="kpiTickets">—</div></div>
       </div>
 
       <div class="banner banner-info">📌 Set up <a href="#pay">auto-pay</a> so you never miss a date. Late fees start on the 6th.</div>
@@ -140,28 +140,25 @@
 
     <section id="lease" style="margin-top:3rem;">
       <h2>My Lease</h2>
-      <table class="tbl">
-        <tr><th>Property</th><td>3601 W Sahara Ave #207, Las Vegas, NV 89102</td></tr>
-        <tr><th>Lease Start</th><td>August 15, 2024</td></tr>
-        <tr><th>Lease End</th><td>August 14, 2026</td></tr>
-        <tr><th>Monthly Rent</th><td>$1,850</td></tr>
-        <tr><th>Security Deposit</th><td>$1,850 (held per NRS 118A)</td></tr>
-        <tr><th>Pet Deposit</th><td>$300 (1 cat)</td></tr>
-        <tr><th>Lease Document</th><td><a href="#">📄 Download Signed Lease (PDF)</a></td></tr>
+      <table class="tbl" id="leaseTbl">
+        <tr><th>Property</th><td id="leaseAddr">—</td></tr>
+        <tr><th>Lease Start</th><td id="leaseStart">—</td></tr>
+        <tr><th>Lease End</th><td id="leaseEnd">—</td></tr>
+        <tr><th>Monthly Rent</th><td id="leaseRent">—</td></tr>
+        <tr><th>Security Deposit</th><td id="leaseDeposit">— <small style="color:#6B7280;">(held per NRS 118A)</small></td></tr>
+        <tr id="leasePetRow" style="display:none;"><th>Pet Fee</th><td id="leasePet">—</td></tr>
+        <tr><th>Status</th><td id="leaseStatus">—</td></tr>
       </table>
+      <p id="noLeaseNote" style="display:none; background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #1F4FC1; margin-top:1rem;">
+        No active lease found on your account. If this seems wrong, contact <a href="mailto:info@investprorealty.net" style="color:#1F4FC1;">your property manager</a>.
+      </p>
     </section>
 
     <section id="payments" style="margin-top:3rem;">
       <h2>Payment History</h2>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Description</th><th>Method</th><th>Amount</th></tr></thead>
-        <tbody>
-          <tr><td>Apr 1, 2026</td><td>Rent — April</td><td>ACH</td><td>$1,850.00</td></tr>
-          <tr><td>Mar 1, 2026</td><td>Rent — March</td><td>ACH</td><td>$1,850.00</td></tr>
-          <tr><td>Feb 1, 2026</td><td>Rent — February</td><td>ACH</td><td>$1,850.00</td></tr>
-          <tr><td>Jan 1, 2026</td><td>Rent — January</td><td>ACH</td><td>$1,850.00</td></tr>
-        </tbody>
-      </table>
+      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
+        Your monthly rent payments and any other charges (late fees, utility allocations, pet rent) will appear here once your payment provider is connected. The platform is wired and waiting on the first month-close.
+      </div>
     </section>
 
     <section id="contact" style="margin-top:3rem;">
@@ -187,11 +184,110 @@
     if (!u) return;
     document.querySelectorAll('[data-user-name]').forEach(el => el.textContent = u.name);
     document.getElementById('welcome').textContent = u.email;
+    document.getElementById('signOutBtn').addEventListener('click', (e)=>{ e.preventDefault(); window.investproAuth.signOut(); });
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    }
+    function fmtMonthShort(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month:'short', year:'2-digit' }).replace(/ (\d\d)/, " '$1");
+    }
+
     if (window.investproAuth.isDemoMode()) {
       const banner = document.getElementById('auth-banner');
-      banner.innerHTML = '<div class="banner banner-info" style="margin:0;border-radius:0;">⚙️ <strong>Demo mode:</strong> sample data shown. Connect Supabase + a payment provider to show real lease/payment data. See <a href="../README.md">README</a>.</div>';
+      banner.innerHTML = '<div class="banner banner-info" style="margin:0;border-radius:0;">⚙️ <strong>Demo mode:</strong> sample data shown. Connect Supabase to show real lease/payment data.</div>';
+      // Stub demo values
+      document.getElementById('propAddr').textContent = '— demo lease —';
+      document.getElementById('kpiRent').textContent = '$0';
+      document.getElementById('kpiDue').textContent = '—';
+      document.getElementById('kpiEnds').textContent = '—';
+      document.getElementById('kpiTickets').textContent = '0';
+    } else {
+      // Real Supabase fetch
+      try {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const authSrc = await fetch('/js/auth.js').then(r => r.text());
+        const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+        const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+        const supa = createClient(url, key);
+
+        // Find this tenant's active lease(s) — tenant_profile_ids is JSONB array
+        const { data: leases, error } = await supa.from('leases')
+          .select('id, property_id, start_date, end_date, monthly_rent, security_deposit_held, pet_fee_paid, status')
+          .contains('tenant_profile_ids', JSON.stringify([u.id]))
+          .eq('status', 'active')
+          .order('start_date', { ascending: false });
+
+        if (error) {
+          console.error('lease lookup', error);
+        }
+
+        const lease = (leases || [])[0];
+        if (!lease) {
+          // No active lease — show empty state
+          document.getElementById('propAddr').textContent = 'No active lease found.';
+          document.getElementById('kpiRent').textContent = '—';
+          document.getElementById('kpiDue').textContent = '—';
+          document.getElementById('kpiEnds').textContent = '—';
+          document.getElementById('kpiTickets').textContent = '0';
+          document.getElementById('leaseTbl').style.display = 'none';
+          document.getElementById('noLeaseNote').style.display = '';
+        } else {
+          // Pull the property
+          const { data: prop } = await supa.from('properties')
+            .select('address_line1, address_line2, city, state, zip')
+            .eq('id', lease.property_id)
+            .maybeSingle();
+
+          const addrLine = prop
+            ? `${prop.address_line1}${prop.address_line2 ? ' ' + prop.address_line2 : ''} — ${prop.city || 'Las Vegas'}, ${prop.state || 'NV'} ${prop.zip || ''}`
+            : '(property not found)';
+
+          document.getElementById('propAddr').textContent = addrLine;
+          document.getElementById('leaseAddr').textContent = addrLine;
+          document.getElementById('leaseStart').textContent = fmtDate(lease.start_date);
+          document.getElementById('leaseEnd').textContent = fmtDate(lease.end_date);
+          document.getElementById('leaseRent').textContent = '$' + Number(lease.monthly_rent).toLocaleString();
+          document.getElementById('leaseDeposit').innerHTML = '$' + Number(lease.security_deposit_held).toLocaleString() +
+            ' <small style="color:#6B7280;">(held per NRS 118A)</small>';
+          if (lease.pet_fee_paid && Number(lease.pet_fee_paid) > 0) {
+            document.getElementById('leasePetRow').style.display = '';
+            document.getElementById('leasePet').textContent = '$' + Number(lease.pet_fee_paid).toLocaleString();
+          }
+          document.getElementById('leaseStatus').innerHTML =
+            `<span style="display:inline-block; padding:.15rem .55rem; background:#D1FAE5; color:#065F46; border-radius:999px; font-size:.78rem; font-weight:700;">${lease.status.toUpperCase()}</span>`;
+
+          // KPIs
+          document.getElementById('kpiRent').textContent = '$' + Number(lease.monthly_rent).toLocaleString();
+
+          // Next due — first of next month
+          const today = new Date();
+          const next1st = new Date(today.getFullYear(), today.getMonth() + (today.getDate() === 1 ? 0 : 1), 1);
+          document.getElementById('kpiDue').textContent = next1st.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+
+          document.getElementById('kpiEnds').textContent = fmtMonthShort(lease.end_date);
+
+          // Open work orders count (if work_orders table exists)
+          try {
+            const { count } = await supa.from('work_orders')
+              .select('id', { count: 'exact', head: true })
+              .eq('lease_id', lease.id)
+              .neq('status', 'completed')
+              .neq('status', 'closed');
+            document.getElementById('kpiTickets').textContent = count != null ? count : '0';
+          } catch {
+            document.getElementById('kpiTickets').textContent = '0';
+          }
+        }
+      } catch (err) {
+        console.warn('Tenant data fetch failed:', err);
+      }
     }
-    document.getElementById('signOutBtn').addEventListener('click', (e)=>{ e.preventDefault(); window.investproAuth.signOut(); });
 
     // MICR alert visibility — show only if a tenant has an active MICR window
     // (in demo mode, always show so reviewers see the section)
