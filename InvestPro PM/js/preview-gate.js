@@ -23,7 +23,7 @@
  */
 
 (function () {
-  const GATE_ENABLED      = true;                // ON during soft-launch testing — turn OFF when going fully public
+  const GATE_ENABLED      = false;               // OFF — site is publicly launched (flipped 2026-05-03)
   const PREVIEW_PASSWORD  = 'investpro2026';     // share with team via Slack/text; change here + redeploy to rotate
   const PREVIEW_VERSION   = 'v1.1-soft-launch';  // shown in the corner badge so reviewers know which build they're seeing
   const STORAGE_KEY       = 'investpro_gate_v4'; // bump this string to force everyone to re-enter
