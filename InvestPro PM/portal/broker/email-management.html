@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Email Management — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .em-filters { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+  .em-filters select, .em-filters input { padding:.45rem .65rem; border:1px solid #DDE3F0; border-radius:4px; font-family:inherit; font-size:.9rem; }
+  .em-table { width:100%; border-collapse:collapse; font-size:.92rem; background:#fff; }
+  .em-table th, .em-table td { padding:.7rem .65rem; border-bottom:1px solid #E5E7EB; vertical-align:top; text-align:left; }
+  .em-table th { background:#F7F8FB; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; font-weight:600; }
+  .em-table tr { cursor:pointer; }
+  .em-table tr:hover { background:#F7F8FB; }
+  .pill { display:inline-block; padding:.18rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .pill.s-pending   { background:#FEF3C7; color:#92400E; }
+  .pill.s-active    { background:#D1FAE5; color:#065F46; }
+  .pill.s-suspended { background:#FEE2E2; color:#B0342B; }
+  .pill.cf-ok       { background:#DBEAFE; color:#1E40AF; }
+  .pill.cf-err      { background:#FEE2E2; color:#B0342B; }
+  .pill.cf-pending  { background:#F3F4F6; color:#4B5563; }
+  .stat-row { display:flex; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat-box { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:.85rem 1.1rem; min-width:140px; flex:1; }
+  .stat-box .label { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:600; }
+  .stat-box .value { font-size:1.7rem; font-weight:700; color:#1F4FC1; line-height:1.1; }
+  .stat-box.amber .value { color:#92400E; }
+  .stat-box.green .value { color:#065F46; }
+  .stat-box.red .value { color:#B0342B; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1000; align-items:flex-start; justify-content:center; padding:2rem 1rem; overflow-y:auto; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:8px; max-width:720px; width:100%; padding:1.75rem 2rem; box-shadow:0 12px 48px rgba(0,0,0,.25); }
+  .modal h2 { margin:0 0 .25rem; font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; word-break:break-all; }
+  .modal-meta { color:#6B7280; font-size:.85rem; margin-bottom:1rem; }
+  .grid-row { display:grid; grid-template-columns:160px 1fr; gap:.5rem 1rem; font-size:.92rem; margin-bottom:1.25rem; }
+  .grid-row .label { font-weight:600; color:#374151; }
+  .grid-row .value { color:#1F2937; word-break:break-all; }
+  .actions-row { display:flex; gap:.5rem; flex-wrap:wrap; padding-top:1rem; border-top:1px solid #E5E7EB; }
+  .empty-state { text-align:center; padding:3rem 2rem; color:#6B7280; }
+  .err { background:#FEE2E2; color:#B0342B; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .ok { background:#D1FAE5; color:#065F46; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .info { background:#DBEAFE; color:#1E40AF; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Email Management</strong> · Provisioned company addresses</nav>
+    <div class="dash-user">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1280px;">
+  <div class="dash-title">
+    <h1>Email Management</h1>
+    <a href="../../docs/COMPANY-EMAIL-ARCHITECTURE.md" target="_blank" class="btn btn-outline btn-sm">📄 Architecture doc</a>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="label">Total</div><div class="value" id="statTotal">—</div></div>
+    <div class="stat-box amber"><div class="label">Pending</div><div class="value" id="statPending">—</div></div>
+    <div class="stat-box green"><div class="label">Active</div><div class="value" id="statActive">—</div></div>
+    <div class="stat-box red"><div class="label">Suspended</div><div class="value" id="statSuspended">—</div></div>
+    <div class="stat-box"><div class="label">SES verified</div><div class="value" id="statSesOk">—</div></div>
+  </div>
+
+  <div class="em-filters">
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="pending">Pending</option>
+      <option value="active">Active</option>
+      <option value="suspended">Suspended</option>
+    </select>
+    <select id="filterCompany">
+      <option value="">All companies</option>
+    </select>
+    <input type="search" id="filterSearch" placeholder="🔎 Search email or name…" style="min-width:280px;flex:1;" />
+    <button id="refreshBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+  </div>
+
+  <div id="loading">Loading provisioned emails…</div>
+
+  <table class="em-table" id="emTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Company email</th>
+        <th>Forward to</th>
+        <th>Status</th>
+        <th>Inbound (CF)</th>
+        <th>Outbound (SES)</th>
+        <th>Provisioned</th>
+      </tr>
+    </thead>
+    <tbody id="emBody"></tbody>
+  </table>
+
+  <div id="emptyState" class="empty-state" style="display:none;">No agent emails match this filter.</div>
+</main>
+
+<!-- Detail modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modal">
+    <h2 id="mFullEmail">—</h2>
+    <div class="modal-meta" id="mMeta">—</div>
+    <div id="mErr" class="err" style="display:none;"></div>
+    <div id="mOk" class="ok" style="display:none;"></div>
+
+    <div class="grid-row">
+      <div class="label">Profile</div>            <div class="value" id="mProfileName">—</div>
+      <div class="label">Forward to</div>         <div class="value" id="mForwardTo">—</div>
+      <div class="label">Company</div>            <div class="value" id="mCompany">—</div>
+      <div class="label">Cloudflare route</div>   <div class="value" id="mCfRoute">—</div>
+      <div class="label">SES identity</div>       <div class="value" id="mSesId">—</div>
+      <div class="label">Provisioned</div>        <div class="value" id="mProvisionedAt">—</div>
+      <div class="label">Onboarding sent</div>    <div class="value" id="mOnboardingAt">—</div>
+      <div class="label">Status reason</div>      <div class="value" id="mReason">—</div>
+    </div>
+
+    <div class="actions-row">
+      <button id="btnVerifySes" class="btn btn-primary btn-sm">🔐 Verify SES sender</button>
+      <button id="btnSuspend" class="btn btn-outline btn-sm" style="color:#B0342B; border-color:#B0342B;">⏸ Suspend</button>
+      <button id="btnReactivate" class="btn btn-outline btn-sm" style="color:#065F46; border-color:#065F46; display:none;">▶ Reactivate</button>
+      <span style="flex:1;"></span>
+      <button id="mCloseBtn" class="btn btn-outline btn-sm">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script type="module">
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('banner-area').innerHTML = '<div class="info">Demo mode — connect Supabase to see real provisioned emails.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  let allRows = [];
+  let companies = [];
+  let currentRow = null;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function loadAll() {
+    document.getElementById('loading').style.display = '';
+    document.getElementById('emTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+
+    // Pull companies (for filter dropdown + display)
+    if (!companies.length) {
+      const { data: cos } = await supa.from('companies').select('id, slug, name, primary_domain').order('name');
+      companies = cos || [];
+      const sel = document.getElementById('filterCompany');
+      for (const c of companies) {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        sel.appendChild(opt);
+      }
+    }
+
+    const { data, error } = await supa.from('agent_emails')
+      .select(`id, full_email, local_part, forward_to, status, status_reason,
+               cloudflare_route_id, cloudflare_synced_at, cloudflare_last_error,
+               ses_identity_arn, ses_identity_verified, ses_synced_at, ses_last_error,
+               provisioned_at, onboarding_email_sent_at, suspended_at,
+               company_id, profile_id,
+               profiles(full_name, email, role),
+               companies(slug, name, primary_domain)`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      document.getElementById('loading').textContent = '';
+      document.getElementById('banner-area').innerHTML = '<div class="err">Couldn\'t load: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+    allRows = data || [];
+    refreshStats();
+    render();
+  }
+
+  function refreshStats() {
+    const c = { total: allRows.length, pending: 0, active: 0, suspended: 0, sesOk: 0 };
+    for (const r of allRows) {
+      c[r.status] = (c[r.status] || 0) + 1;
+      if (r.ses_identity_verified) c.sesOk++;
+    }
+    document.getElementById('statTotal').textContent = c.total;
+    document.getElementById('statPending').textContent = c.pending;
+    document.getElementById('statActive').textContent = c.active;
+    document.getElementById('statSuspended').textContent = c.suspended;
+    document.getElementById('statSesOk').textContent = c.sesOk;
+  }
+
+  function render() {
+    const status   = document.getElementById('filterStatus').value;
+    const company  = document.getElementById('filterCompany').value;
+    const q        = (document.getElementById('filterSearch').value || '').toLowerCase().trim();
+
+    let rows = allRows.slice();
+    if (status)  rows = rows.filter(r => r.status === status);
+    if (company) rows = rows.filter(r => r.company_id === company);
+    if (q) rows = rows.filter(r => {
+      const hay = [r.full_email, r.forward_to, r.profiles?.full_name].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+    document.getElementById('loading').style.display = 'none';
+    if (rows.length === 0) {
+      document.getElementById('emTable').style.display = 'none';
+      document.getElementById('emptyState').style.display = '';
+      return;
+    }
+    document.getElementById('emTable').style.display = '';
+    document.getElementById('emptyState').style.display = 'none';
+
+    const tbody = document.getElementById('emBody');
+    tbody.innerHTML = '';
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      const cfPill = r.cloudflare_route_id
+        ? `<span class="pill cf-ok">✓ Routed</span>`
+        : (r.cloudflare_last_error
+            ? `<span class="pill cf-err" title="${escapeHtml(r.cloudflare_last_error)}">⚠ Error</span>`
+            : `<span class="pill cf-pending">— Pending</span>`);
+      const sesPill = r.ses_identity_verified
+        ? `<span class="pill cf-ok">✓ Verified</span>`
+        : (r.ses_identity_arn
+            ? `<span class="pill cf-pending">⏳ Awaiting click</span>`
+            : `<span class="pill cf-pending">— Not requested</span>`);
+      const provDate = r.provisioned_at
+        ? new Date(r.provisioned_at).toLocaleDateString()
+        : '—';
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(r.full_email)}</strong><br/><small style="color:#6B7280;">${escapeHtml(r.profiles?.full_name || '(no profile name)')}</small></td>
+        <td>${escapeHtml(r.forward_to)}</td>
+        <td><span class="pill s-${r.status}">${r.status}</span></td>
+        <td>${cfPill}</td>
+        <td>${sesPill}</td>
+        <td>${provDate}</td>
+      `;
+      tr.addEventListener('click', () => openModal(r));
+      tbody.appendChild(tr);
+    }
+  }
+
+  function openModal(r) {
+    currentRow = r;
+    document.getElementById('mErr').style.display = 'none';
+    document.getElementById('mOk').style.display = 'none';
+    document.getElementById('mFullEmail').textContent = r.full_email;
+    document.getElementById('mMeta').textContent = `Status: ${r.status} · Created ${new Date(r.provisioned_at || Date.now()).toLocaleString()}`;
+    document.getElementById('mProfileName').textContent = (r.profiles?.full_name || '—') + ' · ' + (r.profiles?.role || '—');
+    document.getElementById('mForwardTo').textContent = r.forward_to;
+    document.getElementById('mCompany').textContent = r.companies?.name + ' (' + r.companies?.primary_domain + ')';
+    document.getElementById('mCfRoute').innerHTML = r.cloudflare_route_id
+      ? `<code>${escapeHtml(r.cloudflare_route_id)}</code><br/><small style="color:#6B7280;">Synced ${r.cloudflare_synced_at ? new Date(r.cloudflare_synced_at).toLocaleString() : '—'}</small>`
+      : `<em style="color:#6B7280;">Not provisioned${r.cloudflare_last_error ? ' — ' + escapeHtml(r.cloudflare_last_error) : ''}</em>`;
+    document.getElementById('mSesId').innerHTML = r.ses_identity_verified
+      ? `<span style="color:#065F46;">✓ Verified for sending</span>`
+      : (r.ses_identity_arn
+          ? `<em style="color:#92400E;">Pending agent verification click</em>`
+          : `<em style="color:#6B7280;">Not yet requested</em>`)
+        + (r.ses_last_error ? `<br/><small style="color:#B0342B;">${escapeHtml(r.ses_last_error)}</small>` : '');
+    document.getElementById('mProvisionedAt').textContent = r.provisioned_at ? new Date(r.provisioned_at).toLocaleString() : '—';
+    document.getElementById('mOnboardingAt').textContent = r.onboarding_email_sent_at ? new Date(r.onboarding_email_sent_at).toLocaleString() : '—';
+    document.getElementById('mReason').textContent = r.status_reason || '—';
+
+    // Toggle buttons based on status
+    document.getElementById('btnSuspend').style.display = r.status === 'suspended' ? 'none' : '';
+    document.getElementById('btnReactivate').style.display = r.status === 'suspended' ? '' : 'none';
+
+    document.getElementById('modalBg').classList.add('show');
+  }
+
+  function closeModal() {
+    currentRow = null;
+    document.getElementById('modalBg').classList.remove('show');
+  }
+
+  async function verifySes() {
+    if (!currentRow) return;
+    document.getElementById('mErr').style.display = 'none';
+    document.getElementById('mOk').textContent = '⏳ Calling SES…';
+    document.getElementById('mOk').style.display = '';
+
+    const { data: sessData } = await supa.auth.getSession();
+    const accessToken = sessData?.session?.access_token;
+    try {
+      const res = await fetch('/.netlify/functions/verify-agent-ses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+        body: JSON.stringify({ agent_email_id: currentRow.id })
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.ok) {
+        document.getElementById('mOk').style.display = 'none';
+        document.getElementById('mErr').textContent = 'SES verify failed: ' + (result.error || res.status);
+        document.getElementById('mErr').style.display = '';
+        return;
+      }
+      document.getElementById('mOk').innerHTML =
+        `✓ ${result.identity_already_existed ? 'SES identity already existed' : 'SES identity created'}.<br/>` +
+        `Status: <strong>${result.verification_status}</strong>.<br/>` +
+        result.next_step;
+      document.getElementById('mOk').style.display = '';
+      // Refresh
+      await loadAll();
+    } catch (err) {
+      document.getElementById('mOk').style.display = 'none';
+      document.getElementById('mErr').textContent = 'Network error: ' + err.message;
+      document.getElementById('mErr').style.display = '';
+    }
+  }
+
+  async function suspend() {
+    if (!currentRow) return;
+    const reason = prompt('Reason for suspending this email? (saved on the audit log)');
+    if (reason === null) return;
+    const { error } = await supa.from('agent_emails')
+      .update({ status: 'suspended', status_reason: reason || null, suspended_at: new Date().toISOString(), suspended_by_id: (await supa.auth.getUser()).data.user.id })
+      .eq('id', currentRow.id);
+    if (error) {
+      document.getElementById('mErr').textContent = 'Suspend failed: ' + error.message;
+      document.getElementById('mErr').style.display = '';
+      return;
+    }
+    document.getElementById('mOk').textContent = '✓ Suspended.';
+    document.getElementById('mOk').style.display = '';
+    await loadAll();
+    setTimeout(closeModal, 1000);
+  }
+
+  async function reactivate() {
+    if (!currentRow) return;
+    const { error } = await supa.from('agent_emails')
+      .update({ status: 'active', status_reason: null, suspended_at: null, suspended_by_id: null })
+      .eq('id', currentRow.id);
+    if (error) {
+      document.getElementById('mErr').textContent = 'Reactivate failed: ' + error.message;
+      document.getElementById('mErr').style.display = '';
+      return;
+    }
+    document.getElementById('mOk').textContent = '✓ Reactivated.';
+    document.getElementById('mOk').style.display = '';
+    await loadAll();
+    setTimeout(closeModal, 1000);
+  }
+
+  document.getElementById('filterStatus').addEventListener('change', render);
+  document.getElementById('filterCompany').addEventListener('change', render);
+  document.getElementById('filterSearch').addEventListener('input', render);
+  document.getElementById('refreshBtn').addEventListener('click', loadAll);
+  document.getElementById('mCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('btnVerifySes').addEventListener('click', verifySes);
+  document.getElementById('btnSuspend').addEventListener('click', suspend);
+  document.getElementById('btnReactivate').addEventListener('click', reactivate);
+  document.getElementById('modalBg').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalBg')) closeModal();
+  });
+
+  loadAll();
+})();
+</script>
+</body>
+</html>
