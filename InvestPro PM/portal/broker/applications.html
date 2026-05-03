@@ -295,6 +295,7 @@
   async function saveCurrent() {
     if (!currentApp) return;
     const newStatus = document.getElementById('mStatus').value;
+    const oldStatus = currentApp.status;
     const newNotes  = document.getElementById('mNotes').value.trim() || null;
     document.getElementById('modalErr').style.display = 'none';
     document.getElementById('modalOk').style.display = 'none';
@@ -329,7 +330,103 @@
     document.getElementById('modalOk').style.display = '';
     saveBtn.disabled = false;
     saveBtn.textContent = 'Save changes';
-    setTimeout(closeModal, 800);
+
+    // ----------------------------------------------------------------
+    // Just-flipped-to-joined? Two side-effects:
+    //   1. Propagate the sponsor link (if any) from application to agents row
+    //      → so generational override credit will flow when their first deal closes
+    //   2. Offer to provision their company email
+    // ----------------------------------------------------------------
+    if (newStatus === 'joined' && oldStatus !== 'joined') {
+      // Step 1 — sponsor propagation (silent / best-effort)
+      if (currentApp.sponsor_agent_id) {
+        try {
+          const { data: propResult, error: propErr } = await supa.rpc('propagate_sponsor_to_agent', {
+            p_application_id: currentApp.id
+          });
+          if (propErr) {
+            console.warn('Sponsor propagation failed:', propErr.message);
+          } else if (propResult === true) {
+            // Show a small note in the success banner
+            const ok = document.getElementById('modalOk');
+            ok.innerHTML = (ok.innerHTML || '') + '<br/>✓ Sponsor link copied to agent record';
+          }
+          // If propResult is false, the agents row doesn't exist yet — the
+          // BEFORE INSERT trigger on agents will pick up the sponsor automatically
+          // when broker creates the agents row later.
+        } catch (e) {
+          console.warn('Sponsor propagation threw:', e);
+        }
+      }
+
+      // Step 2 — email provisioning prompt
+      setTimeout(() => {
+        const proceed = confirm(
+          `Provision company email for ${currentApp.first_name} ${currentApp.last_name}?\n\n` +
+          `This will:\n` +
+          `  • Generate ${(currentApp.first_name || '').toLowerCase()}.${(currentApp.last_name || '').toLowerCase()}@investprorealty.net\n` +
+          `  • Set up inbound forwarding to ${currentApp.email}\n` +
+          `  • Email them the setup instructions\n\n` +
+          `(They must already have a portal profile — invite them via Manage Users first if not.)`
+        );
+        if (proceed) provisionEmail(currentApp.id);
+      }, 600);
+    } else {
+      setTimeout(closeModal, 800);
+    }
+  }
+
+  async function provisionEmail(applicationId) {
+    document.getElementById('modalOk').textContent = '⏳ Provisioning email…';
+    document.getElementById('modalOk').style.display = '';
+    document.getElementById('modalErr').style.display = 'none';
+
+    try {
+      // Get the access token to authorize the function call
+      const { data: sessData } = await supa.auth.getSession();
+      const accessToken = sessData?.session?.access_token;
+      if (!accessToken) {
+        document.getElementById('modalErr').textContent = 'Sign-in expired. Refresh and sign in again.';
+        document.getElementById('modalErr').style.display = '';
+        return;
+      }
+
+      const res = await fetch('/.netlify/functions/provision-agent-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        },
+        body: JSON.stringify({ application_id: applicationId, company_slug: 'investpro' })
+      });
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok || !result.ok) {
+        document.getElementById('modalOk').style.display = 'none';
+        document.getElementById('modalErr').textContent = 'Provision failed: ' + (result.error || res.status);
+        document.getElementById('modalErr').style.display = '';
+        return;
+      }
+
+      // Success — show what happened
+      const lines = [
+        `✓ Provisioned ${result.full_email}`,
+        `Forwarding to: ${result.forward_to}`,
+        result.cloudflare.configured
+          ? (result.cloudflare.route_id ? '✓ Cloudflare route added' : '⚠ Cloudflare error: ' + (result.cloudflare.error || 'unknown'))
+          : '⚠ Cloudflare not configured yet — email exists in DB but inbound forwarding inactive',
+        result.onboarding_email.sent
+          ? '✓ Setup instructions emailed to agent'
+          : '⚠ Onboarding email failed: ' + (result.onboarding_email.error || 'unknown')
+      ];
+      document.getElementById('modalOk').innerHTML = lines.join('<br/>');
+      document.getElementById('modalOk').style.display = '';
+      setTimeout(closeModal, 3500);
+    } catch (err) {
+      document.getElementById('modalOk').style.display = 'none';
+      document.getElementById('modalErr').textContent = 'Network error: ' + err.message;
+      document.getElementById('modalErr').style.display = '';
+    }
   }
 
   document.getElementById('filterStatus').addEventListener('change', render);

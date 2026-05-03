@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Award Points — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .award-card { background:#fff; border:1px solid #DDE3F0; border-radius:8px; padding:1.5rem 1.75rem; max-width:640px; margin:0 auto; }
+  .award-card h2 { margin:0 0 .35rem; font-family:Georgia,serif; color:#1F4FC1; }
+  .award-card .lead { color:#6B7280; font-size:.92rem; margin-bottom:1.5rem; }
+  .form-group { margin-bottom:1rem; }
+  .form-group label { display:block; font-weight:600; font-size:.85rem; color:#374151; margin-bottom:.3rem; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:4px;
+    font-family:inherit; font-size:.95rem; box-sizing:border-box;
+  }
+  .form-group small { color:#6B7280; font-size:.8rem; display:block; margin-top:.25rem; }
+
+  .agent-meta { background:#F7F8FB; border-left:3px solid #1F4FC1; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.92rem; display:none; }
+  .agent-meta.show { display:block; }
+  .agent-meta .level-pill { display:inline-block; padding:.15rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; background:#DBEAFE; color:#1E40AF; text-transform:uppercase; letter-spacing:.05em; }
+
+  .preset-row { display:grid; grid-template-columns:repeat(2,1fr); gap:.5rem; margin-bottom:1rem; }
+  .preset-row button { padding:.5rem .65rem; border:1px solid #DDE3F0; background:#fff; border-radius:4px; cursor:pointer; font-family:inherit; font-size:.85rem; text-align:left; }
+  .preset-row button:hover { background:#F7F8FB; border-color:#1F4FC1; color:#1F4FC1; }
+
+  .err { background:#FEE2E2; color:#B0342B; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .ok { background:#D1FAE5; color:#065F46; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Award Points</strong> · MGC adjustments</nav>
+    <div class="dash-user">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1100px;">
+  <div class="dash-title">
+    <h1>Award Points</h1>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <div class="award-card">
+    <h2>Grant points to an agent</h2>
+    <p class="lead">
+      Use this for manual commission entries, override corrections, bonus pool distributions, or to seed test data so you can demo the MGC system to recruits.
+      Points climb the agent's career level automatically when thresholds are crossed (30k → Senior Associate, 75k → Executive Associate, 75k + broker license → Team Manager).
+    </p>
+
+    <div id="formError" class="err" style="display:none;"></div>
+    <div id="formOk" class="ok" style="display:none;"></div>
+
+    <form id="awardForm" autocomplete="off">
+      <div class="form-group">
+        <label>Agent <span style="color:#B0342B;">*</span></label>
+        <select id="agentSel" required>
+          <option value="">— select an agent —</option>
+        </select>
+        <small>Only agents with a row in the agents table appear here.</small>
+      </div>
+
+      <div class="agent-meta" id="agentMeta">
+        <div><strong id="metaName">—</strong></div>
+        <div style="margin-top:.25rem;">
+          <span class="level-pill" id="metaLevel">—</span>
+          &nbsp;·&nbsp; YTD: <strong id="metaPoints">0</strong> pts
+          &nbsp;·&nbsp; Lifetime: <strong id="metaLifetime">0</strong> pts
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Points <span style="color:#B0342B;">*</span></label>
+        <input type="number" id="pointsInput" required step="0.01" placeholder="e.g. 5000.00" />
+        <small>1 point = $1 commission. Negative numbers allowed for corrections.</small>
+      </div>
+
+      <div class="preset-row">
+        <button type="button" data-preset="1000">+1,000</button>
+        <button type="button" data-preset="5000">+5,000</button>
+        <button type="button" data-preset="15000">+15,000</button>
+        <button type="button" data-preset="30000">+30,000 (Senior threshold)</button>
+        <button type="button" data-preset="75000">+75,000 (Exec threshold)</button>
+        <button type="button" data-preset="-1000">-1,000 (correction)</button>
+      </div>
+
+      <div class="form-group">
+        <label>Source <span style="color:#B0342B;">*</span></label>
+        <select id="sourceSel" required>
+          <option value="manual_adjustment">Manual adjustment (default)</option>
+          <option value="personal_commission">Personal commission</option>
+          <option value="spread_commission">Spread commission</option>
+          <option value="override_gen1">Override — 1st gen (5%)</option>
+          <option value="override_gen2">Override — 2nd gen (3%)</option>
+          <option value="override_gen3">Override — 3rd gen (1%)</option>
+          <option value="all_company_bonus">All-company bonus pool (2%)</option>
+          <option value="executive_bonus">Executive bonus pool (1%)</option>
+          <option value="branch_broker_override">Branch broker override (1%)</option>
+          <option value="referral_fee">Referral fee</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description / context</label>
+        <textarea id="descInput" rows="2" placeholder="e.g. Closed 3601 W Sahara — buy-side commission on sales price $485,000"></textarea>
+        <small>Stored in the audit log. Be specific — this becomes the historical record.</small>
+      </div>
+
+      <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.5rem;">
+        <a href="dashboard.html" class="btn btn-outline">Cancel</a>
+        <button type="submit" id="submitBtn" class="btn btn-primary">Award points</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Recent activity for the selected agent -->
+  <div id="recentBlock" style="max-width:640px; margin:2rem auto 0; display:none;">
+    <h3 style="font-family:Georgia,serif; color:#1F4FC1; margin:0 0 .75rem;">Recent points for this agent</h3>
+    <table class="dash-table" id="recentTbl">
+      <thead><tr><th>When</th><th>Source</th><th>Points</th><th>Description</th></tr></thead>
+      <tbody id="recentBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script type="module">
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'accounting', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('banner-area').innerHTML =
+      '<div class="banner banner-info">Demo mode — connect Supabase to award real points.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // Load agents list
+  const { data: agents, error: agentsErr } = await supa
+    .from('agents')
+    .select('id, profile_id, agent_share_code, current_level, points_ytd, points_lifetime, license_number, profiles(full_name, email, role)')
+    .order('agent_share_code', { ascending: true });
+
+  if (agentsErr) {
+    document.getElementById('formError').textContent = 'Could not load agents: ' + agentsErr.message;
+    document.getElementById('formError').style.display = '';
+    return;
+  }
+
+  const agentSel = document.getElementById('agentSel');
+  for (const a of (agents || [])) {
+    const name = a.profiles?.full_name || '(no name)';
+    const role = a.profiles?.role ? a.profiles.role.replace('_',' ') : '';
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${name} (${a.agent_share_code || 'no code'}) — ${role}`;
+    agentSel.appendChild(opt);
+  }
+
+  const LEVEL_LABEL = {
+    associate: 'Associate', senior_associate: 'Senior Associate',
+    executive_associate: 'Executive Associate', team_manager: 'Team Manager ⭐',
+    branch_broker: 'Branch Broker 🏆'
+  };
+
+  agentSel.addEventListener('change', async () => {
+    const id = agentSel.value;
+    if (!id) {
+      document.getElementById('agentMeta').classList.remove('show');
+      document.getElementById('recentBlock').style.display = 'none';
+      return;
+    }
+    const a = agents.find(x => x.id === id);
+    document.getElementById('metaName').textContent = a.profiles?.full_name || '(no name)';
+    document.getElementById('metaLevel').textContent = LEVEL_LABEL[a.current_level] || a.current_level;
+    document.getElementById('metaPoints').textContent = Number(a.points_ytd || 0).toLocaleString();
+    document.getElementById('metaLifetime').textContent = Number(a.points_lifetime || 0).toLocaleString();
+    document.getElementById('agentMeta').classList.add('show');
+
+    // Recent log
+    const { data: recent } = await supa
+      .from('agent_points_log')
+      .select('points, source, description, earned_at, awarded_by_name')
+      .eq('agent_id', id)
+      .order('earned_at', { ascending: false })
+      .limit(8);
+
+    const tbody = document.getElementById('recentBody');
+    tbody.innerHTML = '';
+    if (recent && recent.length) {
+      for (const r of recent) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(r.earned_at).toLocaleDateString()}</td>
+          <td><span style="font-size:.78rem; color:#6B7280;">${escapeHtml(r.source.replace(/_/g,' '))}</span></td>
+          <td><strong style="color:${r.points >= 0 ? '#065F46' : '#B0342B'};">${r.points >= 0 ? '+' : ''}${Number(r.points).toLocaleString()}</strong></td>
+          <td>${escapeHtml(r.description || '—')}<br/><small style="color:#9CA3AF;">by ${escapeHtml(r.awarded_by_name || '?')}</small></td>
+        `;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('recentBlock').style.display = '';
+    } else {
+      document.getElementById('recentBlock').style.display = 'none';
+    }
+  });
+
+  // Preset buttons
+  document.querySelectorAll('button[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('pointsInput').value = btn.dataset.preset;
+    });
+  });
+
+  // Submit
+  document.getElementById('awardForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('formOk').style.display = 'none';
+
+    const agent_id = agentSel.value;
+    const points = Number(document.getElementById('pointsInput').value);
+    const source = document.getElementById('sourceSel').value;
+    const description = document.getElementById('descInput').value.trim() || null;
+
+    if (!agent_id) return showErr('Pick an agent.');
+    if (!points || isNaN(points)) return showErr('Enter a valid points number.');
+    if (!source) return showErr('Pick a source.');
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Awarding…';
+
+    const { data: logId, error } = await supa.rpc('award_points', {
+      p_agent_id: agent_id,
+      p_points: points,
+      p_source: source,
+      p_source_ref_id: null,
+      p_source_ref_type: null,
+      p_description: description
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Award points';
+
+    if (error) {
+      return showErr('Server error: ' + error.message);
+    }
+
+    // Re-fetch the agent to show new total + possible promotion
+    const { data: updated } = await supa
+      .from('agents')
+      .select('current_level, points_ytd, points_lifetime')
+      .eq('id', agent_id)
+      .single();
+
+    const beforePoints = Number(agents.find(a => a.id === agent_id).points_ytd || 0);
+    const beforeLevel  = agents.find(a => a.id === agent_id).current_level;
+    if (updated) {
+      // Update local state
+      const a = agents.find(x => x.id === agent_id);
+      a.points_ytd = updated.points_ytd;
+      a.points_lifetime = updated.points_lifetime;
+      a.current_level = updated.current_level;
+
+      const promoted = updated.current_level !== beforeLevel;
+      let msg = `✓ Awarded ${points >= 0 ? '+' : ''}${points.toLocaleString()} points. ` +
+                `New YTD: ${Number(updated.points_ytd).toLocaleString()} pts.`;
+      if (promoted) {
+        msg += `<br/>🎉 <strong>Level promoted</strong> to ${LEVEL_LABEL[updated.current_level]}!`;
+      }
+      const ok = document.getElementById('formOk');
+      ok.innerHTML = msg;
+      ok.style.display = '';
+
+      // Refresh the meta display + recent log
+      agentSel.dispatchEvent(new Event('change'));
+      // Clear form for next entry
+      document.getElementById('pointsInput').value = '';
+      document.getElementById('descInput').value = '';
+    }
+  });
+
+  function showErr(msg) {
+    const el = document.getElementById('formError');
+    el.textContent = msg;
+    el.style.display = '';
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+})();
+</script>
+</body>
+</html>
