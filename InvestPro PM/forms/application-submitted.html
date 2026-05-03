@@ -72,6 +72,20 @@
       ⚙️ <strong>Demo mode:</strong> no real Stripe charge was made and no email was sent. The flow shown below is what will happen once Supabase + Stripe are connected. See <a href="../README.md">README</a>.
     </div>
 
+    <!-- PetScreening action box (only renders if applicant listed pets and the URL is configured) -->
+    <div id="petScreeningBox" style="display:none; background: #FFFAEC; border: 1px solid #F1D88A; border-left: 4px solid #C9A227; padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem;">
+      <h3 style="margin: 0 0 .4rem 0; color: #1F4FC1;">🐾 Action needed: Complete Pet Screening</h3>
+      <p style="margin: .25rem 0 1rem; font-size: .95rem; color: #555A6B;">
+        You listed pets on your application. Please complete a <strong>PetScreening.com profile</strong> for each pet now — this is required before we can complete your screening review. The profile takes about 5 minutes per pet, and PetScreening.com handles the payment directly. Service animals and ESAs are <em>free</em>.
+      </p>
+      <a id="petScreeningLink" href="#" target="_blank" rel="noopener" class="btn btn-primary">
+        Complete Pet Screening Now →
+      </a>
+      <p style="margin: 1rem 0 0; font-size: .85rem; color: #6B7280;">
+        Your confirmation number (<span id="petConfirmInline" style="font-weight:600;">—</span>) is automatically attached, so PetScreening's results will sync back to your application here once you finish.
+      </p>
+    </div>
+
     <h2>What happens next</h2>
     <ol class="timeline" id="timeline">
       <li class="done"><div class="dot">✓</div><div><strong>Application received</strong><p>Submitted just now. You'll receive an email confirmation at the address you provided.</p></div></li>
@@ -105,25 +119,68 @@
     <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
     <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
   </div>
-  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division &nbsp;|&nbsp; Cashback rewards <strong style="color:#FFD66B;">Powered by LYMX</strong></span></div>
 </footer>
 
 <script src="../js/main.js"></script>
+<script src="../js/auth.js"></script>
 <script>
+(async function () {
   // Pull confirmation number from query string (?c=IPR-XXXXX) or last localStorage entry
   const params = new URLSearchParams(location.search);
   let confirmation = params.get('c');
   let demo = params.get('demo') === '1';
-  if (!confirmation) {
-    try {
-      const last = JSON.parse(localStorage.getItem('investpro_last_application') || 'null');
-      if (last) { confirmation = last.confirmation; demo = !!last.demo; }
-    } catch {}
-  }
+  let lastApp = null;
+  try {
+    lastApp = JSON.parse(localStorage.getItem('investpro_last_application') || 'null');
+    if (!confirmation && lastApp) { confirmation = lastApp.confirmation; demo = !!lastApp.demo; }
+  } catch {}
+
   document.getElementById('confirmNum').textContent = confirmation || '(no record found)';
   if (demo) document.getElementById('demoBanner').style.display = '';
-  // If user just paid via Stripe, the URL will have ?session_id=...
-  // (real impl) you'd hit Supabase here to confirm the application is now status='submitted'.
+
+  // ───────── PetScreening link (only if applicant listed pets) ─────────
+  const hasPets =
+    !!(lastApp && lastApp.application &&
+       (lastApp.application.has_pets === 'yes' ||
+        (Array.isArray(lastApp.application.pet_name) && lastApp.application.pet_name.length > 0) ||
+        lastApp.application.pet_name));
+
+  if (hasPets && confirmation) {
+    try {
+      // Fetch the PetScreening Property Manager URL + reference param name from public-readable
+      // vendor_settings (the anon-read policy in db/018 allows this without login).
+      if (!window.investproAuth.isDemoMode()) {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const sourceText = await fetch('/js/auth.js').then(r => r.text());
+        const url = sourceText.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+        const key = sourceText.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+        const supa = createClient(url, key);
+        const { data: settings } = await supa
+          .from('vendor_settings')
+          .select('key, value')
+          .in('key', ['petscreening_pm_url', 'petscreening_reference_param']);
+
+        const settingMap = {};
+        (settings || []).forEach(s => { settingMap[s.key] = s.value; });
+
+        const baseUrl = settingMap.petscreening_pm_url;
+        const refParam = settingMap.petscreening_reference_param || 'referenceNumber';
+
+        if (baseUrl) {
+          // Append referenceNumber correctly whether or not the URL already has a query string
+          const sep = baseUrl.includes('?') ? '&' : '?';
+          const finalUrl = `${baseUrl}${sep}${encodeURIComponent(refParam)}=${encodeURIComponent(confirmation)}`;
+          document.getElementById('petScreeningLink').href = finalUrl;
+          document.getElementById('petConfirmInline').textContent = confirmation;
+          document.getElementById('petScreeningBox').style.display = '';
+        }
+      }
+    } catch (e) {
+      console.error('Could not load PetScreening URL', e);
+    }
+  }
+})();
 </script>
 </body>
 </html>
