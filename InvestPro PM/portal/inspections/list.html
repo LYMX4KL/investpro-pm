@@ -271,7 +271,12 @@
         ? `<button class="btn btn-primary btn-sm" data-claim="${i.id}">Claim</button>`
         : (i.inspector_profile_id === u.id && ['scheduled','in_progress'].includes(i.status)
             ? `<a class="btn btn-primary btn-sm" href="perform.html?id=${i.id}">Continue</a>`
-            : `<a class="btn btn-outline btn-sm" href="view.html?id=${i.id}">View</a>`);
+            : `<a class="btn btn-outline btn-sm" href="perform.html?id=${i.id}">View</a>`);
+
+      // Print button — visible for any inspection that's been started (in_progress or submitted)
+      const printBtn = ['in_progress', 'submitted'].includes(i.status)
+        ? ` <a class="btn btn-outline btn-sm" href="print.html?id=${i.id}" target="_blank" title="Open court-printable PDF view">🖨</a>`
+        : '';
 
       tr.innerHTML = `
         <td>${titleLabel}</td>
@@ -279,7 +284,7 @@
         <td class="hide-sm">${inspector}</td>
         <td class="hide-sm">${scheduled}</td>
         <td><span class="pill ${i.status}">${(i.status||'').replace('_',' ')}</span></td>
-        <td>${actionBtn}</td>
+        <td>${actionBtn}${printBtn}</td>
       `;
       tbody.appendChild(tr);
     }

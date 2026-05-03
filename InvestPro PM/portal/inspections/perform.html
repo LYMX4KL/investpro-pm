@@ -28,9 +28,31 @@
   details.area > summary .area-progress { font-size:.8rem; font-weight:400; color:#6B7280; }
   .area-body { padding: 0 1.1rem 1rem; }
 
-  .item-card { padding:.75rem 0; border-top:1px solid #EEF1F8; }
+  .item-card { padding:.75rem 0; border-top:1px solid #EEF1F8; position:relative; }
   .item-card:first-child { border-top:0; }
-  .item-name { font-weight:600; color:#1F2937; margin-bottom:.5rem; font-size:.95rem; }
+  .item-name { font-weight:600; color:#1F2937; margin-bottom:.5rem; font-size:.95rem; padding-right:5rem; }
+  .history-btn {
+    position:absolute; top:.6rem; right:0;
+    background:transparent; border:1px solid #DDE3F0; color:#6B7280;
+    padding:.2rem .55rem; font-size:.72rem; border-radius:999px; cursor:pointer;
+    font-family:inherit; line-height:1;
+  }
+  .history-btn:hover { background:#F7F8FB; color:#1F4FC1; border-color:#1F4FC1; }
+  .history-modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1100; align-items:flex-start; justify-content:center; padding:2rem 1rem; overflow-y:auto; }
+  .history-modal-bg.show { display:flex; }
+  .history-modal { background:#fff; border-radius:8px; max-width:640px; width:100%; padding:1.5rem 1.75rem; box-shadow:0 12px 48px rgba(0,0,0,.25); }
+  .history-modal h3 { margin:0 0 .25rem; font-family:Georgia,serif; color:#1F4FC1; }
+  .history-modal .item-label { color:#6B7280; font-size:.85rem; margin-bottom:1rem; }
+  .history-entry { padding:.85rem 1rem; border-left:3px solid #1F4FC1; background:#F7F8FB; border-radius:4px; margin-bottom:.6rem; font-size:.88rem; }
+  .history-entry .who { font-weight:600; color:#1F2937; }
+  .history-entry .when { color:#6B7280; font-size:.78rem; margin-left:.5rem; }
+  .history-entry .role { color:#6B7280; font-size:.78rem; }
+  .history-entry .action { display:inline-block; margin-top:.3rem; padding:.1rem .4rem; background:#fff; border-radius:3px; font-size:.7rem; color:#1F4FC1; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .history-entry .change { margin-top:.4rem; line-height:1.5; }
+  .history-entry .change .field { font-weight:600; color:#374151; }
+  .history-entry .change .old { color:#B0342B; text-decoration:line-through; }
+  .history-entry .change .new { color:#065F46; font-weight:600; }
+  .history-empty { color:#6B7280; font-style:italic; text-align:center; padding:2rem; }
 
   .condition-row { display:grid; grid-template-columns:repeat(5, 1fr); gap:.4rem; margin-bottom:.5rem; }
   .condition-row label { display:flex; flex-direction:column; align-items:center; gap:.2rem; padding:.4rem .2rem; border:1px solid #DDE3F0; border-radius:6px; cursor:pointer; font-size:.7rem; color:#555A6B; text-align:center; min-height:46px; justify-content:center; }
@@ -73,7 +95,10 @@
         <div class="meta" id="meta"></div>
       </div>
       <div style="display:flex; flex-direction:column; gap:.4rem; align-items:flex-end;">
-        <a href="list.html" class="btn btn-outline btn-sm">← List</a>
+        <div style="display:flex; gap:.4rem;">
+          <a href="#" id="printLink" class="btn btn-outline btn-sm" style="display:none;" target="_blank">🖨 Print PDF</a>
+          <a href="list.html" class="btn btn-outline btn-sm">← List</a>
+        </div>
         <span class="save-status" id="saveStatus" style="display:none;"></span>
       </div>
     </div>
@@ -95,6 +120,20 @@
     <div class="submit-bar" id="submitBar" style="display:none;">
       <span style="color:#6B7280; font-size:.85rem;">Auto-saves as you work.</span>
       <button id="submitBtn" class="btn btn-primary">Submit Inspection</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit-history modal (shared, populated on demand) -->
+<div class="history-modal-bg" id="historyModalBg">
+  <div class="history-modal">
+    <h3>Edit history</h3>
+    <div class="item-label" id="historyItemLabel">—</div>
+    <div id="historyEntries">
+      <div class="history-empty">Loading…</div>
+    </div>
+    <div style="text-align:right; margin-top:1rem;">
+      <button class="btn btn-outline btn-sm" id="historyCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -230,6 +269,14 @@
   loading.style.display = 'none';
   content.style.display = '';
 
+  // Show print button once inspection has been started or submitted
+  // (skip for purely-scheduled inspections — nothing to print yet)
+  if (inspection.status === 'in_progress' || inspection.status === 'submitted') {
+    const printLink = document.getElementById('printLink');
+    printLink.href = `print.html?id=${inspection.id}`;
+    printLink.style.display = '';
+  }
+
   if (editable) {
     document.getElementById('submitBar').style.display = '';
   } else {
@@ -267,6 +314,7 @@
       card.className = 'item-card';
       card.dataset.itemId = it.id;
       card.innerHTML = `
+        <button type="button" class="history-btn" data-history="${it.id}" data-item-name="${escapeAttr(it.item)}" title="View edit history">⏱ History</button>
         <div class="item-name">${escapeHtml(it.item)}</div>
         <div class="condition-row">
           ${['good','fair','damaged','missing','na'].map(c => `
@@ -501,6 +549,81 @@
   function escapeHtml(s) {
     return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  function escapeAttr(s) {
+    return (s || '').toString().replace(/"/g, '&quot;');
+  }
+
+  // ----------------------------------------------------------------
+  // Edit-history modal — shared popup, populated on demand
+  // ----------------------------------------------------------------
+  const historyBg     = document.getElementById('historyModalBg');
+  const historyEntries= document.getElementById('historyEntries');
+  const historyLabel  = document.getElementById('historyItemLabel');
+
+  document.getElementById('historyCloseBtn').addEventListener('click', () => historyBg.classList.remove('show'));
+  historyBg.addEventListener('click', (e) => { if (e.target === historyBg) historyBg.classList.remove('show'); });
+
+  // Delegated click — works on items rendered after this script ran
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.history-btn');
+    if (!btn) return;
+    const itemId = btn.dataset.history;
+    const itemName = btn.dataset.itemName || 'item';
+    historyLabel.textContent = itemName;
+    historyEntries.innerHTML = '<div class="history-empty">Loading…</div>';
+    historyBg.classList.add('show');
+
+    // Pull audit log for this inspection_item row, oldest first
+    const { data: rows, error } = await supa
+      .from('audit_log')
+      .select('action, actor_name_snapshot, actor_role_snapshot, changed_at, changed_fields, before_data, after_data')
+      .eq('table_name', 'inspection_items')
+      .eq('row_id', itemId)
+      .order('changed_at', { ascending: true });
+
+    if (error) {
+      historyEntries.innerHTML = '<div class="history-empty" style="color:#B0342B;">Could not load history: ' + escapeHtml(error.message) + '<br/><br/><small>If you just ran the audit-trail migration, only edits made AFTER that point will be tracked. Older edits aren\'t in the log.</small></div>';
+      return;
+    }
+    if (!rows || rows.length === 0) {
+      historyEntries.innerHTML = '<div class="history-empty">No edits recorded yet for this item.</div>';
+      return;
+    }
+
+    // Render
+    const trackedFields = ['condition', 'notes', 'photo_paths'];
+    historyEntries.innerHTML = rows.map(r => {
+      const when = new Date(r.changed_at).toLocaleString();
+      const who  = r.actor_name_snapshot || '(system)';
+      const role = r.actor_role_snapshot ? ' · ' + r.actor_role_snapshot.replace('_', ' ') : '';
+      let changeHtml = '';
+      if (r.action === 'INSERT') {
+        changeHtml = '<div class="change">Item created with default values.</div>';
+      } else if (r.action === 'UPDATE') {
+        const fields = (r.changed_fields || []).filter(f => trackedFields.includes(f));
+        if (fields.length === 0) {
+          changeHtml = '<div class="change" style="color:#6B7280; font-style:italic;">Internal change (no user-visible field affected)</div>';
+        } else {
+          changeHtml = fields.map(f => {
+            const oldV = (r.before_data && r.before_data[f] != null) ? r.before_data[f] : '(empty)';
+            const newV = (r.after_data && r.after_data[f] != null) ? r.after_data[f] : '(empty)';
+            const oldStr = (typeof oldV === 'object') ? JSON.stringify(oldV) : String(oldV);
+            const newStr = (typeof newV === 'object') ? JSON.stringify(newV) : String(newV);
+            return `<div class="change"><span class="field">${escapeHtml(f)}:</span> <span class="old">${escapeHtml(oldStr)}</span> → <span class="new">${escapeHtml(newStr)}</span></div>`;
+          }).join('');
+        }
+      } else if (r.action === 'DELETE') {
+        changeHtml = '<div class="change" style="color:#B0342B;">Item removed.</div>';
+      }
+      return `
+        <div class="history-entry">
+          <span class="who">${escapeHtml(who)}</span><span class="role">${escapeHtml(role)}</span><span class="when">${escapeHtml(when)}</span>
+          <span class="action">${escapeHtml(r.action)}</span>
+          ${changeHtml}
+        </div>
+      `;
+    }).join('');
+  });
 })();
 </script>
 </body>

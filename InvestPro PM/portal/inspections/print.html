@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspection Report — Print View</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<style>
+  /* ==== Print-friendly base ============================================== */
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    color: #1F2937;
+    background: #F0F2F7;
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    font-size: 11pt;
+  }
+
+  .page {
+    background: #fff;
+    width: 8.5in;
+    min-height: 11in;
+    margin: 1rem auto;
+    padding: 0.75in 0.6in;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  /* ==== Toolbar (hidden when printing) ==================================== */
+  .toolbar {
+    background: #1F4FC1;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .toolbar .actions { display: flex; gap: 0.5rem; }
+  .toolbar button, .toolbar a {
+    background: #fff; color: #1F4FC1;
+    border: none; padding: 0.4rem 1rem;
+    border-radius: 4px; font: inherit; font-weight: 600; cursor: pointer;
+    text-decoration: none; font-size: 0.85rem;
+  }
+  .toolbar button:hover { background: #FFD66B; color: #0E2A6B; }
+  .toolbar .meta { font-size: 0.8rem; opacity: 0.85; }
+
+  /* ==== Cover page ======================================================== */
+  .cover-watermark {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 8rem; font-weight: 700; font-family: 'Playfair Display', serif;
+    color: rgba(31, 79, 193, 0.05);
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .cover-header {
+    border-bottom: 3px solid #1F4FC1;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .cover-header .brand img { height: 50px; display: block; margin-bottom: 0.5rem; }
+  .cover-header .brand .name {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: #1F4FC1; font-size: 1.4rem; font-weight: 700;
+  }
+  .cover-header .brand .tagline {
+    color: #6B7280; font-size: 0.85rem;
+  }
+  .cover-header .doc-id {
+    text-align: right;
+    font-size: 0.85rem; color: #6B7280;
+  }
+  .cover-header .doc-id .ref {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem; color: #1F4FC1; font-weight: 700;
+  }
+
+  .cover-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.2rem;
+    color: #1F4FC1;
+    margin: 1rem 0 0.5rem;
+    line-height: 1.1;
+  }
+  .cover-subtitle {
+    font-size: 1.1rem;
+    color: #6B7280;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  .cover-grid {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 0.6rem 1.5rem;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+  .cover-grid .label {
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.78rem;
+    padding-top: 0.25rem;
+  }
+  .cover-grid .value { color: #1F2937; }
+  .cover-grid .value strong { color: #1F4FC1; }
+
+  .attestation {
+    background: #F7F8FB;
+    border-left: 4px solid #1F4FC1;
+    padding: 1rem 1.25rem;
+    margin: 2rem 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .signature-block {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .signature-line {
+    border-bottom: 1px solid #1F2937;
+    height: 2.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .signature-block .label {
+    font-size: 0.78rem;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  /* ==== Body pages ======================================================== */
+  .area-section {
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+  .area-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.3rem;
+    color: #1F4FC1;
+    border-bottom: 2px solid #1F4FC1;
+    padding-bottom: 0.3rem;
+    margin: 1rem 0 0.75rem;
+  }
+
+  .item {
+    border: 1px solid #E5E7EB;
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+    page-break-inside: avoid;
+  }
+  .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .item-name {
+    font-weight: 700;
+    color: #1F2937;
+    font-size: 0.95rem;
+  }
+  .condition-pill {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .condition-pill.good     { background: #D1FAE5; color: #065F46; }
+  .condition-pill.fair     { background: #FEF3C7; color: #92400E; }
+  .condition-pill.damaged  { background: #FEE2E2; color: #B0342B; }
+  .condition-pill.missing  { background: #EDE9FE; color: #5B21B6; }
+  .condition-pill.na       { background: #E5E7EB; color: #4B5563; }
+
+  .item-notes {
+    background: #F7F8FB;
+    padding: 0.5rem 0.75rem;
+    border-radius: 3px;
+    font-size: 0.88rem;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+  }
+
+  .photos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .photo-fig {
+    border: 1px solid #E5E7EB;
+    border-radius: 3px;
+    padding: 0.4rem;
+    page-break-inside: avoid;
+  }
+  .photo-fig img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 2px;
+    background: #F0F2F7;
+  }
+  .photo-caption {
+    font-size: 0.72rem;
+    color: #6B7280;
+    margin-top: 0.3rem;
+    line-height: 1.4;
+  }
+  .photo-caption .ts {
+    color: #1F4FC1;
+    font-weight: 600;
+  }
+  .photo-caption .by {
+    font-style: italic;
+  }
+  .photo-caption .num {
+    font-weight: 700;
+    color: #0E2A6B;
+  }
+
+  /* ==== Page footer (every page when printed) ============================ */
+  @page {
+    size: letter;
+    margin: 0.5in 0.5in 0.7in 0.5in;
+    @bottom-center {
+      content: "Generated by InvestPro Realty PM platform • Page " counter(page) " of " counter(pages);
+      font-family: 'Source Sans Pro', Arial, sans-serif;
+      font-size: 8pt;
+      color: #6B7280;
+    }
+  }
+
+  /* ==== Print rules ======================================================= */
+  @media print {
+    body { background: #fff; font-size: 10pt; }
+    .toolbar { display: none !important; }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      padding: 0;
+      width: auto;
+      min-height: auto;
+    }
+    .cover-watermark { color: rgba(31, 79, 193, 0.04); }
+    a { color: #1F2937 !important; text-decoration: none !important; }
+    .area-section { page-break-inside: auto; }
+    .item { page-break-inside: avoid; }
+    .photo-fig { page-break-inside: avoid; }
+  }
+
+  .err-banner { background: #FEE2E2; color: #B0342B; padding: 1rem 1.25rem; margin: 2rem auto; max-width: 600px; border-radius: 4px; text-align: center; }
+  .loading { text-align: center; padding: 4rem 2rem; color: #6B7280; }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <span>📄 <strong>Inspection Report — Print View</strong> &nbsp; <span class="meta" id="toolbarMeta">Loading…</span></span>
+  <div class="actions">
+    <button id="printBtn" type="button">🖨 Save as PDF / Print</button>
+    <a href="list.html">← Back to list</a>
+  </div>
+</div>
+
+<div id="loadingState" class="loading">Loading inspection report…</div>
+<div id="errBanner" class="err-banner" style="display:none;"></div>
+
+<div id="content" style="display:none;">
+  <!-- Cover page -->
+  <div class="page" id="coverPage">
+    <div class="cover-watermark">OFFICIAL</div>
+    <div class="cover-header">
+      <div class="brand">
+        <img src="../../images/logo.png" alt="InvestPro Realty" />
+        <div class="name">InvestPro Realty</div>
+        <div class="tagline">Las Vegas, NV · Licensed Brokerage · 14+ years</div>
+      </div>
+      <div class="doc-id">
+        <div>Reference</div>
+        <div class="ref" id="refId">—</div>
+        <div style="margin-top:.5rem;">Generated <span id="generatedDate">—</span></div>
+      </div>
+    </div>
+
+    <div class="cover-title" id="coverTitle">Inspection Report</div>
+    <div class="cover-subtitle" id="coverSubtitle">—</div>
+
+    <div class="cover-grid">
+      <div class="label">Property</div>
+      <div class="value" id="propAddress">—</div>
+
+      <div class="label">Inspection Type</div>
+      <div class="value" id="propType">—</div>
+
+      <div class="label">Inspection Date</div>
+      <div class="value" id="propDate">—</div>
+
+      <div class="label">Inspector</div>
+      <div class="value" id="propInspector">—</div>
+
+      <div class="label">Status</div>
+      <div class="value" id="propStatus">—</div>
+
+      <div class="label">Submitted At</div>
+      <div class="value" id="propSubmitted">—</div>
+
+      <div class="label">Total Items</div>
+      <div class="value" id="propItemCount">—</div>
+
+      <div class="label">Total Photos</div>
+      <div class="value" id="propPhotoCount">—</div>
+    </div>
+
+    <div id="overallNotesBlock" style="display:none;">
+      <h3 style="font-family:Georgia,serif;color:#1F4FC1;margin:1rem 0 .5rem;">Overall Inspector Notes</h3>
+      <div class="item-notes" id="overallNotes" style="background:#FFFCF1;border-left:4px solid #FFD66B;"></div>
+    </div>
+
+    <div class="attestation">
+      <strong>Attestation:</strong> The information contained in this report reflects the condition of the property as observed by the inspector named above on the date of inspection. Photographs are numbered, time-stamped, and attributed to their respective uploader. Edits to inspection items are preserved in the platform's audit log and are available on request. This document is intended as a contemporaneous record of property condition and is suitable for use in deposit-disposition disputes, insurance claims, and other legal proceedings as supported by the underlying audit log.
+    </div>
+
+    <div class="signature-block">
+      <div>
+        <div class="signature-line"></div>
+        <div class="label">Inspector signature</div>
+        <div style="font-size:.85rem;margin-top:.25rem;" id="sigInspector">—</div>
+      </div>
+      <div>
+        <div class="signature-line"></div>
+        <div class="label">Reviewed by (optional)</div>
+        <div style="font-size:.85rem;margin-top:.25rem;color:#6B7280;">Broker / Compliance / Owner</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body pages — rendered by JS -->
+  <div id="bodyPages"></div>
+</div>
+
+<script src="../../js/auth.js"></script>
+<script>
+(async function () {
+  const params = new URLSearchParams(location.search);
+  const inspectionId = params.get('id');
+  if (!inspectionId) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errBanner').textContent = 'Missing ?id parameter. Open this from the inspection list.';
+    document.getElementById('errBanner').style.display = '';
+    return;
+  }
+
+  // Need a signed-in user — anyone with read access to the inspection can print it
+  const u = await window.investproAuth.requireAuth();
+  if (!u) return;
+
+  // Connect to Supabase
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  // ---- Load inspection ----
+  const { data: insp, error: inspErr } = await supa
+    .from('inspections')
+    .select('id, title, inspection_type, status, started_at, submitted_at, scheduled_for, overall_notes, property_id, inspector_profile_id, inspector_role, assigned_by_id')
+    .eq('id', inspectionId)
+    .single();
+  if (inspErr || !insp) {
+    showError('Could not load inspection: ' + (inspErr?.message || 'not found'));
+    return;
+  }
+
+  // ---- Load property ----
+  const { data: prop } = await supa
+    .from('properties')
+    .select('address_line1, address_line2, city, state, zip')
+    .eq('id', insp.property_id)
+    .maybeSingle();
+
+  // ---- Load inspector profile ----
+  let inspector = null;
+  if (insp.inspector_profile_id) {
+    const { data } = await supa
+      .from('profiles')
+      .select('full_name, role, email')
+      .eq('id', insp.inspector_profile_id)
+      .maybeSingle();
+    inspector = data;
+  }
+
+  // ---- Load items ----
+  const { data: items } = await supa
+    .from('inspection_items')
+    .select('id, area, item, condition, notes, sort_order')
+    .eq('inspection_id', inspectionId)
+    .order('sort_order', { ascending: true });
+
+  // ---- Load active photos ----
+  const { data: photos } = await supa
+    .from('inspection_photos')
+    .select('id, inspection_item_id, storage_path, caption, uploaded_by_name, uploaded_by_role, display_timestamp')
+    .eq('inspection_id', inspectionId)
+    .eq('is_removed', false)
+    .order('display_timestamp', { ascending: true });
+
+  // ---- Build cover page ----
+  const TYPE_LABEL = {
+    pre_move_in_agent: 'Pre-Move-In (Listing Agent walkthrough)',
+    pre_move_in:       'Pre-Move-In (PM/Service baseline)',
+    rent_ready:        'Rent Ready (final pre-tenant verification)',
+    move_in_tenant:    'Move-In (tenant)',
+    annual:            'Annual',
+    move_out_tenant:   'Move-Out (tenant)',
+    move_out_pm:       'Move-Out (PM/Service for deposit)'
+  };
+
+  const typeLabel = TYPE_LABEL[insp.inspection_type] || insp.inspection_type;
+  const propAddr = prop ? `${prop.address_line1}${prop.address_line2 ? ' ' + prop.address_line2 : ''}, ${prop.city || 'Las Vegas'}, ${prop.state || 'NV'} ${prop.zip || ''}` : '(property unknown)';
+  const inspectionDate = insp.started_at ? new Date(insp.started_at) : (insp.scheduled_for ? new Date(insp.scheduled_for) : null);
+
+  document.getElementById('refId').textContent = insp.id.slice(0, 8).toUpperCase();
+  document.getElementById('generatedDate').textContent = new Date().toLocaleDateString();
+  document.getElementById('coverTitle').textContent = insp.title || `${typeLabel} Inspection`;
+  document.getElementById('coverSubtitle').textContent = propAddr;
+  document.getElementById('propAddress').textContent = propAddr;
+  document.getElementById('propType').textContent = typeLabel;
+  document.getElementById('propDate').textContent = inspectionDate ? inspectionDate.toLocaleString() : 'Not started';
+  document.getElementById('propInspector').innerHTML = inspector
+    ? `<strong>${escapeHtml(inspector.full_name || '(unnamed)')}</strong><br/><span style="color:#6B7280;font-size:.85rem;">${escapeHtml((inspector.role || '').replace('_',' '))} · ${escapeHtml(inspector.email || '')}</span>`
+    : '<em style="color:#6B7280;">No inspector recorded yet</em>';
+  document.getElementById('propStatus').innerHTML = `<span class="condition-pill ${insp.status === 'submitted' ? 'good' : (insp.status === 'in_progress' ? 'fair' : 'na')}">${insp.status.replace('_',' ')}</span>`;
+  document.getElementById('propSubmitted').textContent = insp.submitted_at ? new Date(insp.submitted_at).toLocaleString() : '— not submitted yet —';
+  document.getElementById('propItemCount').textContent = (items || []).length;
+  document.getElementById('propPhotoCount').textContent = (photos || []).length;
+  document.getElementById('sigInspector').textContent = inspector ? inspector.full_name : '';
+
+  if (insp.overall_notes) {
+    document.getElementById('overallNotes').textContent = insp.overall_notes;
+    document.getElementById('overallNotesBlock').style.display = '';
+  }
+
+  // ---- Build body pages ----
+  // Group items by area
+  const photosByItem = {};
+  for (const p of (photos || [])) {
+    if (!photosByItem[p.inspection_item_id]) photosByItem[p.inspection_item_id] = [];
+    photosByItem[p.inspection_item_id].push(p);
+  }
+
+  const byArea = {};
+  for (const it of (items || [])) {
+    if (!byArea[it.area]) byArea[it.area] = [];
+    byArea[it.area].push(it);
+  }
+
+  let photoCounter = 0;
+  const bodyPages = document.getElementById('bodyPages');
+  const areas = Object.keys(byArea);
+  if (areas.length === 0) {
+    bodyPages.innerHTML = '<div class="page"><p style="text-align:center;color:#6B7280;padding:4rem 2rem;">No inspection items recorded.</p></div>';
+  } else {
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.innerHTML = '<h2 style="font-family:Georgia,serif;color:#1F4FC1;margin:0 0 1.5rem;border-bottom:2px solid #1F4FC1;padding-bottom:.5rem;">Inspection Findings</h2>';
+
+    for (const area of areas) {
+      const sec = document.createElement('div');
+      sec.className = 'area-section';
+      sec.innerHTML = `<div class="area-title">${escapeHtml(area)}</div>`;
+
+      for (const it of byArea[area]) {
+        const itemPhotos = photosByItem[it.id] || [];
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item';
+
+        const photosHtml = itemPhotos.length === 0 ? '' :
+          `<div class="photos-grid">` +
+          itemPhotos.map(p => {
+            photoCounter++;
+            const ts = p.display_timestamp ? new Date(p.display_timestamp).toLocaleString() : '';
+            return `
+              <div class="photo-fig">
+                <img data-storage-path="${escapeAttr(p.storage_path)}" alt="Photo ${photoCounter}" />
+                <div class="photo-caption">
+                  <span class="num">Fig. ${photoCounter}</span>
+                  ${p.caption ? ' — ' + escapeHtml(p.caption) : ''}<br/>
+                  <span class="ts">${escapeHtml(ts)}</span>
+                  &nbsp;·&nbsp;
+                  <span class="by">by ${escapeHtml(p.uploaded_by_name || '(unknown)')}${p.uploaded_by_role ? ' (' + escapeHtml(p.uploaded_by_role.replace('_',' ')) + ')' : ''}</span>
+                </div>
+              </div>
+            `;
+          }).join('') +
+          `</div>`;
+
+        itemDiv.innerHTML = `
+          <div class="item-head">
+            <div class="item-name">${escapeHtml(it.item)}</div>
+            ${it.condition ? `<span class="condition-pill ${it.condition}">${it.condition === 'na' ? 'N/A' : escapeHtml(it.condition)}</span>` : ''}
+          </div>
+          ${it.notes ? `<div class="item-notes">${escapeHtml(it.notes)}</div>` : ''}
+          ${photosHtml}
+        `;
+        sec.appendChild(itemDiv);
+      }
+      page.appendChild(sec);
+    }
+    bodyPages.appendChild(page);
+  }
+
+  // ---- Lazy-load signed URLs for photos ----
+  const imgs = document.querySelectorAll('img[data-storage-path]');
+  for (const img of imgs) {
+    const path = img.getAttribute('data-storage-path');
+    supa.storage.from('signed-documents').createSignedUrl(path, 3600).then(({ data }) => {
+      if (data?.signedUrl) img.src = data.signedUrl;
+    });
+  }
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('content').style.display = '';
+  document.getElementById('toolbarMeta').textContent = `${(items || []).length} items · ${(photos || []).length} photos · ref ${insp.id.slice(0,8).toUpperCase()}`;
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s) {
+    return String(s == null ? '' : s).replace(/"/g, '&quot;');
+  }
+  function showError(msg) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errBanner').textContent = msg;
+    document.getElementById('errBanner').style.display = '';
+  }
+})();
+</script>
+</body>
+</html>
