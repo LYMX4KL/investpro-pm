@@ -42,89 +42,49 @@
 
     <section id="overview">
       <h1>Hello, <span data-user-name>Owner</span></h1>
-      <p class="muted" style="margin-top:-1rem;">Last login: today.  Here's a snapshot of your portfolio.</p>
+      <p class="muted" style="margin-top:-1rem;" id="welcomeSub">Here's a snapshot of your portfolio.</p>
 
       <div class="kpi-grid">
-        <div class="kpi"><div class="label">Properties</div><div class="value">2</div></div>
-        <div class="kpi"><div class="label">Total Monthly Rent</div><div class="value">$4,200</div></div>
-        <div class="kpi"><div class="label">YTD Income</div><div class="value">$48,500</div></div>
-        <div class="kpi"><div class="label">Open Work Orders</div><div class="value">1</div></div>
+        <div class="kpi"><div class="label">Properties</div><div class="value" id="kpiProps">—</div></div>
+        <div class="kpi"><div class="label">Total Monthly Rent</div><div class="value" id="kpiRent">—</div></div>
+        <div class="kpi"><div class="label">Occupied</div><div class="value" id="kpiOccupied">—</div></div>
+        <div class="kpi"><div class="label">Listed (vacant)</div><div class="value" id="kpiListed">—</div></div>
       </div>
 
       <h2 style="margin-top:2.5rem;">Recent Activity</h2>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Property</th><th>Description</th><th>Amount</th></tr></thead>
-        <tbody>
-          <tr><td>Apr 10, 2026</td><td>3601 W Sahara #207</td><td>Rent received (April)</td><td>+$1,850</td></tr>
-          <tr><td>Apr 10, 2026</td><td>Whitney Ranch</td><td>Rent received (April)</td><td>+$2,350</td></tr>
-          <tr><td>Apr 10, 2026</td><td>—</td><td>Owner disbursement (ACH)</td><td>-$3,864</td></tr>
-          <tr><td>Apr 8, 2026</td><td>Whitney Ranch</td><td>HVAC service (Vendor: Desert Mech.)</td><td>-$215</td></tr>
-          <tr><td>Apr 1, 2026</td><td>3601 W Sahara #207</td><td>Management fee (8%)</td><td>-$148</td></tr>
-        </tbody>
-      </table>
+      <div id="recentActivityNote" class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #1F4FC1; font-size:.92rem;">
+        Recent rent collections, owner disbursements, vendor payments, and management fees will appear here once your accounting feed is live. The platform is wired and waiting on the first month-close.
+      </div>
     </section>
 
     <section id="properties" style="margin-top:3rem;">
       <h2>My Properties</h2>
-      <div class="grid grid-2">
-        <article class="property-card">
-          <div class="photo"><img src="../images/property-placeholder.svg" alt="Sahara condo" /><span class="badge">Occupied</span></div>
-          <div class="body">
-            <div class="price">$1,850 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-            <div class="addr">3601 W Sahara Ave #207 — Las Vegas, NV 89102</div>
-            <div class="meta">
-              <span><strong>Tenant</strong>J. Rivera</span>
-              <span><strong>Lease ends</strong>Aug 2026</span>
-            </div>
-          </div>
-        </article>
-        <article class="property-card">
-          <div class="photo"><img src="../images/property-placeholder.svg" alt="Whitney Ranch home" /><span class="badge">Occupied</span></div>
-          <div class="body">
-            <div class="price">$2,350 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-            <div class="addr">Whitney Ranch — Henderson, NV 89014</div>
-            <div class="meta">
-              <span><strong>Tenant</strong>K. Nguyen</span>
-              <span><strong>Lease ends</strong>Jan 2027</span>
-            </div>
-          </div>
-        </article>
+      <div id="propsLoading" class="muted">Loading your properties…</div>
+      <div id="propsEmpty" style="display:none; background:#F7F8FB; padding:1.5rem; border-radius:6px; text-align:center; color:#6B7280;">
+        No properties linked to your account yet. If this seems wrong, contact <a href="mailto:info@investprorealty.net" style="color:#1F4FC1;">your property manager</a>.
       </div>
+      <div class="grid grid-2" id="propsGrid"></div>
     </section>
 
     <section id="statements" style="margin-top:3rem;">
       <h2>Statements</h2>
-      <table class="tbl">
-        <thead><tr><th>Period</th><th>Income</th><th>Expenses</th><th>Net</th><th>Statement</th></tr></thead>
-        <tbody>
-          <tr><td>April 2026</td><td>$4,200</td><td>$363</td><td><strong>$3,837</strong></td><td><a href="#">📄 Download</a></td></tr>
-          <tr><td>March 2026</td><td>$4,200</td><td>$148</td><td><strong>$4,052</strong></td><td><a href="#">📄 Download</a></td></tr>
-          <tr><td>February 2026</td><td>$4,200</td><td>$148</td><td><strong>$4,052</strong></td><td><a href="#">📄 Download</a></td></tr>
-          <tr><td>2025 Year-End 1099</td><td>$50,400</td><td>$5,840</td><td><strong>$44,560</strong></td><td><a href="#">📄 Download</a></td></tr>
-        </tbody>
-      </table>
+      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
+        Monthly owner statements + 1099-MISC year-end summaries will be generated here. Currently building the close-out workflow — first statements arrive at the end of next month-close.
+      </div>
     </section>
 
     <section id="workorders" style="margin-top:3rem;">
       <h2>Work Orders</h2>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Property</th><th>Issue</th><th>Status</th><th>Cost</th></tr></thead>
-        <tbody>
-          <tr><td>Apr 22</td><td>Whitney Ranch</td><td>Garage door opener</td><td><span style="color:var(--gold-dark);font-weight:700;">Awaiting your approval</span></td><td>$240 (est)</td></tr>
-          <tr><td>Apr 8</td><td>Whitney Ranch</td><td>HVAC service call</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td><td>$215</td></tr>
-          <tr><td>Mar 15</td><td>3601 W Sahara</td><td>Water heater valve</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td><td>$95</td></tr>
-        </tbody>
-      </table>
+      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
+        Active and historical maintenance requests on your properties will appear here, including any pending your approval (vendor estimates over $300 require sign-off per your PMA).
+      </div>
     </section>
 
     <section id="documents" style="margin-top:3rem;">
       <h2>Documents</h2>
-      <ul style="list-style:none;">
-        <li style="padding:.6rem 0;border-bottom:1px solid var(--line);">📄 <a href="#">Property Management Agreement (PMA) — 3601 W Sahara</a> <span class="muted" style="font-size:.85rem;">Signed Jan 2024</span></li>
-        <li style="padding:.6rem 0;border-bottom:1px solid var(--line);">📄 <a href="#">PMA — Whitney Ranch</a> <span class="muted" style="font-size:.85rem;">Signed Mar 2023</span></li>
-        <li style="padding:.6rem 0;border-bottom:1px solid var(--line);">📄 <a href="#">2025 Year-End 1099-MISC</a></li>
-        <li style="padding:.6rem 0;">📄 <a href="#">Insurance Certificate Templates</a></li>
-      </ul>
+      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
+        Property Management Agreements, year-end 1099s, insurance certificates, and other ownership records will be filed here as they're added.
+      </div>
     </section>
 
     <section id="contact" style="margin-top:3rem;">
@@ -149,11 +109,94 @@
     if (!u) return;
     document.querySelectorAll('[data-user-name]').forEach(el => el.textContent = u.name);
     document.getElementById('welcome').textContent = u.email;
+    document.getElementById('signOutBtn').addEventListener('click', (e)=>{ e.preventDefault(); window.investproAuth.signOut(); });
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     if (window.investproAuth.isDemoMode()) {
       const banner = document.getElementById('auth-banner');
-      banner.innerHTML = '<div class="banner banner-info" style="margin:0;border-radius:0;">⚙️ <strong>Demo mode:</strong> data shown is sample data. Connect Supabase + a property database to show real owner data. See <a href="../README.md">README</a>.</div>';
+      banner.innerHTML = '<div class="banner banner-info" style="margin:0;border-radius:0;">⚙️ <strong>Demo mode:</strong> data shown is sample. Connect Supabase to show real owner data.</div>';
+      // Populate stub data
+      document.getElementById('kpiProps').textContent = '0';
+      document.getElementById('kpiRent').textContent = '$0';
+      document.getElementById('kpiOccupied').textContent = '0';
+      document.getElementById('kpiListed').textContent = '0';
+      document.getElementById('propsLoading').style.display = 'none';
+      document.getElementById('propsEmpty').style.display = '';
+      return;
     }
-    document.getElementById('signOutBtn').addEventListener('click', (e)=>{ e.preventDefault(); window.investproAuth.signOut(); });
+
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    // Pull this owner's properties (RLS already filters to owner_id = auth.uid())
+    const { data: props, error } = await supa.from('properties')
+      .select('id, address_line1, address_line2, city, state, zip, monthly_rent, security_deposit_amount, status, bedrooms, bathrooms, sqft, photos_override, listing_at')
+      .eq('owner_id', u.id)
+      .order('address_line1');
+
+    document.getElementById('propsLoading').style.display = 'none';
+
+    if (error) {
+      document.getElementById('auth-banner').innerHTML =
+        '<div class="banner banner-error" style="margin:0;border-radius:0;">Could not load your properties: ' + escapeHtml(error.message) + '</div>';
+      return;
+    }
+
+    const list = props || [];
+    const occupied = list.filter(p => p.status === 'leased' || p.status === 'renewal_pending').length;
+    const listed   = list.filter(p => p.status === 'listed').length;
+    const totalRent = list.filter(p => p.status !== 'off_market')
+      .reduce((sum, p) => sum + Number(p.monthly_rent || 0), 0);
+
+    document.getElementById('kpiProps').textContent     = list.length;
+    document.getElementById('kpiRent').textContent      = '$' + Math.round(totalRent).toLocaleString();
+    document.getElementById('kpiOccupied').textContent  = occupied;
+    document.getElementById('kpiListed').textContent    = listed;
+
+    const grid = document.getElementById('propsGrid');
+    if (list.length === 0) {
+      document.getElementById('propsEmpty').style.display = '';
+      return;
+    }
+
+    const STATUS_BADGE = {
+      vacant:                  { label: 'Vacant',          color: '#6B7280', bg: '#F3F4F6' },
+      listed:                  { label: 'Listed',          color: '#92400E', bg: '#FEF3C7' },
+      application_in_progress: { label: 'In application',  color: '#1E40AF', bg: '#DBEAFE' },
+      leased:                  { label: 'Occupied',        color: '#065F46', bg: '#D1FAE5' },
+      renewal_pending:         { label: 'Renewal pending', color: '#92400E', bg: '#FEF3C7' },
+      off_market:              { label: 'Off market',      color: '#6B7280', bg: '#F3F4F6' }
+    };
+
+    grid.innerHTML = list.map(p => {
+      const badge = STATUS_BADGE[p.status] || STATUS_BADGE.vacant;
+      const photo = (Array.isArray(p.photos_override) && p.photos_override[0]) || '../images/property-placeholder.svg';
+      const addr = p.address_line1 + (p.address_line2 ? ' ' + p.address_line2 : '');
+      const fullAddr = addr + ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
+      return `
+        <article class="property-card">
+          <div class="photo">
+            <img src="${escapeHtml(photo)}" alt="${escapeHtml(addr)}" />
+            <span class="badge" style="background:${badge.bg}; color:${badge.color};">${badge.label}</span>
+          </div>
+          <div class="body">
+            <div class="price">$${Number(p.monthly_rent || 0).toLocaleString()} <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
+            <div class="addr">${escapeHtml(fullAddr)}</div>
+            <div class="meta">
+              <span><strong>${p.bedrooms != null ? p.bedrooms : '?'}</strong>${p.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
+              <span><strong>${p.bathrooms != null ? p.bathrooms : '?'}</strong>${p.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+              <span><strong>${p.sqft ? Number(p.sqft).toLocaleString() : '?'}</strong>Sq Ft</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
   })();
 </script>
 </body>
