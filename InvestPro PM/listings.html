@@ -20,10 +20,12 @@
     <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
     <nav class="nav"><ul>
       <li><a href="index.html">Home</a></li><li><a href="property-management.html">Property Management</a></li>
-      <li><a href="listings.html">Listings</a></li><li><a href="sales.html">Buy / Sell</a></li>
-      <li><a href="recruiting.html">Join InvestPro</a></li><li><a href="about.html">About</a></li>
+      <li><a href="listings.html" aria-current="page">Listings</a></li><li><a href="sales.html">Buy / Sell</a></li>
+      <li><a href="recruiting.html">Join InvestPro</a></li>
+      <li><a href="whyus.html">Why InvestPro</a></li>
+      <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
-      <li><a href="portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+      <li><a href="portal/login.html" class="btn btn-primary">Sign In</a></li>
     </ul></nav>
   </div>
 </header>
@@ -39,119 +41,35 @@
 <section>
   <div class="container">
     <form id="listingFilter" class="filter-bar" onsubmit="event.preventDefault();">
-      <input name="q" placeholder="Search by city, ZIP, address…" />
-      <select name="type">
+      <input name="q" id="filterQ" placeholder="Search by city, ZIP, address…" />
+      <select name="type" id="filterType">
         <option value="">All Types</option>
         <option value="rent">For Rent</option>
         <option value="sale">For Sale</option>
       </select>
-      <select name="beds">
+      <select name="beds" id="filterBeds">
         <option value="">Any Beds</option>
         <option value="1">1+</option><option value="2">2+</option>
         <option value="3">3+</option><option value="4">4+</option>
       </select>
-      <input name="min" type="number" placeholder="Min $" />
-      <input name="max" type="number" placeholder="Max $" />
-      <button type="reset" class="btn btn-outline">Reset</button>
+      <input name="min" id="filterMin" type="number" placeholder="Min $" />
+      <input name="max" id="filterMax" type="number" placeholder="Max $" />
+      <button type="reset" id="filterReset" class="btn btn-outline">Reset</button>
     </form>
 
-    <!-- Dynamic listings loaded from properties-store (manual entries + future MLS sync) -->
+    <div id="loadingState" style="text-align:center; padding:2rem; color:#6B7280;">Loading listings…</div>
+    <div id="emptyState" style="display:none; text-align:center; padding:3rem 2rem; color:#6B7280;">
+      <p style="font-size:1.1rem; margin:0 0 .5rem;">No listings match your filters.</p>
+      <p style="font-size:.9rem; margin:0;">Try adjusting your search or <a href="#" id="clearLink" style="color:#1F4FC1;">clear all filters</a>.</p>
+    </div>
+    <div id="resultsCount" style="font-size:.9rem; color:#6B7280; margin-bottom:1rem; display:none;"></div>
+
+    <!-- Dynamic listings — Supabase-backed -->
     <div class="grid grid-3" id="dynamicListings"></div>
 
     <h3 id="staticListingsTitle" style="margin-top:2.5rem;margin-bottom:1rem;display:none;">Sample listings</h3>
 
-    <div class="grid grid-3">
-      <article class="property-card" data-listing data-type="rent" data-beds="2" data-price="1850">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Sahara condo" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$1,850 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">3601 W Sahara Ave #207 — Las Vegas, NV 89102</div>
-          <div class="meta"><span><strong>2</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,120</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="rent" data-beds="3" data-price="2350">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Henderson 3 bed" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$2,350 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">Whitney Ranch — Henderson, NV 89014</div>
-          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,580</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="rent" data-beds="4" data-price="3200">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Summerlin 4 bed" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$3,200 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">Summerlin South — Las Vegas, NV 89135</div>
-          <div class="meta"><span><strong>4</strong>Beds</span><span><strong>3</strong>Baths</span><span><strong>2,610</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="sale" data-beds="3" data-price="485000">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Green Valley 3 bed" /><span class="badge">For Sale</span></div>
-        <div class="body">
-          <div class="price">$485,000</div>
-          <div class="addr">Green Valley Ranch — Henderson, NV 89052</div>
-          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2.5</strong>Baths</span><span><strong>1,840</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="sale" data-beds="4" data-price="725000">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Summerlin 4 bed" /><span class="badge">For Sale</span></div>
-        <div class="body">
-          <div class="price">$725,000</div>
-          <div class="addr">Summerlin South — Las Vegas, NV 89135</div>
-          <div class="meta"><span><strong>4</strong>Beds</span><span><strong>3</strong>Baths</span><span><strong>2,610</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="sale" data-beds="5" data-price="985000">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Centennial 5 bed" /><span class="badge">For Sale</span></div>
-        <div class="body">
-          <div class="price">$985,000</div>
-          <div class="addr">Centennial Hills — Las Vegas, NV 89149</div>
-          <div class="meta"><span><strong>5</strong>Beds</span><span><strong>4</strong>Baths</span><span><strong>3,420</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="rent" data-beds="1" data-price="1395">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Spring Valley studio" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$1,395 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">Spring Valley — Las Vegas, NV 89117</div>
-          <div class="meta"><span><strong>1</strong>Bed</span><span><strong>1</strong>Bath</span><span><strong>720</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="sale" data-beds="3" data-price="395000">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="NLV 3 bed" /><span class="badge">For Sale</span></div>
-        <div class="body">
-          <div class="price">$395,000</div>
-          <div class="addr">Aliante — North Las Vegas, NV 89084</div>
-          <div class="meta"><span><strong>3</strong>Beds</span><span><strong>2</strong>Baths</span><span><strong>1,640</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-
-      <article class="property-card" data-listing data-type="rent" data-beds="2" data-price="1995">
-        <div class="photo"><img src="images/property-placeholder.svg" alt="Mountain's Edge townhome" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$1,995 <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">Mountain's Edge — Las Vegas, NV 89178</div>
-          <div class="meta"><span><strong>2</strong>Beds</span><span><strong>2.5</strong>Baths</span><span><strong>1,410</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;"><a href="property-detail.html" class="btn btn-outline btn-block">View Details</a></div>
-        </div>
-      </article>
-    </div>
-    <p class="muted center mt-3" style="font-size:.85rem;">Sample listings shown for design demonstration. Real listings will be powered via MLS / IDX feed once deployed.</p>
+    <p class="muted center mt-3" style="font-size:.85rem;" id="liveListingsNote" style="display:none;">Listings sync from our internal property database in real time. MLS / IDX integration adds nationwide search in a future release.</p>
   </div>
 </section>
 
@@ -173,32 +91,140 @@
   <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
 </footer>
 <script src="js/main.js"></script>
+<script src="js/header-auth.js"></script>
 <script src="js/properties-store.js"></script>
 <script>
 (async () => {
-  const props = await window.propertiesStore.list({ status: 'listed' });
-  const grid = document.getElementById('dynamicListings');
-  if (!grid || !props.length) return;
-  grid.innerHTML = props.map(p => {
-    const photo = (p.photos && p.photos[0]) || 'images/property-placeholder.svg';
-    const addr = p.address_line1 + (p.address_line2 ? ' ' + p.address_line2 : '') + ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
-    return `
-      <article class="property-card" data-listing data-type="rent" data-beds="${p.bedrooms || 0}" data-price="${p.monthly_rent || 0}">
-        <div class="photo"><img src="${photo.replace(/^\\.\\.\\//,'')}" alt="${escape(p.address_line1)}" /><span class="badge">For Rent</span></div>
-        <div class="body">
-          <div class="price">$${Number(p.monthly_rent).toLocaleString()} <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small></div>
-          <div class="addr">${escape(addr)}</div>
-          <div class="meta"><span><strong>${p.bedrooms || '?'}</strong>Beds</span><span><strong>${p.bathrooms || '?'}</strong>Baths</span><span><strong>${p.sqft ? Number(p.sqft).toLocaleString() : '?'}</strong>Sq Ft</span></div>
-          <div style="margin-top:1rem;display:flex;gap:.5rem;">
-            <a href="forms/rental-application.html?property=${encodeURIComponent(p.id)}" class="btn btn-primary btn-block">Apply Now</a>
+  const grid       = document.getElementById('dynamicListings');
+  const loadingEl  = document.getElementById('loadingState');
+  const emptyEl    = document.getElementById('emptyState');
+  const countEl    = document.getElementById('resultsCount');
+  const noteEl     = document.getElementById('liveListingsNote');
+
+  // URL prefill (lets the homepage hero search jump straight in with filters)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('q'))    document.getElementById('filterQ').value = params.get('q');
+  if (params.get('type')) document.getElementById('filterType').value = params.get('type');
+  if (params.get('beds')) document.getElementById('filterBeds').value = params.get('beds');
+
+  // Capture sponsor / agent attribution from URL — propagated to applications
+  const agentParam = params.get('agent') || params.get('sponsor') || '';
+
+  let allProps = [];
+  try {
+    allProps = await window.propertiesStore.list({ status: 'listed' });
+  } catch (err) {
+    loadingEl.innerHTML = '<div style="color:#B0342B;">Could not load listings: ' + (err?.message || err) + '</div>';
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  noteEl.style.display = '';
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function photoSrc(path) {
+    if (!path) return 'images/property-placeholder.svg';
+    return String(path).replace(/^\.\.\//, '').replace(/^\.\.\//, '');
+  }
+
+  function inferType(p) {
+    // 'rent' if has monthly_rent, otherwise 'sale' if has list_price, otherwise 'rent' as default
+    if (p.monthly_rent) return 'rent';
+    if (p.list_price)   return 'sale';
+    return 'rent';
+  }
+
+  function priceOf(p) {
+    return Number(p.monthly_rent || p.list_price || 0);
+  }
+
+  function applyFilters() {
+    const q     = document.getElementById('filterQ').value.toLowerCase().trim();
+    const type  = document.getElementById('filterType').value;
+    const beds  = Number(document.getElementById('filterBeds').value || 0);
+    const min   = Number(document.getElementById('filterMin').value || 0);
+    const max   = Number(document.getElementById('filterMax').value || 0);
+
+    return allProps.filter(p => {
+      // Text search across address, city, ZIP
+      if (q) {
+        const hay = [p.address_line1, p.address_line2, p.city, p.zip].filter(Boolean).join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (type && inferType(p) !== type) return false;
+      if (beds > 0 && (p.bedrooms || 0) < beds) return false;
+      const price = priceOf(p);
+      if (min > 0 && price < min) return false;
+      if (max > 0 && price > max) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    const list = applyFilters();
+    countEl.style.display = '';
+    countEl.textContent = list.length === allProps.length
+      ? `${list.length} active listings`
+      : `Showing ${list.length} of ${allProps.length} listings`;
+
+    if (list.length === 0) {
+      grid.innerHTML = '';
+      emptyEl.style.display = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    grid.innerHTML = list.map(p => {
+      const t = inferType(p);
+      const isRent = t === 'rent';
+      const price = isRent
+        ? `$${Number(p.monthly_rent).toLocaleString()} <small style="font-size:.85rem;color:var(--ink-soft);font-weight:400;">/mo</small>`
+        : (p.list_price ? `$${Number(p.list_price).toLocaleString()}` : 'Inquire');
+      const badge = isRent ? 'For Rent' : 'For Sale';
+      const photo = photoSrc(Array.isArray(p.photos) && p.photos[0]);
+      const addr = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''} — ${p.city || 'Las Vegas'}, ${p.state || 'NV'} ${p.zip || ''}`;
+      const detailHref = `property-detail.html?id=${encodeURIComponent(p.id)}` + (agentParam ? `&agent=${encodeURIComponent(agentParam)}` : '');
+      return `
+        <article class="property-card">
+          <a href="${detailHref}" style="color:inherit;text-decoration:none;display:block;">
+            <div class="photo">
+              <img src="${escapeHtml(photo)}" alt="${escapeHtml(p.address_line1)}" />
+              <span class="badge">${badge}</span>
+            </div>
+            <div class="body">
+              <div class="price">${price}</div>
+              <div class="addr">${escapeHtml(addr)}</div>
+              <div class="meta">
+                <span><strong>${p.bedrooms != null ? p.bedrooms : '?'}</strong>${p.bedrooms === 1 ? 'Bed' : 'Beds'}</span>
+                <span><strong>${p.bathrooms != null ? p.bathrooms : '?'}</strong>${p.bathrooms === 1 ? 'Bath' : 'Baths'}</span>
+                <span><strong>${p.sqft ? Number(p.sqft).toLocaleString() : '?'}</strong>Sq Ft</span>
+              </div>
+            </div>
+          </a>
+          <div style="padding:0 1rem 1rem;display:flex;gap:.5rem;">
+            <a href="${detailHref}" class="btn btn-outline btn-sm" style="flex:1;text-align:center;">Details</a>
+            ${isRent ? `<a href="forms/rental-application.html?property=${encodeURIComponent(p.id)}${agentParam ? `&agent=${encodeURIComponent(agentParam)}` : ''}" class="btn btn-primary btn-sm" style="flex:1;text-align:center;">Apply</a>` : ''}
           </div>
-        </div>
-      </article>
-    `;
-  }).join('');
-  // Show "Sample listings" header to separate dynamic from static cards
-  document.getElementById('staticListingsTitle').style.display = '';
-  function escape(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+        </article>
+      `;
+    }).join('');
+  }
+
+  // Wire filter inputs
+  ['filterQ', 'filterType', 'filterBeds', 'filterMin', 'filterMax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+  document.getElementById('filterReset').addEventListener('click', () => setTimeout(render, 50));
+  document.getElementById('clearLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('listingFilter').reset();
+    render();
+  });
+
+  render();
 })();
 </script>
 </body>

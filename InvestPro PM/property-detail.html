@@ -3,11 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>3601 W Sahara Ave #207 — InvestPro Realty</title>
+<title id="pageTitle">Property Detail — InvestPro Realty</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/png" href="images/favicon.png" />
 <script src="js/preview-gate.js"></script>
 <link rel="stylesheet" href="css/styles.css" />
+<style>
+  .photo-hero { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:6px; box-shadow:var(--shadow); margin-bottom:1rem; background:#F0F2F7; }
+  .photo-thumbs { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; }
+  .photo-thumbs img { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:4px; cursor:pointer; transition:transform .15s; background:#F0F2F7; }
+  .photo-thumbs img:hover { transform:scale(1.02); }
+  @media (max-width: 720px) { .photo-thumbs { grid-template-columns:repeat(2,1fr); } }
+  .features-grid { list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:.4rem; margin-top:1rem; padding:0; }
+  .err-box { background:#FEE2E2; color:#B0342B; padding:1.25rem 1.5rem; border-radius:6px; max-width:560px; margin:3rem auto; text-align:center; }
+  .loading-box { text-align:center; padding:4rem 2rem; color:#6B7280; }
+</style>
 </head>
 <body>
 
@@ -18,93 +28,246 @@
     <a href="index.html" class="brand"><img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
     <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
     <nav class="nav"><ul>
-      <li><a href="index.html">Home</a></li><li><a href="property-management.html">Property Management</a></li>
-      <li><a href="listings.html">Listings</a></li><li><a href="sales.html">Buy / Sell</a></li>
-      <li><a href="recruiting.html">Join InvestPro</a></li><li><a href="about.html">About</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="property-management.html">Property Management</a></li>
+      <li><a href="listings.html" aria-current="page">Listings</a></li>
+      <li><a href="sales.html">Buy / Sell</a></li>
+      <li><a href="recruiting.html">Join InvestPro</a></li>
+      <li><a href="whyus.html">Why InvestPro</a></li>
+      <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
-      <li><a href="portal/login.html" class="btn btn-primary">Owner / Tenant Login</a></li>
+      <li><a href="portal/login.html" class="btn btn-primary">Sign In</a></li>
     </ul></nav>
   </div>
 </header>
 
-<section style="padding:2rem 0 0;">
-  <div class="container">
-    <div class="breadcrumbs"><a href="index.html">Home</a> &nbsp;/&nbsp; <a href="listings.html">Listings</a> &nbsp;/&nbsp; 3601 W Sahara #207</div>
-    <div class="flex flex-between" style="margin-top:.5rem;">
+<div id="loadingBox" class="loading-box">Loading property details…</div>
+<div id="errBox" class="err-box" style="display:none;"></div>
+
+<div id="content" style="display:none;">
+  <section style="padding:2rem 0 0;">
+    <div class="container">
+      <div class="breadcrumbs">
+        <a href="index.html">Home</a> &nbsp;/&nbsp; <a href="listings.html">Listings</a> &nbsp;/&nbsp; <span id="bcAddr">—</span>
+      </div>
+      <div class="flex flex-between" style="margin-top:.5rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+        <div>
+          <h1 id="addrTitle" style="margin-bottom:.2rem;">—</h1>
+          <p class="muted" style="margin-bottom:0;" id="cityZip">—</p>
+        </div>
+        <div style="text-align:right;">
+          <div id="priceTag" style="font-family:Georgia,serif; color:#B8860B; font-size:2rem; font-weight:700;">—</div>
+          <span id="badgeTag" class="badge" style="background:#FFD66B; color:#0E2A6B; padding:.3rem .8rem; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; border-radius:4px;">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:1.5rem 0;">
+    <div class="container">
+      <img id="heroImg" src="images/property-placeholder.svg" alt="Property exterior" class="photo-hero" />
+      <div class="photo-thumbs" id="thumbsGrid"></div>
+    </div>
+  </section>
+
+  <section style="padding:0 0 4rem;">
+    <div class="container grid grid-2" style="gap:3rem; display:grid; grid-template-columns:2fr 1fr;">
       <div>
-        <h1 style="margin-bottom:.2rem;">3601 W Sahara Ave #207</h1>
-        <p class="muted" style="margin-bottom:0;">Las Vegas, NV 89102 · MLS #INV-2026-0047</p>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-family:var(--serif);color:var(--gold-dark);font-size:2rem;font-weight:700;">$1,850 <small style="color:var(--ink-soft);font-size:1rem;font-weight:400;">/mo</small></div>
-        <span class="badge" style="background:var(--gold);color:var(--navy);padding:.3rem .8rem;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-radius:4px;">For Rent</span>
-      </div>
-    </div>
-  </div>
-</section>
+        <span class="eyebrow">About This Property</span>
+        <h2 id="aboutTitle">—</h2>
+        <div class="divider"></div>
+        <p id="descText" style="line-height:1.65; white-space:pre-wrap;">—</p>
 
-<section style="padding:2rem 0;">
-  <div class="container">
-    <img src="images/property-placeholder.svg" alt="Property exterior" style="width:100%;border-radius:4px;box-shadow:var(--shadow);margin-bottom:1rem;" />
-    <div class="grid grid-4" style="gap:.75rem;">
-      <img src="images/property-placeholder.svg" alt="Living area" style="border-radius:4px;" />
-      <img src="images/property-placeholder.svg" alt="Kitchen" style="border-radius:4px;" />
-      <img src="images/property-placeholder.svg" alt="Bedroom" style="border-radius:4px;" />
-      <img src="images/property-placeholder.svg" alt="Bath" style="border-radius:4px;" />
-    </div>
-  </div>
-</section>
+        <h3 style="margin-top:2rem;">Property Details</h3>
+        <table class="tbl mt-2" style="width:100%;">
+          <tr><th>Type</th><td id="dType">—</td></tr>
+          <tr><th>Bedrooms</th><td id="dBeds">—</td></tr>
+          <tr><th>Bathrooms</th><td id="dBaths">—</td></tr>
+          <tr><th>Square Feet</th><td id="dSqft">—</td></tr>
+          <tr><th>Year Built</th><td id="dYear">—</td></tr>
+          <tr><th>Parking</th><td id="dParking">—</td></tr>
+          <tr><th>Pets</th><td id="dPets">—</td></tr>
+          <tr id="rRow" style="display:none;"><th>Monthly Rent</th><td id="dRent">—</td></tr>
+          <tr id="dpRow" style="display:none;"><th>Security Deposit</th><td id="dDeposit">—</td></tr>
+          <tr id="hoaRow" style="display:none;"><th>HOA</th><td id="dHoa">—</td></tr>
+        </table>
 
-<section style="padding:0 0 4rem;">
-  <div class="container grid grid-2" style="gap:3rem;">
-    <div>
-      <span class="eyebrow">About This Home</span>
-      <h2>Modern condo on West Sahara</h2>
-      <div class="divider"></div>
-      <p>This well-maintained 2-bedroom, 2-bath condo offers central Las Vegas convenience with quick access to the Strip, Summerlin, and Spring Valley. Updated kitchen with stainless appliances, in-unit laundry, secure parking, and a community pool.</p>
-      <h3 style="margin-top:2rem;">Property Details</h3>
-      <table class="tbl mt-2">
-        <tr><th>Type</th><td>Condo / Townhome</td></tr>
-        <tr><th>Bedrooms</th><td>2</td></tr>
-        <tr><th>Bathrooms</th><td>2</td></tr>
-        <tr><th>Square Feet</th><td>1,120</td></tr>
-        <tr><th>Year Built</th><td>2008</td></tr>
-        <tr><th>Parking</th><td>1 covered space</td></tr>
-        <tr><th>Pets</th><td>Cats OK with deposit, no dogs</td></tr>
-        <tr><th>Lease Term</th><td>12 months</td></tr>
-        <tr><th>Available</th><td>Immediately</td></tr>
-      </table>
-      <h3 style="margin-top:2rem;">Features &amp; Amenities</h3>
-      <ul style="list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:1rem;">
-        <li>✓ Central A/C &amp; Heat</li><li>✓ In-unit Washer/Dryer</li>
-        <li>✓ Stainless Steel Appliances</li><li>✓ Granite Countertops</li>
-        <li>✓ Walk-in Closet</li><li>✓ Tile &amp; Carpet Flooring</li>
-        <li>✓ Community Pool</li><li>✓ Gated Parking</li>
-      </ul>
-    </div>
-    <div>
-      <div class="form-card" style="position:sticky;top:100px;">
-        <h3>Interested in this home?</h3>
-        <p class="muted">Schedule a showing or apply online — both take just a few minutes.</p>
-        <a href="forms/rental-application.html" class="btn btn-primary btn-block mt-2">Apply Online</a>
-        <a href="contact.html" class="btn btn-outline btn-block mt-2">Schedule a Showing</a>
-        <hr style="border:0;border-top:1px solid var(--line);margin:1.5rem 0;" />
-        <p style="font-size:.95rem;"><strong>Listing Agent</strong><br/>Kenny Lin, Broker<br/>InvestPro Realty<br/>📞 <a href="tel:7028165555">702-816-5555</a></p>
-        <p style="font-size:.85rem;color:var(--ink-soft);">Application fee: $75 primary / $50 each co-applicant · Holding fee = one month's rent (refundable on denial) · Security deposit due on lease signing · Renter's insurance required.</p>
+        <h3 style="margin-top:2rem;">Features &amp; Amenities</h3>
+        <ul class="features-grid" id="featuresList"></ul>
+
+        <h3 style="margin-top:2rem;">Sewer / Trash</h3>
+        <p id="utilNote" style="font-size:.95rem; color:#555A6B;">—</p>
+      </div>
+
+      <div>
+        <div class="form-card" style="position:sticky; top:100px; padding:1.5rem; background:#fff; border:1px solid #DDE3F0; border-radius:6px;">
+          <h3 style="margin-top:0;">Interested in this home?</h3>
+          <p class="muted">Schedule a showing or apply online.</p>
+          <a id="applyBtn" href="#" class="btn btn-primary btn-block mt-2">Apply Online</a>
+          <a href="contact.html" class="btn btn-outline btn-block mt-2">Schedule a Showing</a>
+          <hr style="border:0; border-top:1px solid #E5E7EB; margin:1.5rem 0;" />
+          <p style="font-size:.95rem;">
+            <strong>Listing Agent</strong><br/>
+            <span id="agentName">Kenny Lin, Broker</span><br/>
+            <span id="agentBrokerage">InvestPro Realty</span><br/>
+            📞 <a href="tel:7028165555">702-816-5555</a>
+          </p>
+          <p style="font-size:.85rem; color:#6B7280;">
+            Application fee: $75 primary / $50 each co-applicant · Holding fee = one month's rent (refundable on denial) · Security deposit due on lease signing · Renter's insurance required.
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
 <footer class="site-footer">
   <div class="container footer-grid">
     <div><a href="index.html" class="brand"><img src="images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
     <div><h4>Services</h4><ul><li><a href="property-management.html">Property Management</a></li><li><a href="sales.html">Buy / Sell</a></li><li><a href="listings.html">Listings</a></li></ul></div>
-    <div><h4>For Clients</h4><ul><li><a href="portal/login.html">Owner Login</a></li><li><a href="portal/login.html">Tenant Login</a></li><li><a href="forms/rental-application.html">Apply</a></li></ul></div>
-    <div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div><h4>For Clients</h4><ul><li><a href="portal/login.html">Sign In</a></li><li><a href="forms/rental-application.html">Apply</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="recruiting.html">Careers</a></li></ul></div>
   </div>
   <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division</span></div>
 </footer>
+
 <script src="js/main.js"></script>
+<script src="js/header-auth.js"></script>
+<script src="js/properties-store.js"></script>
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const agentParam = params.get('agent') || params.get('sponsor') || ''; // for share-link tracking
+
+  if (!id) {
+    showError('No property ID specified. <a href="listings.html">Back to listings</a>.');
+    return;
+  }
+
+  let prop;
+  try {
+    prop = await window.propertiesStore.get(id);
+  } catch (err) {
+    return showError('Could not load property: ' + (err?.message || err));
+  }
+  if (!prop) {
+    return showError('Property not found. <a href="listings.html">Back to listings</a>.');
+  }
+
+  // ---- Render ----
+  const isRental = !!prop.monthly_rent;
+  const isSale   = !!prop.list_price;
+
+  const addrLine1 = prop.address_line1 + (prop.address_line2 ? ' ' + prop.address_line2 : '');
+  const addrFull = `${prop.city || 'Las Vegas'}, ${prop.state || 'NV'} ${prop.zip || ''}`.trim();
+  document.getElementById('pageTitle').textContent = `${addrLine1} — InvestPro Realty`;
+  document.getElementById('bcAddr').textContent = addrLine1;
+  document.getElementById('addrTitle').textContent = addrLine1;
+  document.getElementById('cityZip').textContent = addrFull;
+  document.getElementById('aboutTitle').textContent = `${prop.bedrooms || ''} bed · ${prop.bathrooms || ''} bath ${(prop.property_type || 'home').toLowerCase()}`;
+  document.getElementById('descText').textContent = prop.description || 'No description provided yet.';
+
+  if (isRental) {
+    document.getElementById('priceTag').innerHTML = `$${Number(prop.monthly_rent).toLocaleString()} <small style="color:#6B7280; font-size:1rem; font-weight:400;">/mo</small>`;
+    document.getElementById('badgeTag').textContent = 'For Rent';
+  } else if (isSale) {
+    document.getElementById('priceTag').textContent = '$' + Number(prop.list_price).toLocaleString();
+    document.getElementById('badgeTag').textContent = 'For Sale';
+  } else {
+    document.getElementById('priceTag').textContent = 'Inquire';
+    document.getElementById('badgeTag').textContent = (prop.status || '').replace('_',' ');
+  }
+
+  // Photos (handles array of paths or strings; falls back to placeholder)
+  const photos = Array.isArray(prop.photos) && prop.photos.length ? prop.photos : ['images/property-placeholder.svg'];
+  const heroImg = document.getElementById('heroImg');
+  heroImg.src = photoSrc(photos[0]);
+  heroImg.alt = addrLine1;
+
+  const thumbs = document.getElementById('thumbsGrid');
+  thumbs.innerHTML = '';
+  for (const p of photos) {
+    const img = document.createElement('img');
+    img.src = photoSrc(p);
+    img.alt = addrLine1;
+    img.addEventListener('click', () => { heroImg.src = photoSrc(p); heroImg.scrollIntoView({behavior:'smooth', block:'start'}); });
+    thumbs.appendChild(img);
+  }
+
+  // Details table
+  document.getElementById('dType').textContent = labelType(prop.property_type) || '—';
+  document.getElementById('dBeds').textContent = prop.bedrooms != null ? prop.bedrooms : '—';
+  document.getElementById('dBaths').textContent = prop.bathrooms != null ? prop.bathrooms : '—';
+  document.getElementById('dSqft').textContent = prop.sqft ? Number(prop.sqft).toLocaleString() + ' sq ft' : '—';
+  document.getElementById('dYear').textContent = prop.year_built || '—';
+  document.getElementById('dParking').textContent = prop.parking || '—';
+  document.getElementById('dPets').textContent = labelPets(prop.pets_allowed);
+
+  if (isRental) {
+    document.getElementById('rRow').style.display = '';
+    document.getElementById('dRent').textContent = '$' + Number(prop.monthly_rent).toLocaleString() + ' / month';
+    if (prop.security_deposit_amount) {
+      document.getElementById('dpRow').style.display = '';
+      document.getElementById('dDeposit').textContent = '$' + Number(prop.security_deposit_amount).toLocaleString();
+    }
+  }
+  if (prop.hoa_name || prop.hoa_dues) {
+    document.getElementById('hoaRow').style.display = '';
+    document.getElementById('dHoa').textContent = (prop.hoa_name || 'Yes') +
+      (prop.hoa_dues ? ' — $' + Number(prop.hoa_dues).toLocaleString() + '/mo' : '');
+  }
+
+  // Features
+  const featList = document.getElementById('featuresList');
+  const flags = [];
+  if (prop.has_pool) flags.push('Community / private pool');
+  if (prop.parking) flags.push(prop.parking);
+  if (prop.pets_allowed && prop.pets_allowed !== 'none') flags.push('Pets: ' + labelPets(prop.pets_allowed));
+  if (prop.year_built && prop.year_built >= 2010) flags.push('Built ' + prop.year_built + ' — modern construction');
+  if (Array.isArray(prop.features) && prop.features.length) flags.push(...prop.features);
+  if (flags.length === 0) flags.push('Contact us for full feature list');
+  featList.innerHTML = flags.map(f => `<li>✓ ${escapeHtml(f)}</li>`).join('');
+
+  // Sewer / trash note (Nevada compliance)
+  document.getElementById('utilNote').textContent = prop.sewer_trash_included_in_rent
+    ? '✓ Sewer & trash included in rent (per Nevada law for rentals).'
+    : 'Tenant pays sewer & trash directly. (Inquire for details.)';
+
+  // Apply button — preserves agent attribution if present in URL
+  const applyHref = `forms/rental-application.html?property=${encodeURIComponent(prop.id)}` +
+    (agentParam ? `&agent=${encodeURIComponent(agentParam)}` : '');
+  document.getElementById('applyBtn').href = applyHref;
+
+  // Listing agent override (if a real agent is linked)
+  if (prop.listing_agent_name) {
+    document.getElementById('agentName').textContent = prop.listing_agent_name;
+  }
+
+  // Show
+  document.getElementById('loadingBox').style.display = 'none';
+  document.getElementById('content').style.display = '';
+
+  function photoSrc(path) {
+    if (!path) return 'images/property-placeholder.svg';
+    // Strip leading "../../" used by some seed paths
+    return String(path).replace(/^\.\.\//, '').replace(/^\.\.\//, '');
+  }
+  function labelType(t) {
+    return ({condo:'Condo / Townhome', sfh:'Single-family home', townhome:'Townhome', multifamily:'Multi-family', other:'Other'})[t] || t;
+  }
+  function labelPets(p) {
+    return ({cats:'Cats only', dogs:'Dogs only', both:'Cats & dogs OK', none:'No pets'})[p] || (p || '—');
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function showError(msg) {
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('errBox').innerHTML = msg;
+    document.getElementById('errBox').style.display = '';
+  }
+})();
+</script>
 </body>
 </html>
