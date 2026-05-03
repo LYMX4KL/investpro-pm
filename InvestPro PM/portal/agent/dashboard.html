@@ -42,6 +42,56 @@
     <div class="stat-tile amber"><div class="label">W-9 status</div><div class="value">⚠</div><div class="sub">Upload pending</div></div>
   </div>
 
+  <!-- MGC career card — current level, points, downline -->
+  <div class="dash-section" id="mgcCard" style="background:linear-gradient(135deg,#0E2A6B,#1F4FC1); color:#fff; border-radius:8px; padding:2rem; margin:1.5rem 0;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+      <div style="flex:1; min-width:260px;">
+        <div style="font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">Your career level</div>
+        <h2 id="mgcLevelName" style="font-family:'Playfair Display',Georgia,serif; color:#fff; margin:.25rem 0; font-size:1.7rem;">— loading —</h2>
+        <div style="display:flex; gap:1rem; align-items:baseline; flex-wrap:wrap;">
+          <div>
+            <span style="font-family:'Playfair Display',Georgia,serif; color:#FFD66B; font-size:2.2rem; font-weight:700;" id="mgcSplit">—</span>
+            <span style="font-size:1rem; color:#DDE6F7;">commission split</span>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1; min-width:260px; max-width:380px;">
+        <div style="font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">Points year-to-date</div>
+        <div style="display:flex; align-items:baseline; gap:.5rem; margin:.25rem 0 .35rem;">
+          <span id="mgcPointsYtd" style="font-family:'Playfair Display',Georgia,serif; font-size:2.2rem; font-weight:700; color:#fff;">0</span>
+          <span style="color:#DDE6F7; font-size:.95rem;" id="mgcNextThreshold">/ next level: —</span>
+        </div>
+        <div style="background:rgba(255,255,255,.15); height:8px; border-radius:99px; overflow:hidden;">
+          <div id="mgcProgressBar" style="background:#FFD66B; height:100%; width:0%; transition:width 600ms;"></div>
+        </div>
+        <div style="margin-top:.4rem; font-size:.82rem; color:#DDE6F7;" id="mgcProgressLabel">—</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-top:1.75rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,.15);">
+      <div>
+        <div style="font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">1st gen</div>
+        <div style="font-size:1.6rem; font-weight:700; color:#fff;" id="mgcGen1">0</div>
+        <div style="font-size:.78rem; color:#DDE6F7;">direct recruits · 5% override</div>
+      </div>
+      <div>
+        <div style="font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">2nd gen</div>
+        <div style="font-size:1.6rem; font-weight:700; color:#fff;" id="mgcGen2">0</div>
+        <div style="font-size:.78rem; color:#DDE6F7;">recruits' recruits · 3% override</div>
+      </div>
+      <div>
+        <div style="font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:#FFD66B; font-weight:600;">3rd gen</div>
+        <div style="font-size:1.6rem; font-weight:700; color:#fff;" id="mgcGen3">0</div>
+        <div style="font-size:.78rem; color:#DDE6F7;">3 levels deep · 1% override</div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.5rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+      <a href="../../recruiting.html?sponsor=" id="mgcShareRecruitLink" target="_blank" class="btn btn-light" style="background:#FFD66B; color:#0E2A6B; border:none;">📨 Share recruiting link</a>
+      <a href="#mgcCard" id="mgcViewDownlineBtn" class="btn" style="background:transparent; color:#FFD66B; border:1px solid #FFD66B;" title="Coming soon — full downline tree visualization">🌳 View downline (coming soon)</a>
+    </div>
+  </div>
+
   <div class="dash-section">
     <h2>Your share link</h2>
     <p class="muted">Send this to clients. When they open a property page through it, your info is auto-filled into their application.</p>
@@ -118,8 +168,83 @@ function copyGenerated() { navigator.clipboard.writeText(document.getElementById
   // Show verification banner in demo mode (in v1 with Supabase, read agents.mls_verified)
   if (window.investproAuth.isDemoMode()) {
     document.getElementById('agentVerifyBanner').style.display = 'block';
+    // Stub MGC widget with placeholder data
+    populateMgcWidget({ current_level: 'associate', points_ytd: 0, share_code: 'AGT-DEMO' }, { gen1_count: 0, gen2_count: 0, gen3_count: 0 });
+    return;
+  }
+
+  // ---- Real-mode MGC widget ----
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    // Find this user's agent row
+    const { data: agent } = await supa.from('agents')
+      .select('id, agent_share_code, current_level, points_ytd, license_number, sponsor_agent_id')
+      .eq('profile_id', u.id)
+      .maybeSingle();
+
+    if (!agent) {
+      // Not yet an agents-table row — show entry-level defaults
+      populateMgcWidget({ current_level: 'associate', points_ytd: 0, share_code: '(setup pending)' }, { gen1_count: 0, gen2_count: 0, gen3_count: 0 });
+      return;
+    }
+
+    // Pull downline summary
+    const { data: dl } = await supa.from('v_agent_downline_summary')
+      .select('gen1_count, gen2_count, gen3_count')
+      .eq('agent_id', agent.id)
+      .maybeSingle();
+
+    populateMgcWidget(
+      { current_level: agent.current_level || 'associate',
+        points_ytd: Number(agent.points_ytd || 0),
+        share_code: agent.agent_share_code || '(no share code)' },
+      dl || { gen1_count: 0, gen2_count: 0, gen3_count: 0 }
+    );
+  } catch (err) {
+    console.warn('MGC widget failed to load:', err);
   }
 })();
+
+function populateMgcWidget(agent, downline) {
+  const LEVELS = {
+    associate:           { name: 'Associate',           split: '50%', nextThreshold: 30000,  nextName: 'Senior Associate' },
+    senior_associate:    { name: 'Senior Associate',    split: '65%', nextThreshold: 75000,  nextName: 'Executive Associate' },
+    executive_associate: { name: 'Executive Associate', split: '75%', nextThreshold: 75000,  nextName: 'Team Manager (req. broker license)' },
+    team_manager:        { name: 'Team Manager ⭐',     split: '80%', nextThreshold: null,   nextName: 'Branch Broker (lead an office)' },
+    branch_broker:       { name: 'Branch Broker 🏆',    split: '80% + 1% branch', nextThreshold: null, nextName: '(top of ladder)' }
+  };
+  const lvl = LEVELS[agent.current_level] || LEVELS.associate;
+
+  document.getElementById('mgcLevelName').textContent = lvl.name;
+  document.getElementById('mgcSplit').textContent = lvl.split;
+  document.getElementById('mgcPointsYtd').textContent = Math.round(agent.points_ytd).toLocaleString();
+
+  if (lvl.nextThreshold != null) {
+    const remaining = Math.max(0, lvl.nextThreshold - agent.points_ytd);
+    const pct = Math.min(100, Math.max(0, (agent.points_ytd / lvl.nextThreshold) * 100));
+    document.getElementById('mgcNextThreshold').textContent = `/ ${lvl.nextThreshold.toLocaleString()} for ${lvl.nextName}`;
+    document.getElementById('mgcProgressBar').style.width = pct.toFixed(1) + '%';
+    document.getElementById('mgcProgressLabel').textContent = remaining > 0
+      ? `${remaining.toLocaleString()} points to ${lvl.nextName}`
+      : `✓ Threshold met — promotion processing`;
+  } else {
+    document.getElementById('mgcNextThreshold').textContent = lvl.nextName;
+    document.getElementById('mgcProgressBar').style.width = '100%';
+    document.getElementById('mgcProgressLabel').textContent = lvl.name === 'Branch Broker 🏆' ? 'Top of the ladder.' : 'Become a Branch Broker by leading an office.';
+  }
+
+  document.getElementById('mgcGen1').textContent = downline.gen1_count || 0;
+  document.getElementById('mgcGen2').textContent = downline.gen2_count || 0;
+  document.getElementById('mgcGen3').textContent = downline.gen3_count || 0;
+
+  const shareLink = `https://investprorealty.net/recruiting.html?sponsor=${encodeURIComponent(agent.share_code || '')}`;
+  document.getElementById('mgcShareRecruitLink').href = shareLink;
+}
 </script>
 </body>
 </html>
