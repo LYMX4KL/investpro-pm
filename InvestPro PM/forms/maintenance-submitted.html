@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maintenance Request Submitted — InvestPro Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Tenant Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container center">
+    <div style="font-size:3.5rem; margin-bottom:.5rem;">✅</div>
+    <h1>Request submitted!</h1>
+    <p>Your property manager has been notified. We'll reach out shortly to schedule a vendor.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div style="max-width:640px; margin:0 auto; background:#fff; border:1px solid #DDE3F0; border-radius:8px; padding:2rem 2.25rem;">
+
+      <div id="emergencyBanner" style="display:none; background:#FEE2E2; border:1px solid #FCA5A5; border-radius:6px; padding:1rem 1.25rem; margin-bottom:1.5rem;">
+        <strong style="color:#991B1B;">⚠ Reminder:</strong> If this is an active emergency (gas leak, flooding, no heat in winter, fire/smoke), please <a href="tel:7028165555" style="color:#991B1B; font-weight:700;">call 702-816-5555 now</a> in addition to this form.
+      </div>
+
+      <div style="background:#F7F8FB; border-left:3px solid #1F4FC1; padding:1rem 1.25rem; border-radius:6px; margin-bottom:1.5rem;">
+        <div style="font-size:.78rem; letter-spacing:.12em; color:#6B7280; text-transform:uppercase; font-weight:700;">Reference number</div>
+        <div id="refNum" style="font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; font-size:1.4rem; font-weight:700; letter-spacing:.04em; margin-top:.25rem;">—</div>
+      </div>
+
+      <h3 style="color:#1F4FC1; font-family:'Playfair Display',Georgia,serif;">What happens next?</h3>
+      <ul style="list-style:none; padding:0; margin:1rem 0 1.5rem;">
+        <li style="padding:.7rem 0; border-bottom:1px solid #F0F0F0;">
+          <strong>1.</strong> Your property manager reviews and triages the request <em>(typically same business day)</em>.
+        </li>
+        <li style="padding:.7rem 0; border-bottom:1px solid #F0F0F0;">
+          <strong>2.</strong> A vendor is assigned and contacts you to schedule the appointment.
+        </li>
+        <li style="padding:.7rem 0; border-bottom:1px solid #F0F0F0;">
+          <strong>3.</strong> If repair cost exceeds your owner's pre-approved threshold, we'll get owner approval before proceeding.
+        </li>
+        <li style="padding:.7rem 0;">
+          <strong>4.</strong> Vendor completes the work, you confirm, and the request closes in your portal.
+        </li>
+      </ul>
+
+      <p style="background:#FFFCF0; border:1px dashed #FFD66B; border-radius:6px; padding:1rem 1.25rem; font-size:.92rem; color:#555A6B; margin:1rem 0;">
+        <strong style="color:#92400E;">Heads up:</strong> if you reported the issue is tenant-caused (e.g., clogged drain from improper use), repair charges may be added to your account. Otherwise it's covered under standard maintenance.
+      </p>
+
+      <div style="text-align:center; margin-top:1.5rem;">
+        <a href="../portal/login.html" class="btn btn-primary">View in Tenant Portal</a>
+        <a href="../index.html" class="btn btn-outline" style="margin-left:.4rem;">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>Tenants</h4><ul><li><a href="rental-application.html">Apply</a></li><li><a href="maintenance-request.html">Maintenance</a></li><li><a href="../portal/login.html">Tenant Login</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division &nbsp;|&nbsp; Cashback rewards <strong style="color:#FFD66B;">Powered by LYMX</strong></span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const priority = params.get('priority');
+    if (id) {
+      document.getElementById('refNum').textContent = 'WO-' + id.substring(0, 8).toUpperCase();
+    }
+    if (priority === 'urgent' || priority === 'emergency') {
+      document.getElementById('emergencyBanner').style.display = '';
+    }
+  })();
+</script>
+</body>
+</html>

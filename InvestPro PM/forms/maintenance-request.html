@@ -39,68 +39,96 @@
   <div class="container" style="max-width:760px;">
     <div class="banner banner-error">🚨 <strong>For active emergencies</strong> (water flooding, gas leak, electrical fire, no heat below 40°F, no A/C above 90°F): call our 24/7 line at 702-816-5555. Do not submit through this form.</div>
     <div class="form-card">
-      <form data-validate action="#" method="post">
+      <div id="formError" style="display:none; background:#FEE2E2; color:#991B1B; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.92rem;"></div>
+
+      <form id="maintForm">
         <div class="form-row">
-          <div class="form-group"><label>Your Name <span class="required">*</span></label><input type="text" name="name" required /><div class="form-error">Required.</div></div>
-          <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" name="phone" required /><div class="form-error">Required.</div></div>
+          <div class="form-group"><label>Your Name <span class="required">*</span></label><input type="text" id="full_name" required /></div>
+          <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" id="phone" required /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" name="email" required /><div class="form-error">Valid email required.</div></div>
-          <div class="form-group"><label>Best time to contact</label><select name="contact_time"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Anytime</option></select></div>
+          <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="email" required /></div>
+          <div class="form-group"><label>Best time to contact</label><select id="contact_time"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Anytime</option></select></div>
         </div>
 
         <div class="form-group">
           <label>Property Address <span class="required">*</span></label>
-          <input type="text" name="address" required placeholder="Where is the issue?" />
-          <div class="form-error">Required.</div>
+          <input type="text" id="property_address" required placeholder="Where is the issue?" />
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label>Issue Category <span class="required">*</span></label>
-            <select name="category" required>
+            <select id="category" required>
               <option value="">Select…</option>
-              <option>Plumbing</option><option>HVAC / A/C / Heating</option>
-              <option>Electrical</option><option>Appliances</option>
-              <option>Pest / Bugs / Rodents</option><option>Doors / Windows / Locks</option>
-              <option>Roof / Ceiling / Walls</option><option>Other</option>
+              <option value="plumbing">Plumbing</option>
+              <option value="hvac">HVAC / A/C / Heating</option>
+              <option value="electrical">Electrical</option>
+              <option value="appliance">Appliances</option>
+              <option value="pest">Pest / Bugs / Rodents</option>
+              <option value="structural">Doors / Windows / Walls / Roof</option>
+              <option value="security">Locks / Smoke / CO Detectors</option>
+              <option value="landscaping">Landscaping</option>
+              <option value="pool_spa">Pool / Spa</option>
+              <option value="cleaning">Cleaning</option>
+              <option value="other">Other</option>
             </select>
-            <div class="form-error">Required.</div>
           </div>
           <div class="form-group">
             <label>Urgency <span class="required">*</span></label>
-            <select name="urgency" required>
+            <select id="priority" required>
               <option value="">Select…</option>
-              <option>Routine — within a week</option>
-              <option>Important — within 48 hours</option>
-              <option>Urgent (but not an emergency) — same day</option>
+              <option value="low">Low — cosmetic / nice-to-have</option>
+              <option value="normal">Normal — within a week</option>
+              <option value="high">High — within 48 hours</option>
+              <option value="urgent">Urgent — same day (not emergency)</option>
             </select>
-            <div class="form-error">Required.</div>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label>Short Summary <span class="required">*</span></label>
+          <input type="text" id="title" required placeholder="e.g. Kitchen faucet leaking under sink" maxlength="120" />
         </div>
 
         <div class="form-group">
           <label>Describe the Issue <span class="required">*</span></label>
-          <textarea name="description" required placeholder="Please be as specific as possible. What's broken? Where exactly? When did it start? Have you tried anything?"></textarea>
-          <div class="form-error">Please describe the issue.</div>
+          <textarea id="description" required placeholder="Please be as specific as possible. What's broken? Where exactly? When did it start? Have you tried anything?"></textarea>
         </div>
 
         <div class="form-group">
           <label>Photos (optional but very helpful)</label>
-          <input type="file" name="photos" multiple accept="image/*" />
-          <div class="form-help">You can attach up to 5 photos. JPG, PNG, or HEIC.</div>
+          <input type="file" name="photos" multiple accept="image/*" disabled />
+          <div class="form-help" style="font-size:.82rem;color:#9aa3bd;">Photo upload is launching in the next phase. For now, please describe in detail; staff will follow up if photos are needed.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Vendor Access</label>
+          <select id="access_permission">
+            <option value="tenant_present">I'll be home — schedule with me first</option>
+            <option value="enter_with_notice">Enter with 24-hour notice (I may not be home)</option>
+            <option value="lockbox">Use lockbox / key-safe (provide code in notes)</option>
+            <option value="other">Other (describe in notes)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Access notes (optional)</label>
+          <input type="text" id="access_notes" placeholder="e.g. lockbox code 1234, alarm off, side gate latch" />
         </div>
 
         <div class="form-group checkbox-group">
-          <input type="checkbox" name="entry_permission" id="entry" />
-          <label for="entry">I give permission for an authorized vendor to enter the property to perform repairs even if I'm not home. (Tenants will be notified at least 24 hours in advance when possible.)</label>
+          <input type="checkbox" id="pet_in_home" />
+          <label for="pet_in_home">There's a pet at the property</label>
         </div>
         <div class="form-group">
-          <label>Pets at the property?</label>
-          <input type="text" name="pets" placeholder="e.g. 1 friendly dog (kept in crate)" />
+          <label>Pet notes (if applicable)</label>
+          <input type="text" id="pet_notes" placeholder="e.g. friendly dog, kept in crate / yard" />
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block">Submit Maintenance Request</button>
+        <!-- Honeypot — hidden from real users -->
+        <input type="text" id="website" name="website" style="display:none;" tabindex="-1" autocomplete="off" />
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Submit Maintenance Request</button>
       </form>
     </div>
   </div>
@@ -116,5 +144,60 @@
   <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division &nbsp;|&nbsp; Cashback rewards <strong style="color:#FFD66B;">Powered by LYMX</strong></span></div>
 </footer>
 <script src="../js/main.js"></script>
+<script>
+  document.getElementById('maintForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const errBox = document.getElementById('formError');
+    const btn    = document.getElementById('submitBtn');
+    errBox.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const payload = {
+      full_name:         document.getElementById('full_name').value.trim(),
+      phone:             document.getElementById('phone').value.trim(),
+      email:             document.getElementById('email').value.trim().toLowerCase(),
+      property_address:  document.getElementById('property_address').value.trim(),
+      category:          document.getElementById('category').value,
+      priority:          document.getElementById('priority').value,
+      title:             document.getElementById('title').value.trim(),
+      description:       document.getElementById('description').value.trim(),
+      access_permission: document.getElementById('access_permission').value,
+      access_notes:      document.getElementById('access_notes').value.trim(),
+      pet_in_home:       document.getElementById('pet_in_home').checked,
+      pet_notes:         document.getElementById('pet_notes').value.trim(),
+      website:           document.getElementById('website').value
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/maintenance-submit', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errBox.textContent = data.error || 'Sorry — could not submit your request. Try again or call 702-816-5555.';
+        errBox.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Submit Maintenance Request';
+        return;
+      }
+      // Success — redirect to a thank-you / status page
+      const params = new URLSearchParams({
+        id: data.id || '',
+        priority: payload.priority,
+        title: payload.title,
+        matched: data.lease_matched ? '1' : '0'
+      });
+      window.location.href = 'maintenance-submitted.html?' + params.toString();
+    } catch (err) {
+      errBox.textContent = 'Network error. Please check your connection and try again, or call 702-816-5555.';
+      errBox.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Submit Maintenance Request';
+    }
+  });
+</script>
 </body>
 </html>
