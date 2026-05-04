@@ -108,34 +108,38 @@
 
     <section id="pay" style="margin-top:3rem;">
       <h2>Pay Rent</h2>
-      <div class="form-card" style="max-width:520px;">
-        <p><strong>Amount Due:</strong> $1,850.00 — for May 2026</p>
+      <div class="form-card" style="max-width:560px;">
+        <p><strong>Amount Due:</strong> <span id="payAmountDue">—</span> <span id="payDueLabel" class="muted"></span></p>
+        <p id="payBalanceLine" class="muted" style="margin-top:-.5rem;font-size:.92rem;display:none;">Outstanding balance on lease: <strong id="payBalanceVal">$0.00</strong></p>
         <div class="form-group"><label>Payment Method</label>
-          <select><option>Bank Account (ACH) — no fee</option><option>Debit Card — 3% fee</option><option>Credit Card — 3% fee</option></select>
+          <select id="payMethod">
+            <option value="ach">Bank Account (ACH) — no fee</option>
+            <option value="card_debit">Debit Card — 3% fee</option>
+            <option value="card_credit">Credit Card — 3% fee</option>
+            <option value="lymx">Apply LYMX cashback (where eligible)</option>
+          </select>
         </div>
-        <div class="form-group"><label>Pay Amount</label><input type="number" value="1850.00" step="0.01" /></div>
+        <div class="form-group"><label>Pay Amount</label><input type="number" id="payAmountInput" step="0.01" /></div>
         <div class="form-group checkbox-group"><input type="checkbox" id="auto" /><label for="auto">Enroll in auto-pay (1st of every month)</label></div>
-        <button class="btn btn-primary btn-block">Pay Rent</button>
-        <p class="muted center mt-2" style="font-size:.85rem;">Payments processed via Stripe / your PM software once connected.</p>
+        <button class="btn btn-primary btn-block" id="payNowBtn">Pay Rent</button>
+        <p class="muted center mt-2" style="font-size:.85rem;">Payments processed via Stripe / your PM software once connected. <strong>LYMX cannot be used to pay rent</strong> — only InvestPro fees (application, transaction, etc.).</p>
       </div>
     </section>
 
     <section id="maintenance" style="margin-top:3rem;">
       <h2>Maintenance</h2>
-      <p>Submit a maintenance request through our public form (it'll appear here once submitted).</p>
+      <p>Submit a maintenance request — your property manager is notified immediately and will assign a vendor. Emergencies (gas leak, no water/heat, flooding) call <strong><a href="tel:7028165555">702-816-5555</a></strong> directly.</p>
       <a href="../forms/maintenance-request.html" class="btn btn-primary">+ New Request</a>
 
       <h3 style="margin-top:1.5rem;">Your open requests</h3>
-      <p class="muted">No open requests. ✨</p>
+      <div id="woOpenList">
+        <p class="muted">Loading…</p>
+      </div>
 
       <h3 style="margin-top:1.5rem;">Past requests</h3>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Issue</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Mar 15, 2026</td><td>Water heater valve</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td></tr>
-          <tr><td>Jan 8, 2026</td><td>Garbage disposal jam</td><td><span style="color:var(--success);font-weight:700;">Completed</span></td></tr>
-        </tbody>
-      </table>
+      <div id="woPastList">
+        <p class="muted">Loading…</p>
+      </div>
     </section>
 
     <section id="lease" style="margin-top:3rem;">
@@ -156,8 +160,37 @@
 
     <section id="payments" style="margin-top:3rem;">
       <h2>Payment History</h2>
-      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
-        Your monthly rent payments and any other charges (late fees, utility allocations, pet rent) will appear here once your payment provider is connected. The platform is wired and waiting on the first month-close.
+      <p class="muted" style="margin-top:-.5rem;">Every charge on your lease — rent, fees, credits, refunds. Use the filter to narrow.</p>
+
+      <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin:.5rem 0 1rem;">
+        <select id="payFilterType" class="form-control" style="max-width:220px;">
+          <option value="">All charge types</option>
+          <option value="rent">Rent only</option>
+          <option value="late_fee">Late fees</option>
+          <option value="pet_rent">Pet rent</option>
+          <option value="security_deposit_hold">Security deposit</option>
+          <option value="security_deposit_refund">Deposit refund</option>
+          <option value="application_fee">Application fee</option>
+          <option value="lease_processing_fee">Lease processing fee</option>
+          <option value="tenant_caused_repair">Tenant-caused repair</option>
+          <option value="credit">Credits</option>
+          <option value="adjustment">Adjustments</option>
+        </select>
+        <select id="payFilterStatus" class="form-control" style="max-width:200px;">
+          <option value="">All statuses</option>
+          <option value="paid">Paid</option>
+          <option value="due">Due</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+          <option value="refunded">Refunded</option>
+          <option value="waived">Waived</option>
+        </select>
+        <button id="payFilterReset" class="btn btn-outline btn-sm">Reset</button>
+      </div>
+
+      <div id="payHistoryList">
+        <p class="muted">Loading payment history…</p>
       </div>
     </section>
 
@@ -272,22 +305,216 @@
 
           document.getElementById('kpiEnds').textContent = fmtMonthShort(lease.end_date);
 
-          // Open work orders count (if work_orders table exists)
+          // ===== Pay Rent (real amount due) =====
+          const payAmt = Number(lease.monthly_rent || 0);
+          document.getElementById('payAmountDue').textContent = '$' + payAmt.toFixed(2);
+          document.getElementById('payDueLabel').textContent =
+            '— for ' + next1st.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          document.getElementById('payAmountInput').value = payAmt.toFixed(2);
+
+          // Lease balance (sum of unpaid charges)
+          try {
+            const { data: balRow } = await supa.rpc('lease_balance', { p_lease_id: lease.id });
+            const bal = Number(balRow || 0);
+            if (Math.abs(bal) > 0.01) {
+              document.getElementById('payBalanceLine').style.display = '';
+              document.getElementById('payBalanceVal').textContent =
+                (bal < 0 ? '-' : '') + '$' + Math.abs(bal).toFixed(2);
+            }
+          } catch {}
+
+          // ===== Open work orders count (KPI) =====
+          let openCount = 0;
           try {
             const { count } = await supa.from('work_orders')
               .select('id', { count: 'exact', head: true })
               .eq('lease_id', lease.id)
-              .neq('status', 'completed')
-              .neq('status', 'closed');
-            document.getElementById('kpiTickets').textContent = count != null ? count : '0';
-          } catch {
-            document.getElementById('kpiTickets').textContent = '0';
-          }
+              .not('status', 'in', '("completed","closed","verified","cancelled","rejected")');
+            openCount = count != null ? count : 0;
+          } catch {}
+          document.getElementById('kpiTickets').textContent = openCount;
+
+          // ===== Maintenance — load full work order list =====
+          await loadWorkOrders(supa, lease.id);
+
+          // ===== Payment history =====
+          await loadPaymentHistory(supa, lease.id);
         }
       } catch (err) {
         console.warn('Tenant data fetch failed:', err);
       }
     }
+
+    // ============ Work order rendering ============
+    const STATUS_BADGE = {
+      submitted:                { bg:'#FEF3C7', fg:'#92400E', label:'Submitted' },
+      triaged:                  { bg:'#DBEAFE', fg:'#1E40AF', label:'Triaged' },
+      awaiting_owner_approval:  { bg:'#FEF3C7', fg:'#92400E', label:'Awaiting owner approval' },
+      assigned:                 { bg:'#DBEAFE', fg:'#1E40AF', label:'Vendor assigned' },
+      scheduled:                { bg:'#DBEAFE', fg:'#1E40AF', label:'Scheduled' },
+      in_progress:              { bg:'#DBEAFE', fg:'#1E40AF', label:'In progress' },
+      completed:                { bg:'#D1FAE5', fg:'#065F46', label:'Completed' },
+      verified:                 { bg:'#D1FAE5', fg:'#065F46', label:'Verified' },
+      closed:                   { bg:'#E5E7EB', fg:'#374151', label:'Closed' },
+      cancelled:                { bg:'#FEE2E2', fg:'#991B1B', label:'Cancelled' },
+      rejected:                 { bg:'#FEE2E2', fg:'#991B1B', label:'Rejected' },
+    };
+    const PRIORITY_BADGE = {
+      emergency: { bg:'#FEE2E2', fg:'#991B1B', label:'EMERGENCY' },
+      urgent:    { bg:'#FED7AA', fg:'#9A3412', label:'Urgent' },
+      high:      { bg:'#FEF3C7', fg:'#92400E', label:'High' },
+      normal:    { bg:'#E5E7EB', fg:'#374151', label:'Normal' },
+      low:       { bg:'#E5E7EB', fg:'#6B7280', label:'Low' },
+    };
+    const OPEN_STATUSES = ['submitted','triaged','awaiting_owner_approval','assigned','scheduled','in_progress'];
+
+    async function loadWorkOrders(supa, leaseId) {
+      const { data: wos, error } = await supa.from('work_orders')
+        .select('id, title, category, priority, status, created_at, scheduled_at, completed_at, assigned_vendor_name')
+        .eq('lease_id', leaseId)
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('woOpenList').innerHTML =
+          '<p class="muted">Could not load work orders: ' + escapeHtml(error.message) + '</p>';
+        document.getElementById('woPastList').innerHTML = '';
+        return;
+      }
+      const list = wos || [];
+      const open = list.filter(w => OPEN_STATUSES.includes(w.status));
+      const past = list.filter(w => !OPEN_STATUSES.includes(w.status));
+
+      document.getElementById('woOpenList').innerHTML = open.length
+        ? renderWoTable(open, /*showVendor*/true)
+        : '<p class="muted">No open requests. ✨</p>';
+      document.getElementById('woPastList').innerHTML = past.length
+        ? renderWoTable(past, /*showVendor*/false)
+        : '<p class="muted">No past requests yet.</p>';
+    }
+
+    function renderWoTable(rows, showVendor) {
+      const head = `
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Issue</th>
+              <th>Category</th>
+              <th>Priority</th>
+              ${showVendor ? '<th>Vendor</th>' : ''}
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      const body = rows.map(w => {
+        const sb = STATUS_BADGE[w.status] || { bg:'#E5E7EB', fg:'#374151', label: w.status };
+        const pb = PRIORITY_BADGE[w.priority] || { bg:'#E5E7EB', fg:'#374151', label: w.priority };
+        const dateLbl = w.completed_at
+          ? new Date(w.completed_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+          : new Date(w.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        return `<tr>
+          <td>${dateLbl}</td>
+          <td>${escapeHtml(w.title)}</td>
+          <td style="text-transform:capitalize;">${escapeHtml((w.category||'').replace(/_/g,' '))}</td>
+          <td><span style="display:inline-block;padding:.1rem .5rem;background:${pb.bg};color:${pb.fg};border-radius:999px;font-size:.74rem;font-weight:700;">${pb.label}</span></td>
+          ${showVendor ? `<td>${escapeHtml(w.assigned_vendor_name || '—')}</td>` : ''}
+          <td><span style="display:inline-block;padding:.1rem .5rem;background:${sb.bg};color:${sb.fg};border-radius:999px;font-size:.78rem;font-weight:700;">${sb.label}</span></td>
+        </tr>`;
+      }).join('');
+      return head + body + '</tbody></table>';
+    }
+
+    // ============ Payment history rendering ============
+    let _allPayments = [];
+
+    async function loadPaymentHistory(supa, leaseId) {
+      const { data, error } = await supa.from('payments')
+        .select('id, amount, type, status, due_date, paid_at, payment_method, lymx_redeemed, description, created_at')
+        .eq('lease_id', leaseId)
+        .order('due_date', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('payHistoryList').innerHTML =
+          '<p class="muted">Could not load payment history: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      _allPayments = data || [];
+      renderPayments();
+    }
+
+    function renderPayments() {
+      const filterType = document.getElementById('payFilterType').value;
+      const filterStatus = document.getElementById('payFilterStatus').value;
+      const filtered = _allPayments.filter(p =>
+        (!filterType || p.type === filterType) &&
+        (!filterStatus || p.status === filterStatus)
+      );
+
+      const container = document.getElementById('payHistoryList');
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="muted" style="background:#F7F8FB;padding:1rem 1.25rem;border-radius:6px;border-left:3px solid #FFD66B;font-size:.92rem;">No payments match these filters yet. New charges will appear here as they post.</p>';
+        return;
+      }
+
+      const PAY_STATUS_BADGE = {
+        paid:      { bg:'#D1FAE5', fg:'#065F46', label:'Paid' },
+        due:       { bg:'#FEF3C7', fg:'#92400E', label:'Due' },
+        scheduled: { bg:'#E5E7EB', fg:'#374151', label:'Scheduled' },
+        pending:   { bg:'#DBEAFE', fg:'#1E40AF', label:'Pending' },
+        failed:    { bg:'#FEE2E2', fg:'#991B1B', label:'Failed' },
+        refunded:  { bg:'#F3E8FF', fg:'#6B21A8', label:'Refunded' },
+        voided:    { bg:'#E5E7EB', fg:'#6B7280', label:'Voided' },
+        waived:    { bg:'#E5E7EB', fg:'#374151', label:'Waived' },
+      };
+
+      const rows = filtered.map(p => {
+        const sb = PAY_STATUS_BADGE[p.status] || { bg:'#E5E7EB', fg:'#374151', label: p.status };
+        const dateLbl = p.paid_at
+          ? new Date(p.paid_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+          : (p.due_date
+              ? new Date(p.due_date + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+              : new Date(p.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }));
+        const amt = Number(p.amount);
+        const amtFmt = (amt < 0 ? '−' : '') + '$' + Math.abs(amt).toFixed(2);
+        const amtColor = amt < 0 ? '#065F46' : '#1F2937';
+        const lymxNote = (Number(p.lymx_redeemed) > 0)
+          ? `<small style="color:#1F4FC1;">includes ${Math.round(Number(p.lymx_redeemed) * 100)} LYMX redeemed</small>`
+          : '';
+        return `<tr>
+          <td>${dateLbl}</td>
+          <td style="text-transform:capitalize;">${escapeHtml((p.type||'').replace(/_/g,' '))}</td>
+          <td>${escapeHtml(p.description || '')} ${lymxNote}</td>
+          <td style="text-transform:capitalize;">${escapeHtml(p.payment_method || '—')}</td>
+          <td style="text-align:right;color:${amtColor};font-weight:600;font-variant-numeric:tabular-nums;">${amtFmt}</td>
+          <td><span style="display:inline-block;padding:.1rem .5rem;background:${sb.bg};color:${sb.fg};border-radius:999px;font-size:.78rem;font-weight:700;">${sb.label}</span></td>
+        </tr>`;
+      }).join('');
+
+      // Total
+      const totalPaid = filtered
+        .filter(p => p.status === 'paid')
+        .reduce((s, p) => s + Number(p.amount), 0);
+
+      container.innerHTML = `
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Method</th><th style="text-align:right;">Amount</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr><td colspan="4" style="text-align:right;font-weight:700;">Total paid in view:</td><td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;">$${totalPaid.toFixed(2)}</td><td></td></tr></tfoot>
+        </table>`;
+    }
+
+    // Wire payment history filters (no-op if dashboard hasn't loaded payments yet)
+    document.getElementById('payFilterType')?.addEventListener('change', renderPayments);
+    document.getElementById('payFilterStatus')?.addEventListener('change', renderPayments);
+    document.getElementById('payFilterReset')?.addEventListener('click', () => {
+      document.getElementById('payFilterType').value = '';
+      document.getElementById('payFilterStatus').value = '';
+      renderPayments();
+    });
+
+    // Stub Pay Now click — Stripe wiring is Phase 2
+    document.getElementById('payNowBtn')?.addEventListener('click', () => {
+      alert('Online payments are launching in the next phase (Stripe / your PM software). For now, please pay via the existing channel — bank ACH, in-person check, or money order. Questions: 702-816-5555.');
+    });
 
     // MICR alert visibility — show only if a tenant has an active MICR window
     // (in demo mode, always show so reviewers see the section)
