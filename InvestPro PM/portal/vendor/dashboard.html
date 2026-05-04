@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vendor Portal — InvestPro Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .pill { display:inline-block; padding:.15rem .55rem; border-radius:999px; font-size:.74rem; font-weight:700; letter-spacing:.02em; }
+  .pill.emergency { background:#FEE2E2; color:#991B1B; }
+  .pill.urgent    { background:#FED7AA; color:#9A3412; }
+  .pill.high      { background:#FEF3C7; color:#92400E; }
+  .pill.normal    { background:#E5E7EB; color:#374151; }
+  .pill.low       { background:#E5E7EB; color:#6B7280; }
+  .pill.assigned  { background:#DBEAFE; color:#1E40AF; }
+  .pill.scheduled { background:#DBEAFE; color:#1E40AF; }
+  .pill.in_progress { background:#FEF3C7; color:#92400E; }
+  .pill.completed { background:#D1FAE5; color:#065F46; }
+  .pill.verified  { background:#D1FAE5; color:#065F46; }
+  .pill.closed    { background:#E5E7EB; color:#374151; }
+  .pill.awaiting_owner_approval { background:#FEF3C7; color:#92400E; }
+
+  .wo-card { background:#fff; border:1px solid #DDE3F0; border-radius:8px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+  .wo-card.urgent-border { border-left: 4px solid #991B1B; }
+  .wo-card.high-border   { border-left: 4px solid #92400E; }
+  .wo-card .head { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem; align-items:flex-start; }
+  .wo-card .title { font-weight:700; color:#1F4FC1; font-size:1.05rem; margin-bottom:.25rem; }
+  .wo-card .meta { color:#6B7280; font-size:.85rem; }
+  .wo-card .desc { background:#F7F8FB; border-radius:6px; padding:.75rem 1rem; margin:.75rem 0; font-size:.9rem; white-space:pre-wrap; }
+  .wo-card .row { display:grid; grid-template-columns: 140px 1fr; gap:.5rem; padding:.3rem 0; font-size:.9rem; border-bottom:1px solid #F0F0F0; }
+  .wo-card .row:last-child { border-bottom:0; }
+  .wo-card .row .label { color:#6B7280; font-weight:600; }
+  .wo-card .actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; padding-top:1rem; border-top:1px solid #F0F0F0; }
+
+  .invoice-form { background:#FFFCF0; border:1px dashed #FFD66B; border-radius:6px; padding:1rem 1.25rem; margin-top:.75rem; }
+  .invoice-form label { display:block; font-weight:600; color:#374151; font-size:.85rem; margin-bottom:.25rem; }
+  .invoice-form .grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .invoice-form input, .invoice-form textarea {
+    width:100%; padding:.5rem .75rem; border:1px solid #DDE3F0; border-radius:6px;
+    font-family:inherit; font-size:.9rem; box-sizing:border-box;
+  }
+</style>
+</head>
+<body class="dashboard-body" data-default-role="vendor">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Vendor</strong> · Work Queue</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+
+  <div class="dash-title">
+    <h1>Vendor Dashboard</h1>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile red"><div class="label">Urgent / Emergency</div><div class="value" id="kpiUrgent">—</div></div>
+    <div class="stat-tile amber"><div class="label">New assignments</div><div class="value" id="kpiNew">—</div><div class="sub">awaiting your acceptance</div></div>
+    <div class="stat-tile"><div class="label">In progress</div><div class="value" id="kpiInProg">—</div></div>
+    <div class="stat-tile green"><div class="label">Completed (last 30d)</div><div class="value" id="kpiCompleted">—</div></div>
+  </div>
+
+  <!-- New assignments need acceptance -->
+  <div class="dash-section" id="newAssignmentsSection" style="display:none;">
+    <h2>🔔 New assignments</h2>
+    <p class="muted">Accept the job to move it to "In progress" or decline if you can't take it.</p>
+    <div id="newAssignmentsList"></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>🛠️ Active jobs</h2>
+    <p class="muted">Work orders you've accepted. Update status as the work progresses; record the invoice when done.</p>
+    <div id="activeList">
+      <p class="muted">Loading…</p>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>✅ Recently completed</h2>
+    <div id="completedList">
+      <p class="muted">Loading…</p>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>📞 Need help?</h2>
+    <p>Office: <a href="tel:7028165555"><strong>702-816-5555</strong></a> · Email: <a href="mailto:info@investprorealty.net">info@investprorealty.net</a></p>
+    <p class="muted small">For vendor onboarding (W-9, COI, payment setup), contact the broker directly.</p>
+  </div>
+
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+  (async function () {
+    const u = await window.investproAuth.requireRole('vendor');
+    if (!u) return;
+    document.getElementById('userBadge').textContent = u.name + ' · vendor';
+    document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+    function fmtDateTime(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    }
+    function toLocalDateTimeInput(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const tz = d.getTimezoneOffset() * 60000;
+      return new Date(d - tz).toISOString().slice(0, 16);
+    }
+
+    if (window.investproAuth.isDemoMode()) {
+      document.getElementById('activeList').innerHTML =
+        '<div class="banner banner-info">⚙️ <strong>Demo mode:</strong> connect Supabase to see real assignments.</div>';
+      document.getElementById('completedList').innerHTML = '';
+      return;
+    }
+
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    let _allWOs = [];
+    let _propAddrs = {};
+
+    async function loadAssignments() {
+      const { data, error } = await supa.from('work_orders')
+        .select('id, property_id, lease_id, submitted_by_name, submitted_by_phone, submitted_by_email, category, priority, title, description, access_permission, access_notes, pet_in_home, pet_notes, status, status_reason, assigned_at, scheduled_at, estimate_amount, owner_approval_required, owner_approved_at, owner_decision, completed_at, completion_notes, invoice_amount, tenant_caused, created_at')
+        .eq('assigned_vendor_id', u.id)
+        .order('priority', { ascending: true })   // emergency=alphabetically first by string but we'll handle ordering ourselves
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('activeList').innerHTML =
+          '<p style="color:#991B1B;">Could not load work orders: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      _allWOs = data || [];
+
+      // Resolve property addresses
+      const propIds = Array.from(new Set(_allWOs.map(w => w.property_id).filter(Boolean)));
+      if (propIds.length) {
+        const { data: props } = await supa.from('properties')
+          .select('id, address_line1, address_line2, city, state, zip')
+          .in('id', propIds);
+        (props || []).forEach(p => {
+          _propAddrs[p.id] =
+            (p.address_line1 || '') + (p.address_line2 ? ' ' + p.address_line2 : '') +
+            ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
+        });
+      }
+
+      updateKpis();
+      render();
+    }
+
+    function updateKpis() {
+      const PRIORITY_RANK = { emergency: 0, urgent: 1, high: 2, normal: 3, low: 4 };
+      const _new = _allWOs.filter(w => w.status === 'assigned');
+      const _active = _allWOs.filter(w => ['scheduled','in_progress'].includes(w.status));
+      const urgent = _allWOs.filter(w => ['emergency','urgent'].includes(w.priority) && ['assigned','scheduled','in_progress'].includes(w.status)).length;
+      const since = new Date(); since.setDate(since.getDate() - 30);
+      const completed30 = _allWOs.filter(w =>
+        ['completed','verified','closed'].includes(w.status)
+        && w.completed_at && new Date(w.completed_at) >= since).length;
+      document.getElementById('kpiUrgent').textContent = urgent;
+      document.getElementById('kpiNew').textContent = _new.length;
+      document.getElementById('kpiInProg').textContent = _active.length;
+      document.getElementById('kpiCompleted').textContent = completed30;
+    }
+
+    function priorityClass(p) {
+      if (p === 'emergency' || p === 'urgent') return 'urgent-border';
+      if (p === 'high') return 'high-border';
+      return '';
+    }
+
+    function renderCard(w, showAccept, showWorkflow, showInvoice) {
+      const propAddr = _propAddrs[w.property_id] || '(no property linked)';
+      const tenant = w.submitted_by_name || '(unknown)';
+      const pri = (w.priority || 'normal').toUpperCase();
+      const statusLabel = (w.status || '').replace(/_/g, ' ');
+      const woRef = 'WO-' + w.id.substring(0, 8).toUpperCase();
+
+      let html = `
+        <div class="wo-card ${priorityClass(w.priority)}" data-wo-id="${w.id}">
+          <div class="head">
+            <div>
+              <div class="title">${escapeHtml(w.title)}</div>
+              <div class="meta">${woRef} · submitted ${fmtDate(w.created_at)}</div>
+            </div>
+            <div style="display:flex;gap:.4rem;">
+              <span class="pill ${w.priority}">${pri}</span>
+              <span class="pill ${w.status}">${statusLabel}</span>
+            </div>
+          </div>
+
+          <div style="margin-top:.75rem;">
+            <div class="row"><span class="label">Property</span><span>${escapeHtml(propAddr)}</span></div>
+            <div class="row"><span class="label">Tenant</span><span>${escapeHtml(tenant)} · <a href="tel:${escapeHtml(w.submitted_by_phone || '')}">${escapeHtml(w.submitted_by_phone || '—')}</a></span></div>
+            <div class="row"><span class="label">Category</span><span style="text-transform:capitalize;">${escapeHtml((w.category || '').replace(/_/g, ' '))}</span></div>
+            <div class="row"><span class="label">Access</span><span>${escapeHtml((w.access_permission || '—').replace(/_/g, ' '))}${w.access_notes ? ' — ' + escapeHtml(w.access_notes) : ''}</span></div>
+            ${w.pet_in_home ? `<div class="row"><span class="label">Pet on premises</span><span style="color:#92400E;">⚠ Yes${w.pet_notes ? ' — ' + escapeHtml(w.pet_notes) : ''}</span></div>` : ''}
+            ${w.scheduled_at ? `<div class="row"><span class="label">Scheduled</span><span>${fmtDateTime(w.scheduled_at)}</span></div>` : ''}
+            ${w.estimate_amount ? `<div class="row"><span class="label">Estimate</span><span>$${Number(w.estimate_amount).toFixed(2)}${w.owner_approval_required ? (w.owner_approved_at ? ' · <span style="color:#065F46;">owner approved ✓</span>' : ' · <span style="color:#92400E;">awaiting owner approval</span>') : ''}</span></div>` : ''}
+          </div>
+
+          <div class="desc">${escapeHtml(w.description || '(no details)')}</div>
+
+          <div class="actions">
+      `;
+
+      if (showAccept) {
+        html += `
+            <button class="btn btn-primary" data-action="accept" data-id="${w.id}">✓ Accept job</button>
+            <button class="btn btn-outline" data-action="decline" data-id="${w.id}" style="border-color:#991B1B;color:#991B1B;">✗ Decline</button>
+        `;
+      }
+
+      if (showWorkflow) {
+        if (w.status === 'scheduled' || w.status === 'assigned') {
+          html += `<button class="btn btn-primary" data-action="start" data-id="${w.id}">▶ Mark in progress</button>`;
+        }
+        if (w.status === 'assigned' || w.status === 'in_progress') {
+          html += `
+            <label style="display:inline-flex; align-items:center; gap:.4rem; margin-left:.5rem;">
+              <span style="font-size:.85rem; color:#6B7280; font-weight:600;">Schedule:</span>
+              <input type="datetime-local" data-schedule-id="${w.id}" value="${toLocalDateTimeInput(w.scheduled_at)}" style="padding:.35rem .5rem; border:1px solid #DDE3F0; border-radius:4px; font-size:.85rem;" />
+              <button class="btn btn-outline btn-sm" data-action="schedule" data-id="${w.id}">Save</button>
+            </label>
+          `;
+        }
+        if (['scheduled','in_progress','assigned'].includes(w.status)) {
+          html += `<button class="btn btn-outline" data-action="show-invoice" data-id="${w.id}">📄 Record completion + invoice</button>`;
+        }
+      }
+
+      if (showInvoice && (w.status === 'completed' || w.status === 'verified')) {
+        html += `<span class="muted small" style="padding:.5rem 0;">Invoice $${Number(w.invoice_amount || 0).toFixed(2)} · completed ${fmtDate(w.completed_at)}</span>`;
+      }
+
+      html += `</div>`;
+
+      // Inline invoice form (hidden by default)
+      if (showWorkflow) {
+        html += `
+          <div class="invoice-form" data-invoice-form="${w.id}" style="display:none;">
+            <div class="grid">
+              <div>
+                <label>Invoice amount ($) *</label>
+                <input type="number" step="0.01" min="0" data-invoice-amount="${w.id}" value="${w.invoice_amount || w.estimate_amount || ''}" />
+              </div>
+              <div>
+                <label>Tenant-caused?</label>
+                <select data-tenant-caused="${w.id}">
+                  <option value="false" ${!w.tenant_caused ? 'selected' : ''}>No (owner pays)</option>
+                  <option value="true" ${w.tenant_caused ? 'selected' : ''}>Yes (chargeback to tenant)</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:.5rem;">
+              <label>Completion notes (optional)</label>
+              <textarea rows="2" data-completion-notes="${w.id}" placeholder="What was done, parts replaced, anything to flag for owner…">${escapeHtml(w.completion_notes || '')}</textarea>
+            </div>
+            <div style="margin-top:.5rem; display:flex; gap:.5rem;">
+              <button class="btn btn-primary" data-action="complete" data-id="${w.id}">✅ Submit completion</button>
+              <button class="btn btn-outline" data-action="hide-invoice" data-id="${w.id}">Cancel</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
+    function render() {
+      const PRIORITY_RANK = { emergency: 0, urgent: 1, high: 2, normal: 3, low: 4 };
+      const sortByPri = (a, b) => (PRIORITY_RANK[a.priority] || 99) - (PRIORITY_RANK[b.priority] || 99);
+
+      const _new = _allWOs.filter(w => w.status === 'assigned').sort(sortByPri);
+      const _active = _allWOs.filter(w => ['scheduled','in_progress'].includes(w.status)).sort(sortByPri);
+      const _done = _allWOs.filter(w => ['completed','verified','closed'].includes(w.status)).slice(0, 10);
+
+      // New assignments
+      if (_new.length > 0) {
+        document.getElementById('newAssignmentsSection').style.display = '';
+        document.getElementById('newAssignmentsList').innerHTML = _new.map(w => renderCard(w, true, false, false)).join('');
+      } else {
+        document.getElementById('newAssignmentsSection').style.display = 'none';
+        document.getElementById('newAssignmentsList').innerHTML = '';
+      }
+
+      // Active
+      document.getElementById('activeList').innerHTML = _active.length
+        ? _active.map(w => renderCard(w, false, true, false)).join('')
+        : '<p class="muted">No active jobs right now.</p>';
+
+      // Completed
+      document.getElementById('completedList').innerHTML = _done.length
+        ? _done.map(w => renderCard(w, false, false, true)).join('')
+        : '<p class="muted">No recently completed jobs.</p>';
+
+      wireActionButtons();
+    }
+
+    // Action wiring
+    function wireActionButtons() {
+      document.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const action = btn.dataset.action;
+          const id = btn.dataset.id;
+          if (!id) return;
+
+          if (action === 'accept') {
+            await update(id, { status: 'scheduled', status_reason: 'Vendor accepted assignment' });
+          }
+          else if (action === 'decline') {
+            const reason = prompt('Reason for declining:');
+            if (!reason || !reason.trim()) return;
+            await update(id, {
+              status: 'triaged',
+              status_reason: 'Vendor declined: ' + reason.trim(),
+              assigned_vendor_id: null,
+              assigned_vendor_name: null,
+              assigned_at: null
+            });
+          }
+          else if (action === 'start') {
+            await update(id, { status: 'in_progress', status_reason: 'Vendor started work' });
+          }
+          else if (action === 'schedule') {
+            const when = document.querySelector(`input[data-schedule-id="${id}"]`)?.value;
+            if (!when) { alert('Pick a date/time first.'); return; }
+            await update(id, {
+              scheduled_at: new Date(when).toISOString(),
+              status: 'scheduled',
+              status_reason: 'Vendor scheduled visit'
+            });
+          }
+          else if (action === 'show-invoice') {
+            document.querySelectorAll('[data-invoice-form]').forEach(f => f.style.display = 'none');
+            const form = document.querySelector(`[data-invoice-form="${id}"]`);
+            if (form) form.style.display = '';
+          }
+          else if (action === 'hide-invoice') {
+            const form = document.querySelector(`[data-invoice-form="${id}"]`);
+            if (form) form.style.display = 'none';
+          }
+          else if (action === 'complete') {
+            const amt = document.querySelector(`input[data-invoice-amount="${id}"]`)?.value;
+            const tc  = document.querySelector(`select[data-tenant-caused="${id}"]`)?.value === 'true';
+            const nts = document.querySelector(`textarea[data-completion-notes="${id}"]`)?.value || '';
+            if (!amt) { alert('Enter the invoice amount.'); return; }
+            await update(id, {
+              status: 'completed',
+              status_reason: 'Vendor marked complete',
+              invoice_amount: Number(amt),
+              tenant_caused: tc,
+              completion_notes: nts.trim() || null,
+              completed_at: new Date().toISOString()
+            });
+          }
+        });
+      });
+    }
+
+    async function update(id, patch) {
+      const { error } = await supa.from('work_orders').update(patch).eq('id', id);
+      if (error) {
+        alert('Update failed: ' + error.message);
+        return;
+      }
+      // Notify on key transitions
+      if (patch.status === 'completed') {
+        fetch('/.netlify/functions/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'work_order_completed', payload: { work_order_id: id } })
+        }).catch(err => console.warn('notify work_order_completed failed:', err));
+      }
+      await loadAssignments();
+    }
+
+    await loadAssignments();
+  })();
+</script>
+</body>
+</html>
