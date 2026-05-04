@@ -26,6 +26,7 @@
     <h1>Broker Dashboard</h1>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
       <a href="applications.html" class="btn btn-outline">🎯 Recruiting Pipeline</a>
+      <a href="work-orders.html" class="btn btn-outline">🛠️ Work Orders</a>
       <a href="award-points.html" class="btn btn-outline">⭐ Award Points</a>
       <a href="email-management.html" class="btn btn-outline">📧 Email Management</a>
       <a href="feedback.html" class="btn btn-outline">📥 Feedback</a>
@@ -39,7 +40,7 @@
 
   <div class="stat-grid">
     <div class="stat-tile red"><div class="label">Decisions Pending</div><div class="value">2</div><div class="sub">screening summaries ready</div></div>
-    <div class="stat-tile amber"><div class="label">Counter-offers</div><div class="value">1</div></div>
+    <div class="stat-tile amber"><div class="label">Open Work Orders</div><div class="value" id="kpiOpenWO">—</div><div class="sub" id="kpiOpenWOSub"></div></div>
     <div class="stat-tile"><div class="label">Properties Listed</div><div class="value">5</div></div>
     <div class="stat-tile green"><div class="label">Active Leases</div><div class="value">38</div></div>
   </div>
@@ -142,6 +143,33 @@ function finishDecision(decision) {
   if (!u) return;
   document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
   document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  if (window.investproAuth.isDemoMode()) return;
+
+  // Live count of open work orders for the KPI tile
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    const OPEN = ['submitted','triaged','awaiting_owner_approval','assigned','scheduled','in_progress'];
+    const { count: openCount } = await supa.from('work_orders')
+      .select('id', { count: 'exact', head: true })
+      .in('status', OPEN);
+    document.getElementById('kpiOpenWO').textContent = openCount != null ? openCount : '—';
+
+    const { count: urgentCount } = await supa.from('work_orders')
+      .select('id', { count: 'exact', head: true })
+      .in('status', OPEN)
+      .in('priority', ['emergency','urgent']);
+    if (urgentCount && urgentCount > 0) {
+      document.getElementById('kpiOpenWOSub').textContent = urgentCount + ' urgent';
+    }
+  } catch (err) {
+    console.warn('Open WO count fetch failed:', err);
+  }
 })();
 </script>
 </body>

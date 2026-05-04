@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Work Orders — InvestPro Broker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .wo-toolbar { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:1rem 0 1.25rem; }
+  .wo-toolbar select, .wo-toolbar input[type=search] { padding:.45rem .75rem; border:1px solid #DDE3F0; border-radius:6px; font-size:.92rem; font-family:inherit; }
+  .wo-toolbar input[type=search] { min-width:240px; }
+
+  .pill { display:inline-block; padding:.15rem .55rem; border-radius:999px; font-size:.74rem; font-weight:700; letter-spacing:.02em; }
+  .pill.emergency { background:#FEE2E2; color:#991B1B; }
+  .pill.urgent    { background:#FED7AA; color:#9A3412; }
+  .pill.high      { background:#FEF3C7; color:#92400E; }
+  .pill.normal    { background:#E5E7EB; color:#374151; }
+  .pill.low       { background:#E5E7EB; color:#6B7280; }
+  .pill.submitted { background:#FEF3C7; color:#92400E; }
+  .pill.triaged   { background:#DBEAFE; color:#1E40AF; }
+  .pill.awaiting_owner_approval { background:#FEF3C7; color:#92400E; }
+  .pill.assigned  { background:#DBEAFE; color:#1E40AF; }
+  .pill.scheduled { background:#DBEAFE; color:#1E40AF; }
+  .pill.in_progress { background:#DBEAFE; color:#1E40AF; }
+  .pill.completed { background:#D1FAE5; color:#065F46; }
+  .pill.verified  { background:#D1FAE5; color:#065F46; }
+  .pill.closed    { background:#E5E7EB; color:#374151; }
+  .pill.cancelled { background:#FEE2E2; color:#991B1B; }
+  .pill.rejected  { background:#FEE2E2; color:#991B1B; }
+
+  /* Modal */
+  .wo-modal-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+    display: none; align-items: flex-start; justify-content: center;
+    z-index: 1000; padding: 2rem 1rem; overflow-y: auto;
+  }
+  .wo-modal-overlay.open { display: flex; }
+  .wo-modal {
+    background: #fff; border-radius: 8px; max-width: 900px; width: 100%;
+    box-shadow: 0 24px 48px rgba(0,0,0,.25); padding: 1.5rem 1.75rem;
+    margin: 0 auto;
+  }
+  .wo-modal h3 { font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; margin:0 0 .25rem; }
+  .wo-modal .modal-close { float:right; background:none; border:0; font-size:1.6rem; color:#6B7280; cursor:pointer; line-height:1; }
+  .wo-modal .panel { background:#F7F8FB; border-radius:6px; padding:1rem 1.25rem; margin:1rem 0; }
+  .wo-modal .panel h4 { margin:0 0 .5rem; color:#1F4FC1; font-size:.92rem; text-transform:uppercase; letter-spacing:.06em; }
+  .wo-modal .field-row { display:grid; grid-template-columns: 160px 1fr; gap:.75rem; padding:.45rem 0; font-size:.92rem; border-bottom:1px solid #F0F0F0; }
+  .wo-modal .field-row:last-child { border-bottom:0; }
+  .wo-modal .field-row .label { font-weight:600; color:#6B7280; }
+  .wo-modal label { display:block; font-weight:600; color:#374151; font-size:.85rem; margin-bottom:.25rem; }
+  .wo-modal select, .wo-modal input, .wo-modal textarea {
+    width:100%; padding:.5rem .75rem; border:1px solid #DDE3F0; border-radius:6px;
+    font-family:inherit; font-size:.9rem; box-sizing:border-box;
+  }
+  .wo-modal .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.85rem; }
+  .wo-modal .actions { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem; }
+  .history-row { display:grid; grid-template-columns: 130px 1fr 1fr; gap:.75rem; padding:.45rem .75rem; border-radius:4px; font-size:.85rem; }
+  .history-row:nth-child(odd) { background:#F7F8FB; }
+  .history-row .ts { color:#6B7280; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body class="dashboard-body" data-default-role="broker">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb">
+      <a href="dashboard.html">Broker</a> · Work Orders
+    </nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+
+  <div class="dash-title">
+    <h1>Work Orders</h1>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <a href="dashboard.html" class="btn btn-outline">← Broker Dashboard</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile red"><div class="label">Open · Emergency/Urgent</div><div class="value" id="kpiUrgent">—</div></div>
+    <div class="stat-tile amber"><div class="label">Awaiting owner approval</div><div class="value" id="kpiAwaiting">—</div></div>
+    <div class="stat-tile"><div class="label">In progress</div><div class="value" id="kpiInProg">—</div></div>
+    <div class="stat-tile green"><div class="label">Completed (last 30 days)</div><div class="value" id="kpiCompleted">—</div></div>
+  </div>
+
+  <div class="dash-section">
+    <h2>📋 Active queue</h2>
+
+    <div class="wo-toolbar">
+      <select id="filterStatus">
+        <option value="">All statuses</option>
+        <option value="OPEN" selected>Open (any)</option>
+        <option value="submitted">Submitted</option>
+        <option value="triaged">Triaged</option>
+        <option value="awaiting_owner_approval">Awaiting owner approval</option>
+        <option value="assigned">Assigned</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="in_progress">In progress</option>
+        <option value="completed">Completed</option>
+        <option value="verified">Verified</option>
+        <option value="closed">Closed</option>
+        <option value="cancelled">Cancelled</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <select id="filterPriority">
+        <option value="">Any priority</option>
+        <option value="emergency">Emergency</option>
+        <option value="urgent">Urgent</option>
+        <option value="high">High</option>
+        <option value="normal">Normal</option>
+        <option value="low">Low</option>
+      </select>
+      <select id="filterCategory">
+        <option value="">Any category</option>
+        <option value="plumbing">Plumbing</option>
+        <option value="hvac">HVAC</option>
+        <option value="electrical">Electrical</option>
+        <option value="appliance">Appliance</option>
+        <option value="structural">Structural</option>
+        <option value="security">Security</option>
+        <option value="pest">Pest</option>
+        <option value="landscaping">Landscaping</option>
+        <option value="pool_spa">Pool/Spa</option>
+        <option value="cleaning">Cleaning</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="search" id="filterQ" placeholder="Search title, address, tenant..." />
+      <button id="filterReset" class="btn btn-outline btn-sm">Reset</button>
+      <button id="refreshBtn" class="btn btn-outline btn-sm">⟳ Refresh</button>
+    </div>
+
+    <div id="woListContainer">
+      <p class="muted">Loading work orders…</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal: triage / manage a single work order -->
+<div class="wo-modal-overlay" id="woModal">
+  <div class="wo-modal">
+    <button class="modal-close" id="modalCloseBtn" type="button">&times;</button>
+    <h3 id="modalTitle">Work Order</h3>
+    <div class="muted small" id="modalSubtitle"></div>
+
+    <div class="panel">
+      <h4>Submission details</h4>
+      <div id="modalSubmission"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Triage / update</h4>
+      <div class="grid-2">
+        <div>
+          <label>Priority</label>
+          <select id="m_priority">
+            <option value="emergency">Emergency</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="normal">Normal</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="m_status">
+            <option value="submitted">Submitted</option>
+            <option value="triaged">Triaged</option>
+            <option value="awaiting_owner_approval">Awaiting owner approval</option>
+            <option value="assigned">Assigned</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in_progress">In progress</option>
+            <option value="completed">Completed</option>
+            <option value="verified">Verified</option>
+            <option value="closed">Closed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:.85rem;">
+        <div>
+          <label>Vendor (assignee)</label>
+          <select id="m_vendor">
+            <option value="">— unassigned —</option>
+          </select>
+        </div>
+        <div>
+          <label>Scheduled date/time</label>
+          <input type="datetime-local" id="m_scheduled" />
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:.85rem;">
+        <div>
+          <label>Estimate ($)</label>
+          <input type="number" id="m_estimate" step="0.01" min="0" placeholder="e.g. 350.00" />
+        </div>
+        <div>
+          <label>Final invoice ($)</label>
+          <input type="number" id="m_invoice" step="0.01" min="0" placeholder="e.g. 280.00" />
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:.85rem;">
+        <div>
+          <label><input type="checkbox" id="m_owner_approval_required" /> Requires owner approval</label>
+        </div>
+        <div>
+          <label><input type="checkbox" id="m_tenant_caused" /> Tenant-caused (chargeback)</label>
+        </div>
+      </div>
+
+      <div style="margin-top:.85rem;">
+        <label>Status change reason / staff notes</label>
+        <textarea id="m_reason" rows="2" placeholder="Internal note describing the change..."></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="m_saveBtn">Save changes</button>
+        <button class="btn btn-outline" id="m_cancelBtn">Cancel</button>
+      </div>
+      <div id="modalErr" style="display:none; color:#991B1B; font-size:.92rem; margin-top:.5rem;"></div>
+      <div id="modalOk"  style="display:none; color:#065F46; font-size:.92rem; margin-top:.5rem;"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Status history</h4>
+      <div id="modalHistory">
+        <p class="muted small">Loading history…</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+  (async function () {
+    const u = await window.investproAuth.requireRole(['broker','compliance','admin_onsite']);
+    if (!u) return;
+    document.getElementById('userBadge').textContent = u.email + ' · ' + (u.role || 'broker');
+    document.getElementById('signOutBtn').addEventListener('click', (e) => { e.preventDefault(); window.investproAuth.signOut(); });
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+    function fmtDateTime(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    }
+
+    if (window.investproAuth.isDemoMode()) {
+      document.getElementById('woListContainer').innerHTML =
+        '<div class="banner banner-info">⚙️ <strong>Demo mode:</strong> connect Supabase to see real work orders.</div>';
+      return;
+    }
+
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    const OPEN_STATUSES = ['submitted','triaged','awaiting_owner_approval','assigned','scheduled','in_progress'];
+
+    let _allWOs = [];
+    let _vendors = [];
+    let _propertyAddresses = {};
+
+    // Load vendors (profiles with role 'vendor')
+    async function loadVendors() {
+      const { data: vendors } = await supa.from('profiles')
+        .select('id, full_name, email')
+        .eq('role', 'vendor')
+        .order('full_name');
+      _vendors = vendors || [];
+      const sel = document.getElementById('m_vendor');
+      sel.innerHTML = '<option value="">— unassigned —</option>' +
+        _vendors.map(v => `<option value="${v.id}">${escapeHtml(v.full_name || v.email)}</option>`).join('');
+    }
+
+    // Load all work orders + a property-address map (for table column)
+    async function loadWorkOrders() {
+      document.getElementById('woListContainer').innerHTML = '<p class="muted">Loading work orders…</p>';
+      const { data: wos, error } = await supa.from('work_orders')
+        .select('id, lease_id, property_id, submitted_by_id, submitted_by_name, submitted_by_phone, submitted_by_email, category, priority, title, description, access_permission, access_notes, pet_in_home, pet_notes, status, status_reason, assigned_vendor_id, assigned_vendor_name, scheduled_at, estimate_amount, owner_approval_required, owner_approved_at, completed_at, invoice_amount, tenant_caused, created_at')
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('woListContainer').innerHTML =
+          '<p style="color:#991B1B;">Could not load work orders: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      _allWOs = wos || [];
+      // Resolve property addresses in a single query
+      const propIds = Array.from(new Set(_allWOs.map(w => w.property_id).filter(Boolean)));
+      if (propIds.length) {
+        const { data: props } = await supa.from('properties')
+          .select('id, address_line1, address_line2, city, state, zip')
+          .in('id', propIds);
+        (props || []).forEach(p => {
+          _propertyAddresses[p.id] =
+            (p.address_line1 || '') + (p.address_line2 ? ' ' + p.address_line2 : '') +
+            ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
+        });
+      }
+      updateKpis();
+      renderList();
+    }
+
+    function updateKpis() {
+      const open = _allWOs.filter(w => OPEN_STATUSES.includes(w.status));
+      const urgent = open.filter(w => w.priority === 'emergency' || w.priority === 'urgent').length;
+      const awaiting = open.filter(w => w.status === 'awaiting_owner_approval').length;
+      const inProg = _allWOs.filter(w => w.status === 'in_progress' || w.status === 'scheduled' || w.status === 'assigned').length;
+      const since = new Date(); since.setDate(since.getDate() - 30);
+      const completed30 = _allWOs.filter(w =>
+        (w.status === 'completed' || w.status === 'verified' || w.status === 'closed')
+        && w.completed_at && new Date(w.completed_at) >= since).length;
+      document.getElementById('kpiUrgent').textContent = urgent;
+      document.getElementById('kpiAwaiting').textContent = awaiting;
+      document.getElementById('kpiInProg').textContent = inProg;
+      document.getElementById('kpiCompleted').textContent = completed30;
+    }
+
+    function renderList() {
+      const fStatus = document.getElementById('filterStatus').value;
+      const fPriority = document.getElementById('filterPriority').value;
+      const fCategory = document.getElementById('filterCategory').value;
+      const q = (document.getElementById('filterQ').value || '').toLowerCase().trim();
+
+      let rows = _allWOs;
+      if (fStatus === 'OPEN') rows = rows.filter(w => OPEN_STATUSES.includes(w.status));
+      else if (fStatus) rows = rows.filter(w => w.status === fStatus);
+      if (fPriority) rows = rows.filter(w => w.priority === fPriority);
+      if (fCategory) rows = rows.filter(w => w.category === fCategory);
+      if (q) rows = rows.filter(w =>
+        (w.title || '').toLowerCase().includes(q)
+        || (w.submitted_by_name || '').toLowerCase().includes(q)
+        || (w.submitted_by_email || '').toLowerCase().includes(q)
+        || (_propertyAddresses[w.property_id] || '').toLowerCase().includes(q)
+      );
+
+      const container = document.getElementById('woListContainer');
+      if (rows.length === 0) {
+        container.innerHTML = '<p class="muted">No work orders match these filters.</p>';
+        return;
+      }
+      container.innerHTML = `
+        <table class="dash-table">
+          <thead><tr>
+            <th>Submitted</th>
+            <th>Title</th>
+            <th>Tenant</th>
+            <th>Property</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Vendor</th>
+            <th></th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(w => `
+              <tr>
+                <td>${fmtDate(w.created_at)}</td>
+                <td>${escapeHtml(w.title || '')}</td>
+                <td>${escapeHtml(w.submitted_by_name || '')}<br/><small class="muted">${escapeHtml(w.submitted_by_phone || '')}</small></td>
+                <td><small>${escapeHtml(_propertyAddresses[w.property_id] || '(no property linked)')}</small></td>
+                <td style="text-transform:capitalize;">${escapeHtml((w.category || '').replace(/_/g, ' '))}</td>
+                <td><span class="pill ${w.priority}">${(w.priority || '').toUpperCase()}</span></td>
+                <td><span class="pill ${w.status}">${(w.status || '').replace(/_/g,' ')}</span></td>
+                <td>${escapeHtml(w.assigned_vendor_name || '—')}</td>
+                <td><button class="btn btn-primary btn-sm" data-wo-id="${w.id}">Manage</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      container.querySelectorAll('button[data-wo-id]').forEach(btn => {
+        btn.addEventListener('click', () => openModal(btn.dataset.woId));
+      });
+    }
+
+    // ----- Modal -----
+    let _activeWO = null;
+
+    async function openModal(id) {
+      const w = _allWOs.find(x => x.id === id);
+      if (!w) return;
+      _activeWO = w;
+
+      document.getElementById('modalTitle').textContent = w.title || '(no title)';
+      document.getElementById('modalSubtitle').textContent =
+        'WO-' + id.substring(0, 8).toUpperCase() + ' · submitted ' + fmtDateTime(w.created_at);
+
+      // Submission details
+      document.getElementById('modalSubmission').innerHTML = `
+        <div class="field-row"><span class="label">Tenant</span><span>${escapeHtml(w.submitted_by_name || '—')} <small class="muted">${escapeHtml(w.submitted_by_email || '')} · ${escapeHtml(w.submitted_by_phone || '')}</small></span></div>
+        <div class="field-row"><span class="label">Property</span><span>${escapeHtml(_propertyAddresses[w.property_id] || '(no property linked)')}</span></div>
+        <div class="field-row"><span class="label">Category</span><span style="text-transform:capitalize;">${escapeHtml((w.category || '').replace(/_/g,' '))}</span></div>
+        <div class="field-row"><span class="label">Issue</span><span style="white-space:pre-wrap;">${escapeHtml(w.description || '(no details)')}</span></div>
+        <div class="field-row"><span class="label">Access</span><span>${escapeHtml((w.access_permission || '').replace(/_/g,' '))}${w.access_notes ? ' — ' + escapeHtml(w.access_notes) : ''}</span></div>
+        <div class="field-row"><span class="label">Pet on premises</span><span>${w.pet_in_home ? 'Yes' + (w.pet_notes ? ' — ' + escapeHtml(w.pet_notes) : '') : 'No'}</span></div>
+      `;
+
+      // Editable fields (current values)
+      document.getElementById('m_priority').value = w.priority || 'normal';
+      document.getElementById('m_status').value = w.status || 'submitted';
+      document.getElementById('m_vendor').value = w.assigned_vendor_id || '';
+      document.getElementById('m_scheduled').value = w.scheduled_at ? new Date(w.scheduled_at).toISOString().slice(0,16) : '';
+      document.getElementById('m_estimate').value = w.estimate_amount || '';
+      document.getElementById('m_invoice').value = w.invoice_amount || '';
+      document.getElementById('m_owner_approval_required').checked = !!w.owner_approval_required;
+      document.getElementById('m_tenant_caused').checked = !!w.tenant_caused;
+      document.getElementById('m_reason').value = '';
+
+      document.getElementById('modalErr').style.display = 'none';
+      document.getElementById('modalOk').style.display = 'none';
+
+      // History
+      document.getElementById('modalHistory').innerHTML = '<p class="muted small">Loading history…</p>';
+      const { data: hist } = await supa.from('work_order_status_history')
+        .select('from_status, to_status, reason, changed_by_name, changed_at')
+        .eq('work_order_id', id)
+        .order('changed_at', { ascending: false });
+      if (!hist || hist.length === 0) {
+        document.getElementById('modalHistory').innerHTML = '<p class="muted small">No history yet.</p>';
+      } else {
+        document.getElementById('modalHistory').innerHTML = hist.map(h => `
+          <div class="history-row">
+            <span class="ts">${fmtDateTime(h.changed_at)}</span>
+            <span>${h.from_status ? `<span class="pill ${h.from_status}">${(h.from_status||'').replace(/_/g,' ')}</span> → ` : ''}<span class="pill ${h.to_status}">${(h.to_status||'').replace(/_/g,' ')}</span></span>
+            <span class="muted">${escapeHtml(h.changed_by_name || '—')}${h.reason ? ' · ' + escapeHtml(h.reason) : ''}</span>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('woModal').classList.add('open');
+    }
+
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    document.getElementById('m_cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('woModal').addEventListener('click', (e) => {
+      if (e.target.id === 'woModal') closeModal();
+    });
+    function closeModal() {
+      document.getElementById('woModal').classList.remove('open');
+      _activeWO = null;
+    }
+
+    document.getElementById('m_saveBtn').addEventListener('click', async () => {
+      if (!_activeWO) return;
+      const errBox = document.getElementById('modalErr');
+      const okBox  = document.getElementById('modalOk');
+      errBox.style.display = 'none'; okBox.style.display = 'none';
+
+      const vendorId = document.getElementById('m_vendor').value || null;
+      const vendorName = vendorId ? (_vendors.find(v => v.id === vendorId)?.full_name || null) : null;
+      const scheduledRaw = document.getElementById('m_scheduled').value;
+      const newStatus = document.getElementById('m_status').value;
+      const isCompleted = ['completed','verified','closed'].includes(newStatus);
+
+      const update = {
+        priority:                 document.getElementById('m_priority').value,
+        status:                   newStatus,
+        status_reason:            document.getElementById('m_reason').value.trim() || null,
+        assigned_vendor_id:       vendorId,
+        assigned_vendor_name:     vendorName,
+        assigned_at:              vendorId && !_activeWO.assigned_vendor_id ? new Date().toISOString() : _activeWO.assigned_at,
+        scheduled_at:             scheduledRaw ? new Date(scheduledRaw).toISOString() : null,
+        estimate_amount:          document.getElementById('m_estimate').value || null,
+        invoice_amount:           document.getElementById('m_invoice').value || null,
+        owner_approval_required:  document.getElementById('m_owner_approval_required').checked,
+        tenant_caused:            document.getElementById('m_tenant_caused').checked,
+        completed_at:             isCompleted && !_activeWO.completed_at ? new Date().toISOString() : _activeWO.completed_at
+      };
+
+      const { error } = await supa.from('work_orders').update(update).eq('id', _activeWO.id);
+      if (error) {
+        errBox.textContent = 'Save failed: ' + error.message;
+        errBox.style.display = '';
+        return;
+      }
+      okBox.textContent = 'Saved.';
+      okBox.style.display = '';
+      // Refresh the list and the open modal
+      await loadWorkOrders();
+      const refreshed = _allWOs.find(x => x.id === _activeWO.id);
+      if (refreshed) openModal(refreshed.id);
+    });
+
+    // ----- Wire filters -----
+    ['filterStatus','filterPriority','filterCategory','filterQ'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderList);
+      document.getElementById(id).addEventListener('change', renderList);
+    });
+    document.getElementById('filterReset').addEventListener('click', () => {
+      document.getElementById('filterStatus').value = 'OPEN';
+      document.getElementById('filterPriority').value = '';
+      document.getElementById('filterCategory').value = '';
+      document.getElementById('filterQ').value = '';
+      renderList();
+    });
+    document.getElementById('refreshBtn').addEventListener('click', loadWorkOrders);
+
+    // ----- Initial load -----
+    await loadVendors();
+    await loadWorkOrders();
+  })();
+</script>
+</body>
+</html>
