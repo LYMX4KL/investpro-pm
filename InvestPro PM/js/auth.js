@@ -42,6 +42,7 @@ const ROLE_HOME = {
   applicant:     '/portal/applicant/dashboard.html',
   tenant:        '/portal/tenant-dashboard.html',
   owner:         '/portal/owner-dashboard.html',
+  vendor:        '/portal/vendor/dashboard.html',
 };
 
 /* Internal staff roles — share access to most internal data */
