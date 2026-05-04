@@ -35,6 +35,7 @@
       <li><a href="#maintenance">Maintenance</a></li>
       <li><a href="#lease">My Lease</a></li>
       <li><a href="#payments">Payment History</a></li>
+      <li><a href="#documents">Documents</a></li>
       <li><a href="#contact">Contact PM</a></li>
     </ul>
   </aside>
@@ -108,23 +109,97 @@
 
     <section id="pay" style="margin-top:3rem;">
       <h2>Pay Rent</h2>
-      <div class="form-card" style="max-width:560px;">
-        <p><strong>Amount Due:</strong> <span id="payAmountDue">—</span> <span id="payDueLabel" class="muted"></span></p>
-        <p id="payBalanceLine" class="muted" style="margin-top:-.5rem;font-size:.92rem;display:none;">Outstanding balance on lease: <strong id="payBalanceVal">$0.00</strong></p>
-        <div class="form-group"><label>Payment Method</label>
-          <select id="payMethod">
-            <option value="ach">Bank Account (ACH) — no fee</option>
-            <option value="card_debit">Debit Card — 3% fee</option>
-            <option value="card_credit">Credit Card — 3% fee</option>
-            <option value="lymx">Apply LYMX cashback (where eligible)</option>
-          </select>
+
+      <div class="form-card" style="max-width:620px;">
+        <div style="text-align:center; padding:.75rem 0 .25rem;">
+          <div style="font-size:.78rem; letter-spacing:.12em; color:#6B7280; text-transform:uppercase; font-weight:700;">Amount due</div>
+          <div id="payAmountDue" style="font-size:2.4rem; font-weight:700; color:#1F4FC1; line-height:1.1;">—</div>
+          <div id="payDueLabel" class="muted" style="font-size:.92rem;"></div>
+          <p id="payBalanceLine" class="muted" style="margin:.25rem 0 0;font-size:.85rem;display:none;">Outstanding balance on lease: <strong id="payBalanceVal">$0.00</strong></p>
         </div>
-        <div class="form-group"><label>Pay Amount</label><input type="number" id="payAmountInput" step="0.01" /></div>
-        <div class="form-group checkbox-group"><input type="checkbox" id="auto" /><label for="auto">Enroll in auto-pay (1st of every month)</label></div>
-        <button class="btn btn-primary btn-block" id="payNowBtn">Pay Rent</button>
-        <p class="muted center mt-2" style="font-size:.85rem;">Payments processed via Stripe / your PM software once connected. <strong>LYMX cannot be used to pay rent</strong> — only InvestPro fees (application, transaction, etc.).</p>
+
+        <h3 style="color:#1F4FC1;font-family:'Playfair Display',Georgia,serif;font-size:1rem;margin:1.25rem 0 .5rem;">How to pay</h3>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+          <div style="background:#F7F8FB;border-radius:6px;padding:1rem 1.25rem;">
+            <div style="font-weight:700;color:#1F4FC1;">📬 Mail check</div>
+            <div style="font-size:.85rem;color:#555A6B;margin-top:.25rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</div>
+            <div style="font-size:.78rem;color:#9aa3bd;margin-top:.5rem;">Free · clears in 3–5 business days</div>
+          </div>
+          <div style="background:#F7F8FB;border-radius:6px;padding:1rem 1.25rem;">
+            <div style="font-weight:700;color:#1F4FC1;">☎️ Pay by phone</div>
+            <div style="font-size:.85rem;color:#555A6B;margin-top:.25rem;"><a href="tel:7028165555">702-816-5555</a><br/>Mon–Fri, 9 AM – 5 PM PT</div>
+            <div style="font-size:.78rem;color:#9aa3bd;margin-top:.5rem;">eCheck or card · small fee may apply</div>
+          </div>
+        </div>
+
+        <div style="background:#FFFCF0; border:1px dashed #FFD66B; border-radius:6px; padding:1rem 1.25rem; margin-top:1rem;">
+          <div style="font-weight:700;color:#92400E;">⚡ Set up auto-pay</div>
+          <div style="font-size:.9rem;color:#555A6B;margin-top:.4rem;">Skip the monthly hassle — we'll auto-pull rent from your bank account on your preferred day. Standard ACH, typically $0.50–$1 fee per month (often free).</div>
+          <button id="autopayBtn" class="btn btn-primary btn-sm" style="margin-top:.75rem;">Request Auto-pay Setup</button>
+          <p class="muted" style="font-size:.78rem; margin:.5rem 0 0;">We never ask for bank info via web form — we'll call you to capture routing/account securely.</p>
+        </div>
+
+        <p class="muted center mt-2" style="font-size:.78rem; margin-top:1rem;"><strong>Note:</strong> LYMX cannot be applied to rent — only to InvestPro fees (application, transaction, etc.).</p>
       </div>
     </section>
+
+    <!-- Auto-pay enrollment modal -->
+    <div id="autopayModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;">
+      <div style="background:#fff;padding:1.75rem 2rem;border-radius:8px;max-width:520px;width:100%;margin:0 auto;box-shadow:0 24px 48px rgba(0,0,0,.25);">
+        <button type="button" id="autopayCloseBtn" style="float:right;background:none;border:0;font-size:1.6rem;color:#6B7280;cursor:pointer;line-height:1;">&times;</button>
+        <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1F4FC1;margin:0 0 .25rem;">Set up auto-pay</h3>
+        <p class="muted small" style="margin-top:0;">We'll call you to securely capture your bank info — never email or text it.</p>
+
+        <div id="apErr" style="display:none;background:#FEE2E2;color:#991B1B;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+        <div id="apOk"  style="display:none;background:#D1FAE5;color:#065F46;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:#374151;">Phone *</label>
+            <input type="tel" id="ap_phone" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:#374151;">Best time to call</label>
+            <select id="ap_best_time" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+              <option>Anytime</option><option>Morning</option><option>Afternoon</option><option>Evening</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem;">
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:#374151;">Preferred method</label>
+            <select id="ap_method" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+              <option value="ach">ACH (bank account)</option>
+              <option value="echeck">eCheck</option>
+              <option value="unsure">Not sure — recommend best</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.85rem;font-weight:600;color:#374151;">Pull on which day?</label>
+            <select id="ap_day" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+              <option value="1">1st of month</option>
+              <option value="3">3rd</option>
+              <option value="5">5th</option>
+              <option value="15">15th</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:.75rem;">
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Notes (optional)</label>
+          <textarea id="ap_notes" rows="2" placeholder="Any specific timing or banking concerns?" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;"></textarea>
+        </div>
+
+        <input type="text" id="ap_website" name="website" style="display:none;" tabindex="-1" autocomplete="off" />
+
+        <div style="display:flex;gap:.5rem;margin-top:1rem;">
+          <button type="button" id="apSubmitBtn" class="btn btn-primary">Request Setup</button>
+          <button type="button" id="apCancelBtn" class="btn btn-outline">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <section id="maintenance" style="margin-top:3rem;">
       <h2>Maintenance</h2>
@@ -191,6 +266,14 @@
 
       <div id="payHistoryList">
         <p class="muted">Loading payment history…</p>
+      </div>
+    </section>
+
+    <section id="documents" style="margin-top:3rem;">
+      <h2>Documents</h2>
+      <p class="muted" style="margin-top:-.5rem;">Your lease, addendums, move-in inspection report, and any other paperwork from InvestPro.</p>
+      <div id="tenantDocsContainer">
+        <p class="muted">Loading documents…</p>
       </div>
     </section>
 
@@ -306,6 +389,7 @@
           document.getElementById('kpiEnds').textContent = fmtMonthShort(lease.end_date);
 
           // ===== Pay Rent (real amount due) =====
+          window._tenantLeaseId = lease.id;
           const payAmt = Number(lease.monthly_rent || 0);
           document.getElementById('payAmountDue').textContent = '$' + payAmt.toFixed(2);
           document.getElementById('payDueLabel').textContent =
@@ -339,6 +423,9 @@
 
           // ===== Payment history =====
           await loadPaymentHistory(supa, lease.id);
+
+          // ===== Documents =====
+          await loadTenantDocuments(supa, lease.id);
         }
       } catch (err) {
         console.warn('Tenant data fetch failed:', err);
@@ -421,6 +508,66 @@
         </tr>`;
       }).join('');
       return head + body + '</tbody></table>';
+    }
+
+    // ============ Documents rendering ============
+    async function loadTenantDocuments(supa, leaseId) {
+      // RLS automatically filters to tenant_visible + tenant's lease
+      const { data: docs, error } = await supa.from('documents')
+        .select('id, type, title, description, storage_bucket, storage_path, file_size_bytes, mime_type, created_at, uploaded_by_name')
+        .order('created_at', { ascending: false });
+      const container = document.getElementById('tenantDocsContainer');
+      if (error) {
+        container.innerHTML = '<p style="color:#991B1B;">Could not load documents: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      const list = docs || [];
+      if (list.length === 0) {
+        container.innerHTML = '<p class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">No documents on file yet. Your lease and any addendums will appear here when uploaded by InvestPro.</p>';
+        return;
+      }
+      const TYPE_LABELS = {
+        lease:                 '📄 Lease',
+        lease_addendum:        '📎 Addendum',
+        inspection_report:     '🔍 Inspection report',
+        utility_account:       '⚡ Utility / disclosure',
+        photo:                 '📷 Photo',
+        other:                 '📁 Other',
+      };
+      const fmtSize = b => {
+        if (!b) return '';
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+        return (b / 1048576).toFixed(1) + ' MB';
+      };
+      container.innerHTML = `
+        <table class="tbl">
+          <thead><tr><th>Type</th><th>Document</th><th>Uploaded</th><th></th></tr></thead>
+          <tbody>${list.map(d => `
+            <tr>
+              <td>${TYPE_LABELS[d.type] || d.type}</td>
+              <td><strong>${escapeHtml(d.title)}</strong>${d.description ? `<br/><small class="muted">${escapeHtml(d.description)}</small>` : ''}</td>
+              <td><small>${new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}<br/>${escapeHtml(d.uploaded_by_name || 'staff')}</small></td>
+              <td><button class="btn btn-outline btn-sm" data-doc-bucket="${escapeHtml(d.storage_bucket)}" data-doc-path="${escapeHtml(d.storage_path)}">⬇ Download${d.file_size_bytes ? ' (' + fmtSize(d.file_size_bytes) + ')' : ''}</button></td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      `;
+      container.querySelectorAll('button[data-doc-path]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const orig = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Generating link…';
+          const { data: signed, error: sErr } = await supa.storage.from(btn.dataset.docBucket).createSignedUrl(btn.dataset.docPath, 60);
+          btn.disabled = false;
+          btn.textContent = orig;
+          if (sErr || !signed?.signedUrl) {
+            alert('Could not generate download link: ' + (sErr?.message || 'unknown'));
+            return;
+          }
+          window.open(signed.signedUrl, '_blank', 'noopener');
+        });
+      });
     }
 
     // ============ Payment history rendering ============
@@ -511,9 +658,68 @@
       renderPayments();
     });
 
-    // Stub Pay Now click — Stripe wiring is Phase 2
-    document.getElementById('payNowBtn')?.addEventListener('click', () => {
-      alert('Online payments are launching in the next phase (Stripe / your PM software). For now, please pay via the existing channel — bank ACH, in-person check, or money order. Questions: 702-816-5555.');
+    // Auto-pay enrollment modal wiring
+    const _apModal = document.getElementById('autopayModal');
+    function _openAutopay() {
+      if (!_apModal) return;
+      _apModal.style.display = 'flex';
+      document.getElementById('apErr').style.display = 'none';
+      document.getElementById('apOk').style.display = 'none';
+    }
+    function _closeAutopay() { if (_apModal) _apModal.style.display = 'none'; }
+    document.getElementById('autopayBtn')?.addEventListener('click', _openAutopay);
+    document.getElementById('autopayCloseBtn')?.addEventListener('click', _closeAutopay);
+    document.getElementById('apCancelBtn')?.addEventListener('click', _closeAutopay);
+    _apModal?.addEventListener('click', (e) => { if (e.target.id === 'autopayModal') _closeAutopay(); });
+
+    document.getElementById('apSubmitBtn')?.addEventListener('click', async () => {
+      const errBox = document.getElementById('apErr');
+      const okBox  = document.getElementById('apOk');
+      errBox.style.display = 'none'; okBox.style.display = 'none';
+
+      const phone = document.getElementById('ap_phone').value.trim();
+      const best  = document.getElementById('ap_best_time').value;
+      const method= document.getElementById('ap_method').value;
+      const day   = document.getElementById('ap_day').value;
+      const notes = document.getElementById('ap_notes').value.trim();
+
+      if (!phone) { errBox.textContent = 'Phone is required.'; errBox.style.display = ''; return; }
+
+      const u2 = await window.investproAuth.getUser?.() || window.investproAuth.user || {};
+      const tenant_profile_id = u2.id || (typeof u !== 'undefined' ? u.id : null);
+
+      // Find the active lease id from the rendered KPI section if not exposed
+      const leaseEl = document.querySelector('[data-lease-id]');
+      const lease_id = leaseEl?.dataset.leaseId || (window._tenantLeaseId || '');
+
+      const btn = document.getElementById('apSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        const res = await fetch('/.netlify/functions/autopay-enroll', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            tenant_profile_id,
+            lease_id,
+            preferred_method: method,
+            preferred_day:    day,
+            phone,
+            best_time:        best,
+            notes,
+            website:          document.getElementById('ap_website').value
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Send failed');
+        okBox.innerHTML = `Got it. Reference <strong>${data.id || ''}</strong>. We'll call ${phone} ${best === 'Anytime' ? 'soon' : 'in the ' + best.toLowerCase()} to set up your auto-pay.`;
+        okBox.style.display = '';
+      } catch (err) {
+        errBox.textContent = 'Could not send: ' + (err?.message || err);
+        errBox.style.display = '';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Request Setup';
+      }
     });
 
     // MICR alert visibility — show only if a tenant has an active MICR window

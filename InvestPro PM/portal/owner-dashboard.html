@@ -68,22 +68,40 @@
 
     <section id="statements" style="margin-top:3rem;">
       <h2>Statements</h2>
-      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
-        Monthly owner statements + 1099-MISC year-end summaries will be generated here. Currently building the close-out workflow — first statements arrive at the end of next month-close.
+      <p class="muted" style="margin-top:-.5rem;">Month-by-month summary across all your properties: rent collected, our PM fee, vendor expenses, and net distribution to you.</p>
+
+      <div id="statementsContainer">
+        <p class="muted">Loading statements…</p>
       </div>
+
+      <p class="muted" style="font-size:.85rem; margin-top:1rem;">
+        These summaries are computed live from your payment ledger and work-order invoices. Year-end 1099-MISC documents are generated separately each January from these totals.
+      </p>
     </section>
 
     <section id="workorders" style="margin-top:3rem;">
       <h2>Work Orders</h2>
-      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
-        Active and historical maintenance requests on your properties will appear here, including any pending your approval (vendor estimates over $300 require sign-off per your PMA).
+      <p class="muted" style="margin-top:-.5rem;">Active and historical maintenance requests on your properties. Items requiring your approval (vendor estimate above your PMA threshold) appear at the top.</p>
+
+      <h3 id="ownerApprovalHeader" style="margin-top:1.5rem; display:none; color:#92400E;">⚠ Awaiting your approval</h3>
+      <div id="woApprovalList"></div>
+
+      <h3 style="margin-top:1.5rem;">Active</h3>
+      <div id="woActiveList">
+        <p class="muted">Loading…</p>
+      </div>
+
+      <h3 style="margin-top:1.5rem;">Past</h3>
+      <div id="woPastList">
+        <p class="muted">Loading…</p>
       </div>
     </section>
 
     <section id="documents" style="margin-top:3rem;">
       <h2>Documents</h2>
-      <div class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
-        Property Management Agreements, year-end 1099s, insurance certificates, and other ownership records will be filed here as they're added.
+      <p class="muted" style="margin-top:-.5rem;">Property Management Agreements, year-end 1099s, insurance certificates, and other ownership records.</p>
+      <div id="documentsContainer">
+        <p class="muted">Loading documents…</p>
       </div>
     </section>
 
@@ -197,6 +215,474 @@
         </article>
       `;
     }).join('');
+
+    // ===== Work orders for owner's properties =====
+    const propIds = list.map(p => p.id);
+    const propAddressMap = {};
+    list.forEach(p => {
+      propAddressMap[p.id] =
+        (p.address_line1 || '') + (p.address_line2 ? ' ' + p.address_line2 : '') +
+        ' — ' + (p.city || 'Las Vegas') + ', ' + (p.state || 'NV') + ' ' + (p.zip || '');
+    });
+    await loadOwnerWorkOrders(supa, propIds, propAddressMap);
+
+    // ===== Owner statements (live monthly summary) =====
+    await loadOwnerStatements(supa, propIds, propAddressMap);
+
+    // ===== Documents =====
+    await loadOwnerDocuments(supa, propIds, propAddressMap, u.id);
+
+    // ===== Helpers =====
+
+    async function loadOwnerWorkOrders(supa, propertyIds, propAddrMap) {
+      if (propertyIds.length === 0) {
+        document.getElementById('woActiveList').innerHTML = '<p class="muted">No properties yet — no work orders to show.</p>';
+        document.getElementById('woPastList').innerHTML = '';
+        return;
+      }
+      const { data: wos, error } = await supa.from('work_orders')
+        .select('id, property_id, title, description, category, priority, status, assigned_vendor_name, scheduled_at, estimate_amount, owner_approval_required, owner_approved_at, owner_decision, owner_decision_notes, completed_at, invoice_amount, tenant_caused, created_at')
+        .in('property_id', propertyIds)
+        .eq('visible_to_owner', true)
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('woActiveList').innerHTML =
+          '<p style="color:#991B1B;">Could not load work orders: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      const all = wos || [];
+      const OPEN = ['submitted','triaged','awaiting_owner_approval','assigned','scheduled','in_progress'];
+      const awaiting = all.filter(w => w.status === 'awaiting_owner_approval' && !w.owner_approved_at);
+      const active   = all.filter(w => OPEN.includes(w.status) && w.status !== 'awaiting_owner_approval');
+      const past     = all.filter(w => !OPEN.includes(w.status));
+
+      // Awaiting approval block
+      if (awaiting.length > 0) {
+        document.getElementById('ownerApprovalHeader').style.display = '';
+        document.getElementById('woApprovalList').innerHTML = awaiting.map(w => renderApprovalCard(w, propAddrMap)).join('');
+        // Wire approve/decline buttons
+        document.querySelectorAll('button[data-approve-id]').forEach(btn => {
+          btn.addEventListener('click', () => approveWorkOrder(supa, btn.dataset.approveId, 'approved', propertyIds, propAddrMap));
+        });
+        document.querySelectorAll('button[data-decline-id]').forEach(btn => {
+          btn.addEventListener('click', () => approveWorkOrder(supa, btn.dataset.declineId, 'declined', propertyIds, propAddrMap));
+        });
+      } else {
+        document.getElementById('ownerApprovalHeader').style.display = 'none';
+        document.getElementById('woApprovalList').innerHTML = '';
+      }
+
+      document.getElementById('woActiveList').innerHTML = active.length
+        ? renderWoTable(active, propAddrMap, /*showVendor*/true)
+        : '<p class="muted">No active work orders. ✨</p>';
+      document.getElementById('woPastList').innerHTML = past.length
+        ? renderWoTable(past, propAddrMap, /*showVendor*/false)
+        : '<p class="muted">No past work orders yet.</p>';
+    }
+
+    function renderApprovalCard(w, propAddrMap) {
+      const est = Number(w.estimate_amount || 0);
+      return `
+        <div style="background:#FEF3C7; border:1px solid #FCD34D; border-radius:8px; padding:1.25rem 1.5rem; margin:.75rem 0;">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+            <div style="font-weight:700; color:#92400E; font-size:1.05rem;">${escapeHtml(w.title || '(no title)')}</div>
+            <div style="font-weight:700; color:#92400E;">${est ? '$' + est.toFixed(2) : '(no estimate)'}</div>
+          </div>
+          <div style="color:#6B7280; font-size:.88rem; margin:.25rem 0 .5rem;">
+            ${escapeHtml(propAddrMap[w.property_id] || '')}
+            · <span style="text-transform:capitalize;">${escapeHtml((w.category || '').replace(/_/g,' '))}</span>
+            · vendor: ${escapeHtml(w.assigned_vendor_name || 'unassigned')}
+          </div>
+          ${w.description ? `<div style="background:#fff; border-radius:6px; padding:.6rem .75rem; font-size:.9rem; margin:.5rem 0; white-space:pre-wrap;">${escapeHtml(w.description)}</div>` : ''}
+          <div style="display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" data-approve-id="${w.id}">✓ Approve estimate</button>
+            <button class="btn btn-outline btn-sm" data-decline-id="${w.id}" style="border-color:#991B1B; color:#991B1B;">✗ Decline / request modification</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function approveWorkOrder(supa, woId, decision, propertyIds, propAddrMap) {
+      let notes = '';
+      if (decision === 'declined') {
+        notes = prompt('Reason for declining (visible to your property manager):') || '';
+        if (!notes.trim()) return;
+      }
+      const update = {
+        owner_approved_by_id: u.id,
+        owner_approved_at:    new Date().toISOString(),
+        owner_decision:       decision,
+        owner_decision_notes: notes || null,
+        status:               decision === 'approved' ? 'assigned' : 'triaged',
+        status_reason:        decision === 'approved' ? 'Owner approved estimate' : 'Owner declined estimate: ' + notes
+      };
+      const { error } = await supa.from('work_orders').update(update).eq('id', woId);
+      if (error) {
+        alert('Could not save: ' + error.message);
+        return;
+      }
+      // Notify broker of the decision
+      fetch('/.netlify/functions/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'owner_approval_decision',
+          payload: { work_order_id: woId, decision, notes }
+        })
+      }).catch(err => console.warn('notify owner_approval_decision failed:', err));
+
+      await loadOwnerWorkOrders(supa, propertyIds, propAddrMap);
+    }
+
+    // ============ Owner statements ============
+    // Compute on-the-fly from payments + work_orders. No new schema needed.
+    // Shows the last 3 calendar months across all owner's properties.
+    async function loadOwnerStatements(supa, propertyIds, propAddrMap) {
+      const container = document.getElementById('statementsContainer');
+      if (propertyIds.length === 0) {
+        container.innerHTML = '<p class="muted">No properties on file yet — no statements to show.</p>';
+        return;
+      }
+
+      // Window: first day of (current month - 2) through end of current month
+      const today = new Date();
+      const startWindow = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+      const startISO = startWindow.toISOString().slice(0, 10);
+
+      // Pull payments + work orders within that window for these properties
+      const [payRes, woRes] = await Promise.all([
+        supa.from('payments')
+          .select('id, property_id, amount, type, status, paid_at, due_date, payment_method, description, ext_payment_id')
+          .in('property_id', propertyIds)
+          .gte('paid_at', startWindow.toISOString())
+          .order('paid_at', { ascending: false }),
+        supa.from('work_orders')
+          .select('id, property_id, title, completed_at, invoice_amount, tenant_caused, assigned_vendor_name')
+          .in('property_id', propertyIds)
+          .gte('completed_at', startWindow.toISOString())
+          .order('completed_at', { ascending: false }),
+      ]);
+
+      const payments = payRes.data || [];
+      const workorders = woRes.data || [];
+
+      // Bucket by YYYY-MM
+      const monthKeyOf = d => {
+        const dt = new Date(d);
+        return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+      };
+      const monthLabelOf = key => {
+        const [y, m] = key.split('-').map(Number);
+        return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      };
+
+      // Build the list of months to show (current, current-1, current-2)
+      const months = [];
+      for (let i = 0; i < 3; i++) {
+        const dt = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        months.push(dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0'));
+      }
+
+      // Compute per-month totals
+      const summaries = months.map(key => {
+        const monthPayments = payments.filter(p => p.paid_at && monthKeyOf(p.paid_at) === key && p.status === 'paid');
+        const monthWOs      = workorders.filter(w => w.completed_at && monthKeyOf(w.completed_at) === key);
+
+        const rent_collected   = monthPayments.filter(p => p.type === 'rent').reduce((s, p) => s + Number(p.amount), 0);
+        const other_charges    = monthPayments.filter(p => !['rent','security_deposit_hold','security_deposit_refund','credit','owner_distribution'].includes(p.type)).reduce((s, p) => s + Number(p.amount), 0);
+        const credits_refunds  = monthPayments.filter(p => p.type === 'credit' || p.type === 'security_deposit_refund').reduce((s, p) => s + Number(p.amount), 0);
+        const distributions    = monthPayments.filter(p => p.type === 'owner_distribution').reduce((s, p) => s + Math.abs(Number(p.amount)), 0);
+        const pm_fee           = rent_collected * 0.08;
+        const vendor_expenses  = monthWOs.filter(w => !w.tenant_caused).reduce((s, w) => s + Number(w.invoice_amount || 0), 0);
+        const tenant_chargeback = monthWOs.filter(w => w.tenant_caused).reduce((s, w) => s + Number(w.invoice_amount || 0), 0);
+        const net_earned       = rent_collected + other_charges + credits_refunds - pm_fee - vendor_expenses;
+        const balance_change   = net_earned - distributions;  // what's still owed for this month after distributions
+
+        return {
+          key,
+          label: monthLabelOf(key),
+          rent_collected, other_charges, pm_fee, vendor_expenses, tenant_chargeback,
+          credits_refunds, distributions, net_to_owner: net_earned, balance_change,
+          payments: monthPayments,
+          workorders: monthWOs
+        };
+      });
+
+      // Render
+      const fmt$ = n => '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const isCurrentMonth = key => key === months[0];
+
+      container.innerHTML = summaries.map(s => {
+        const empty = s.rent_collected === 0 && s.vendor_expenses === 0 && s.payments.length === 0 && s.workorders.length === 0 && s.distributions === 0;
+        const distList = s.payments.filter(p => p.type === 'owner_distribution');
+        return `
+          <details ${isCurrentMonth(s.key) ? 'open' : ''} style="border:1px solid #DDE3F0; border-radius:8px; margin-bottom:1rem; padding:1rem 1.25rem; background:#fff;">
+            <summary style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; font-weight:600;">
+              <span style="font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; font-size:1.15rem;">${s.label}${isCurrentMonth(s.key) ? ' <small style="color:#6B7280; font-weight:400;">(in progress)</small>' : ''}</span>
+              <span style="display:flex; gap:1rem; align-items:center; font-variant-numeric:tabular-nums;">
+                <span class="muted small">Earned:</span>
+                <strong style="color:${s.net_to_owner < 0 ? '#991B1B' : '#065F46'}; font-size:1.1rem;">${fmt$(s.net_to_owner)}</strong>
+                ${s.distributions > 0 ? `<span class="muted small">Paid out:</span><strong style="color:#1F4FC1; font-size:1.1rem;">${fmt$(s.distributions)}</strong>` : ''}
+                <button class="btn btn-outline btn-sm" data-csv-month="${s.key}" type="button">⬇ CSV</button>
+              </span>
+            </summary>
+            ${empty ? `
+              <p class="muted" style="margin-top:.75rem;">No activity recorded in ${s.label} yet.</p>
+            ` : `
+              <table class="tbl" style="margin-top:.75rem;">
+                <tbody>
+                  <tr><td>Rent collected</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${fmt$(s.rent_collected)}</td></tr>
+                  ${s.other_charges > 0 ? `<tr><td>Other charges (late fees, pet rent, etc.)</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${fmt$(s.other_charges)}</td></tr>` : ''}
+                  ${s.credits_refunds !== 0 ? `<tr><td>Credits / refunds</td><td style="text-align:right;font-variant-numeric:tabular-nums;color:${s.credits_refunds < 0 ? '#991B1B' : '#065F46'};">${fmt$(s.credits_refunds)}</td></tr>` : ''}
+                  <tr><td>InvestPro PM fee (8%)</td><td style="text-align:right;font-variant-numeric:tabular-nums;color:#991B1B;">−${fmt$(s.pm_fee)}</td></tr>
+                  <tr><td>Vendor / maintenance expenses</td><td style="text-align:right;font-variant-numeric:tabular-nums;color:#991B1B;">−${fmt$(s.vendor_expenses)}</td></tr>
+                  ${s.tenant_chargeback > 0 ? `<tr><td>Tenant-caused (chargeback to tenant)</td><td style="text-align:right;font-variant-numeric:tabular-nums;color:#6B7280;">+${fmt$(s.tenant_chargeback)} (collected from tenant)</td></tr>` : ''}
+                  <tr style="border-top:2px solid #1F4FC1;"><td style="font-weight:700;">Net earned this month</td><td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:${s.net_to_owner < 0 ? '#991B1B' : '#065F46'};">${fmt$(s.net_to_owner)}</td></tr>
+                  ${s.distributions > 0 ? `<tr><td>Distributions paid to you</td><td style="text-align:right;font-variant-numeric:tabular-nums;color:#1F4FC1;">${fmt$(s.distributions)}</td></tr>` : ''}
+                  ${s.distributions !== 0 ? `<tr style="border-top:1px solid #DDE3F0;"><td style="font-weight:700;">Owed to you (still pending)</td><td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:${s.balance_change < 0 ? '#991B1B' : '#92400E'};">${fmt$(s.balance_change)}</td></tr>` : ''}
+                </tbody>
+              </table>
+
+              ${distList.length > 0 ? `
+                <h4 style="margin-top:1rem;color:#1F4FC1;font-size:.92rem;">Distributions this month</h4>
+                <table class="tbl">
+                  <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th style="text-align:right;">Amount</th></tr></thead>
+                  <tbody>${distList.map(d => `
+                    <tr>
+                      <td>${new Date(d.paid_at).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</td>
+                      <td style="text-transform:capitalize;">${escapeHtml(d.payment_method || '—')}</td>
+                      <td><small>${escapeHtml(d.ext_payment_id || '—')}</small></td>
+                      <td style="text-align:right;font-variant-numeric:tabular-nums;color:#1F4FC1;font-weight:600;">${fmt$(Math.abs(Number(d.amount)))}</td>
+                    </tr>
+                  `).join('')}</tbody>
+                </table>
+              ` : ''}
+
+              ${s.workorders.length > 0 ? `
+                <h4 style="margin-top:1rem;color:#1F4FC1;font-size:.92rem;">Maintenance this month</h4>
+                <table class="tbl">
+                  <thead><tr><th>Date</th><th>Issue</th><th>Vendor</th><th style="text-align:right;">Cost</th></tr></thead>
+                  <tbody>${s.workorders.map(w => `
+                    <tr>
+                      <td>${new Date(w.completed_at).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</td>
+                      <td>${escapeHtml(w.title)}</td>
+                      <td><small>${escapeHtml(w.assigned_vendor_name || '—')}</small></td>
+                      <td style="text-align:right;font-variant-numeric:tabular-nums;${w.tenant_caused ? 'color:#6B7280;' : ''}">${fmt$(w.invoice_amount || 0)}${w.tenant_caused ? ' (tenant)' : ''}</td>
+                    </tr>
+                  `).join('')}</tbody>
+                </table>
+              ` : ''}
+            `}
+          </details>
+        `;
+      }).join('');
+
+      // Wire CSV download buttons
+      container.querySelectorAll('button[data-csv-month]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const key = btn.dataset.csvMonth;
+          const s = summaries.find(x => x.key === key);
+          if (s) downloadStatementCsv(s);
+        });
+      });
+    }
+
+    function downloadStatementCsv(s) {
+      const fmt$ = n => Number(n).toFixed(2);
+      const lines = [
+        ['InvestPro Realty Owner Statement'],
+        ['Month', s.label],
+        [''],
+        ['SUMMARY'],
+        ['Rent collected', fmt$(s.rent_collected)],
+        ['Other charges', fmt$(s.other_charges)],
+        ['Credits / refunds', fmt$(s.credits_refunds)],
+        ['PM fee (8%)', '-' + fmt$(s.pm_fee)],
+        ['Vendor expenses', '-' + fmt$(s.vendor_expenses)],
+        ['Tenant chargebacks (collected from tenant)', fmt$(s.tenant_chargeback)],
+        ['NET TO OWNER', fmt$(s.net_to_owner)],
+        [''],
+        ['PAYMENT DETAIL'],
+        ['Date', 'Type', 'Method', 'Amount', 'Description'],
+        ...s.payments.map(p => [
+          p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-US') : '',
+          p.type, p.payment_method || '', fmt$(p.amount), (p.description || '').replace(/[\r\n,]/g, ' ')
+        ]),
+        [''],
+        ['MAINTENANCE DETAIL'],
+        ['Date', 'Issue', 'Vendor', 'Tenant-caused', 'Cost'],
+        ...s.workorders.map(w => [
+          w.completed_at ? new Date(w.completed_at).toLocaleDateString('en-US') : '',
+          (w.title || '').replace(/[\r\n,]/g, ' '),
+          w.assigned_vendor_name || '',
+          w.tenant_caused ? 'Yes' : 'No',
+          fmt$(w.invoice_amount || 0)
+        ]),
+      ];
+      const csv = lines.map(row => row.map(cell => {
+        const c = String(cell);
+        return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
+      }).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = 'InvestPro-Statement-' + s.key + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ============ Documents ============
+    async function loadOwnerDocuments(supa, propertyIds, propAddrMap, userId) {
+      const container = document.getElementById('documentsContainer');
+      // RLS already filters to owner_visible + their properties + their owner_profile_id
+      const { data: docs, error } = await supa.from('documents')
+        .select('id, type, title, description, storage_bucket, storage_path, file_size_bytes, mime_type, property_id, lease_id, tax_year, created_at, uploaded_by_name')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        container.innerHTML = '<p style="color:#991B1B;">Could not load documents: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      const list = docs || [];
+      if (list.length === 0) {
+        container.innerHTML = `
+          <p class="muted" style="background:#F7F8FB; padding:1rem 1.25rem; border-radius:6px; border-left:3px solid #FFD66B; font-size:.92rem;">
+            No documents uploaded yet. Your Property Management Agreement, insurance certificates, and year-end 1099s will appear here as they're filed.
+          </p>`;
+        return;
+      }
+
+      // Group by type for nicer display
+      const TYPE_LABELS = {
+        lease:                 'Leases',
+        lease_addendum:        'Lease addendums',
+        pma:                   'Property Management Agreements',
+        pma_amendment:         'PMA amendments',
+        form_1099_misc:        'Year-end 1099s',
+        form_w9:               'Tax forms (W-9)',
+        insurance_certificate: 'Insurance certificates',
+        inspection_report:     'Inspection reports',
+        work_order_invoice:    'Vendor invoices',
+        utility_account:       'Utility / disclosures',
+        photo:                 'Photos',
+        other:                 'Other'
+      };
+      const groups = {};
+      list.forEach(d => {
+        const k = d.type;
+        if (!groups[k]) groups[k] = [];
+        groups[k].push(d);
+      });
+
+      const fmtSize = b => {
+        if (!b) return '';
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+        return (b / 1048576).toFixed(1) + ' MB';
+      };
+
+      // Render
+      const orderedTypes = ['pma','pma_amendment','lease','lease_addendum','insurance_certificate','form_1099_misc','form_w9','inspection_report','work_order_invoice','utility_account','photo','other'];
+      const html = orderedTypes
+        .filter(t => groups[t] && groups[t].length)
+        .map(type => `
+          <div style="margin-bottom:1.25rem;">
+            <h4 style="color:#1F4FC1; font-family:'Playfair Display',Georgia,serif; font-size:1rem; margin:0 0 .5rem;">${TYPE_LABELS[type] || type}</h4>
+            <table class="tbl">
+              <thead><tr><th>Title</th><th>Property</th><th>Tax year</th><th>Uploaded</th><th></th></tr></thead>
+              <tbody>${groups[type].map(d => `
+                <tr>
+                  <td><strong>${escapeHtml(d.title)}</strong>${d.description ? `<br/><small class="muted">${escapeHtml(d.description)}</small>` : ''}</td>
+                  <td><small>${escapeHtml(propAddrMap[d.property_id] || '—')}</small></td>
+                  <td>${d.tax_year || '—'}</td>
+                  <td><small>${new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}<br/>${escapeHtml(d.uploaded_by_name || 'staff')}</small></td>
+                  <td><button class="btn btn-outline btn-sm" data-doc-bucket="${escapeHtml(d.storage_bucket)}" data-doc-path="${escapeHtml(d.storage_path)}" data-doc-mime="${escapeHtml(d.mime_type || '')}" data-doc-title="${escapeHtml(d.title)}">⬇ Download${d.file_size_bytes ? ' (' + fmtSize(d.file_size_bytes) + ')' : ''}</button></td>
+                </tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        `).join('');
+
+      container.innerHTML = html || '<p class="muted">No documents.</p>';
+
+      // Wire download buttons (signed URL for private bucket)
+      container.querySelectorAll('button[data-doc-path]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const bucket = btn.dataset.docBucket;
+          const path = btn.dataset.docPath;
+          const orig = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = 'Generating link…';
+          const { data: signed, error: sErr } = await supa.storage.from(bucket).createSignedUrl(path, 60);
+          btn.disabled = false;
+          btn.textContent = orig;
+          if (sErr || !signed?.signedUrl) {
+            alert('Could not generate download link: ' + (sErr?.message || 'unknown'));
+            return;
+          }
+          window.open(signed.signedUrl, '_blank', 'noopener');
+        });
+      });
+    }
+
+    function renderWoTable(rows, propAddrMap, showVendor) {
+      const STATUS = {
+        submitted:                { bg:'#FEF3C7', fg:'#92400E', label:'Submitted' },
+        triaged:                  { bg:'#DBEAFE', fg:'#1E40AF', label:'Triaged' },
+        awaiting_owner_approval:  { bg:'#FEF3C7', fg:'#92400E', label:'Your approval needed' },
+        assigned:                 { bg:'#DBEAFE', fg:'#1E40AF', label:'Vendor assigned' },
+        scheduled:                { bg:'#DBEAFE', fg:'#1E40AF', label:'Scheduled' },
+        in_progress:              { bg:'#DBEAFE', fg:'#1E40AF', label:'In progress' },
+        completed:                { bg:'#D1FAE5', fg:'#065F46', label:'Completed' },
+        verified:                 { bg:'#D1FAE5', fg:'#065F46', label:'Verified' },
+        closed:                   { bg:'#E5E7EB', fg:'#374151', label:'Closed' },
+        cancelled:                { bg:'#FEE2E2', fg:'#991B1B', label:'Cancelled' },
+        rejected:                 { bg:'#FEE2E2', fg:'#991B1B', label:'Rejected' },
+      };
+      const PRI = {
+        emergency: { bg:'#FEE2E2', fg:'#991B1B', label:'EMERGENCY' },
+        urgent:    { bg:'#FED7AA', fg:'#9A3412', label:'Urgent' },
+        high:      { bg:'#FEF3C7', fg:'#92400E', label:'High' },
+        normal:    { bg:'#E5E7EB', fg:'#374151', label:'Normal' },
+        low:       { bg:'#E5E7EB', fg:'#6B7280', label:'Low' },
+      };
+      const fmt = d => d ? new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+      return `
+        <table class="tbl">
+          <thead><tr>
+            <th>Date</th>
+            <th>Issue</th>
+            <th>Property</th>
+            <th>Priority</th>
+            ${showVendor ? '<th>Vendor</th>' : ''}
+            <th>Cost</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody>${rows.map(w => {
+            const sb = STATUS[w.status] || { bg:'#E5E7EB', fg:'#374151', label: w.status };
+            const pb = PRI[w.priority] || { bg:'#E5E7EB', fg:'#374151', label: w.priority };
+            const amt = Number(w.invoice_amount || w.estimate_amount || 0);
+            const amtLbl = amt > 0
+              ? '$' + amt.toFixed(2) + (w.tenant_caused ? ' (tenant)' : '')
+              : '—';
+            return `<tr>
+              <td>${fmt(w.completed_at || w.created_at)}</td>
+              <td>${escapeHtml(w.title)}</td>
+              <td><small>${escapeHtml(propAddrMap[w.property_id] || '')}</small></td>
+              <td><span style="display:inline-block;padding:.1rem .5rem;background:${pb.bg};color:${pb.fg};border-radius:999px;font-size:.74rem;font-weight:700;">${pb.label}</span></td>
+              ${showVendor ? `<td><small>${escapeHtml(w.assigned_vendor_name || '—')}</small></td>` : ''}
+              <td>${amtLbl}</td>
+              <td><span style="display:inline-block;padding:.1rem .5rem;background:${sb.bg};color:${sb.fg};border-radius:999px;font-size:.78rem;font-weight:700;">${sb.label}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      `;
+    }
   })();
 </script>
 </body>
