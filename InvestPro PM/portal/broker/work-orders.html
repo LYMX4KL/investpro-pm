@@ -499,11 +499,36 @@
       }
       okBox.textContent = 'Saved.';
       okBox.style.display = '';
+
+      // ===== Fire notifications based on what changed =====
+      const before = _activeWO;
+      // Vendor newly assigned (or changed)
+      if (vendorId && vendorId !== before.assigned_vendor_id) {
+        notify('vendor_assigned', { work_order_id: before.id });
+      }
+      // Status moved to awaiting_owner_approval
+      if (newStatus === 'awaiting_owner_approval' && before.status !== 'awaiting_owner_approval') {
+        notify('estimate_awaiting_approval', { work_order_id: before.id });
+      }
+      // Status moved to completed
+      if (isCompleted && before.status !== newStatus) {
+        notify('work_order_completed', { work_order_id: before.id });
+      }
+
       // Refresh the list and the open modal
       await loadWorkOrders();
       const refreshed = _allWOs.find(x => x.id === _activeWO.id);
       if (refreshed) openModal(refreshed.id);
     });
+
+    // Fire-and-forget notify call
+    function notify(eventType, payload) {
+      fetch('/.netlify/functions/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: eventType, payload })
+      }).catch(err => console.warn('notify ' + eventType + ' failed:', err));
+    }
 
     // ----- Wire filters -----
     ['filterStatus','filterPriority','filterCategory','filterQ'].forEach(id => {

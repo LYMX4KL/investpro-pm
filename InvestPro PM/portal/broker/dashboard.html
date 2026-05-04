@@ -27,6 +27,10 @@
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
       <a href="applications.html" class="btn btn-outline">🎯 Recruiting Pipeline</a>
       <a href="work-orders.html" class="btn btn-outline">🛠️ Work Orders</a>
+      <a href="documents.html" class="btn btn-outline">📁 Documents</a>
+      <button type="button" id="recordPaymentBtn" class="btn btn-outline">💵 Record Payment</button>
+      <button type="button" id="distributeBtn" class="btn btn-outline">💸 Distribute to Owner</button>
+      <button type="button" id="genRentBtn" class="btn btn-outline">📆 Generate Rent Charges</button>
       <a href="award-points.html" class="btn btn-outline">⭐ Award Points</a>
       <a href="email-management.html" class="btn btn-outline">📧 Email Management</a>
       <a href="feedback.html" class="btn btn-outline">📥 Feedback</a>
@@ -39,10 +43,10 @@
   </div>
 
   <div class="stat-grid">
-    <div class="stat-tile red"><div class="label">Decisions Pending</div><div class="value">2</div><div class="sub">screening summaries ready</div></div>
+    <div class="stat-tile red"><div class="label">Decisions Pending</div><div class="value" id="kpiDecisions">—</div><div class="sub">applications awaiting review</div></div>
     <div class="stat-tile amber"><div class="label">Open Work Orders</div><div class="value" id="kpiOpenWO">—</div><div class="sub" id="kpiOpenWOSub"></div></div>
-    <div class="stat-tile"><div class="label">Properties Listed</div><div class="value">5</div></div>
-    <div class="stat-tile green"><div class="label">Active Leases</div><div class="value">38</div></div>
+    <div class="stat-tile"><div class="label">Properties Listed</div><div class="value" id="kpiListed">—</div></div>
+    <div class="stat-tile green"><div class="label">Active Leases</div><div class="value" id="kpiLeases">—</div></div>
   </div>
 
   <div class="dash-section">
@@ -107,6 +111,175 @@
   </div>
 </main>
 
+<!-- Record Payment modal -->
+<div id="paymentModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;">
+  <div style="background:#fff;padding:1.75rem 2rem;border-radius:8px;max-width:560px;width:100%;margin:0 auto;box-shadow:0 24px 48px rgba(0,0,0,.25);">
+    <button type="button" onclick="document.getElementById('paymentModal').style.display='none';" style="float:right;background:none;border:0;font-size:1.6rem;color:#6B7280;cursor:pointer;line-height:1;">&times;</button>
+    <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1F4FC1;margin:0 0 .25rem;">Record Payment</h3>
+    <p class="muted small" style="margin-top:0;">Manual entry until Stripe is wired. Adds a row to the payments ledger.</p>
+
+    <div id="payErr" style="display:none;background:#FEE2E2;color:#991B1B;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+    <div id="payOk"  style="display:none;background:#D1FAE5;color:#065F46;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:.75rem;">
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">Lease *</label>
+        <select id="pay_lease" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+          <option value="">Loading leases…</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Type *</label>
+          <select id="pay_type" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+            <option value="rent">Rent</option>
+            <option value="late_fee">Late fee</option>
+            <option value="pet_rent">Pet rent</option>
+            <option value="pet_fee">Pet fee (one-time)</option>
+            <option value="security_deposit_hold">Security deposit (hold)</option>
+            <option value="security_deposit_refund">Security deposit refund</option>
+            <option value="application_fee">Application fee</option>
+            <option value="lease_processing_fee">Lease processing fee</option>
+            <option value="tenant_caused_repair">Tenant-caused repair</option>
+            <option value="nsf_fee">NSF / returned-payment fee</option>
+            <option value="lease_break_fee">Lease break fee</option>
+            <option value="move_out_admin_fee">Move-out admin fee</option>
+            <option value="credit">Credit (negative)</option>
+            <option value="adjustment">Adjustment</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Amount *</label>
+          <input type="number" id="pay_amount" step="0.01" placeholder="e.g. 1850.00" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Method *</label>
+          <select id="pay_method" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+            <option value="ach">ACH / Bank transfer</option>
+            <option value="check">Check</option>
+            <option value="cash">Cash / Money order</option>
+            <option value="card">Card</option>
+            <option value="wire">Wire</option>
+            <option value="lymx">LYMX redemption</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Date paid *</label>
+          <input type="date" id="pay_date" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+      </div>
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">Description / memo</label>
+        <input type="text" id="pay_description" placeholder="e.g. May 2026 rent — check #1247" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">External reference (optional)</label>
+        <input type="text" id="pay_ext_id" placeholder="Stripe / Buildium / bank ref" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+        <button type="button" id="payRecordBtn" class="btn btn-primary">Record Payment</button>
+        <button type="button" onclick="document.getElementById('paymentModal').style.display='none';" class="btn btn-outline">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generate Rent Charges modal -->
+<div id="genRentModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;">
+  <div style="background:#fff;padding:1.75rem 2rem;border-radius:8px;max-width:520px;width:100%;margin:0 auto;box-shadow:0 24px 48px rgba(0,0,0,.25);">
+    <button type="button" onclick="document.getElementById('genRentModal').style.display='none';" style="float:right;background:none;border:0;font-size:1.6rem;color:#6B7280;cursor:pointer;line-height:1;">&times;</button>
+    <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1F4FC1;margin:0 0 .25rem;">Generate Rent Charges</h3>
+    <p class="muted small" style="margin-top:0;">Creates one "due" payment row per active lease for the selected month. Idempotent — won't create duplicates if you've already run it for that month.</p>
+
+    <div id="genRentErr" style="display:none;background:#FEE2E2;color:#991B1B;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+    <div id="genRentOk"  style="display:none;background:#D1FAE5;color:#065F46;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+
+    <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.25rem;">Target month</label>
+    <input type="month" id="genRent_month" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+
+    <p class="muted" style="font-size:.85rem; margin:.75rem 0;">
+      <strong>💡 Tip:</strong> this normally runs automatically on the 1st of each month at 5 AM UTC (so you don't need to do this manually). Use this button only for retroactive runs or if a scheduled run was missed.
+    </p>
+
+    <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+      <button type="button" id="genRentRunBtn" class="btn btn-primary">Run for this month</button>
+      <button type="button" onclick="document.getElementById('genRentModal').style.display='none';" class="btn btn-outline">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Distribute to Owner modal -->
+<div id="distModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;">
+  <div style="background:#fff;padding:1.75rem 2rem;border-radius:8px;max-width:600px;width:100%;margin:0 auto;box-shadow:0 24px 48px rgba(0,0,0,.25);">
+    <button type="button" onclick="document.getElementById('distModal').style.display='none';" style="float:right;background:none;border:0;font-size:1.6rem;color:#6B7280;cursor:pointer;line-height:1;">&times;</button>
+    <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1F4FC1;margin:0 0 .25rem;">Distribute to Owner</h3>
+    <p class="muted small" style="margin-top:0;">Records a payout from InvestPro to a property owner. Recorded as a negative payment of type "owner_distribution".</p>
+
+    <div id="distErr" style="display:none;background:#FEE2E2;color:#991B1B;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+    <div id="distOk"  style="display:none;background:#D1FAE5;color:#065F46;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:.75rem;">
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">Property *</label>
+        <select id="dist_property" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+          <option value="">Loading properties…</option>
+        </select>
+      </div>
+
+      <div id="distOutstandingBox" style="display:none; background:#FFFCF0; border:1px dashed #FFD66B; border-radius:6px; padding:.75rem 1rem; font-size:.9rem;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+          <span><strong>Outstanding owed to owner (last 90 days):</strong></span>
+          <strong id="distOutstandingVal" style="color:#92400E;font-variant-numeric:tabular-nums;">—</strong>
+        </div>
+        <small class="muted">Computed as: rent collected − PM fee − vendor expenses − prior distributions, last 90 days.</small>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Amount *</label>
+          <input type="number" id="dist_amount" step="0.01" min="0.01" placeholder="e.g. 1547.32" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Payout date *</label>
+          <input type="date" id="dist_date" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Method *</label>
+          <select id="dist_method" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+            <option value="ach">ACH transfer</option>
+            <option value="check">Check</option>
+            <option value="wire">Wire</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">For period (e.g. month) *</label>
+          <input type="month" id="dist_period" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">Reference (check #, wire ID, etc.)</label>
+        <input type="text" id="dist_ext_id" placeholder="e.g. Check #2418" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+      </div>
+
+      <div>
+        <label style="font-size:.85rem;font-weight:600;color:#374151;">Notes (optional)</label>
+        <textarea id="dist_description" rows="2" placeholder="e.g. April 2026 net distribution; rent $2,000 - PM $160 - $290 plumbing repair." style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+        <button type="button" id="distRecordBtn" class="btn btn-primary">Record Distribution</button>
+        <button type="button" onclick="document.getElementById('distModal').style.display='none';" class="btn btn-outline">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Decision modal -->
 <div id="decisionModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#fff;padding:2rem;border-radius:6px;max-width:560px;width:92%;">
@@ -146,30 +319,332 @@ function finishDecision(decision) {
 
   if (window.investproAuth.isDemoMode()) return;
 
-  // Live count of open work orders for the KPI tile
-  try {
+  // ---- Live Supabase client (shared by KPI fetch + payment modal) ----
+  let _supa = null;
+  async function getSupa() {
+    if (_supa) return _supa;
     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
     const authSrc = await fetch('/js/auth.js').then(r => r.text());
     const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
     const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
-    const supa = createClient(url, key);
+    _supa = createClient(url, key);
+    return _supa;
+  }
 
+  // ---- KPIs: live counts ----
+  try {
+    const supa = await getSupa();
+
+    // Open work orders + urgent count
     const OPEN = ['submitted','triaged','awaiting_owner_approval','assigned','scheduled','in_progress'];
-    const { count: openCount } = await supa.from('work_orders')
-      .select('id', { count: 'exact', head: true })
-      .in('status', OPEN);
-    document.getElementById('kpiOpenWO').textContent = openCount != null ? openCount : '—';
+    const [{ count: openCount }, { count: urgentCount }, { count: pendingDecisions }, { count: listedCount }, { count: activeLeases }] = await Promise.all([
+      supa.from('work_orders').select('id', { count: 'exact', head: true }).in('status', OPEN),
+      supa.from('work_orders').select('id', { count: 'exact', head: true }).in('status', OPEN).in('priority', ['emergency','urgent']),
+      supa.from('applications').select('id', { count: 'exact', head: true }).in('status', ['screening_complete','va_recommended','awaiting_decision','counter_pending']),
+      supa.from('properties').select('id', { count: 'exact', head: true }).eq('status', 'listed'),
+      supa.from('leases').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    ]);
 
-    const { count: urgentCount } = await supa.from('work_orders')
-      .select('id', { count: 'exact', head: true })
-      .in('status', OPEN)
-      .in('priority', ['emergency','urgent']);
+    document.getElementById('kpiOpenWO').textContent = openCount != null ? openCount : '—';
     if (urgentCount && urgentCount > 0) {
       document.getElementById('kpiOpenWOSub').textContent = urgentCount + ' urgent';
     }
+    document.getElementById('kpiDecisions').textContent = pendingDecisions != null ? pendingDecisions : '—';
+    document.getElementById('kpiListed').textContent    = listedCount       != null ? listedCount       : '—';
+    document.getElementById('kpiLeases').textContent    = activeLeases      != null ? activeLeases      : '—';
   } catch (err) {
-    console.warn('Open WO count fetch failed:', err);
+    console.warn('KPI fetch failed:', err);
   }
+
+  // ---- Record Payment modal ----
+  let _leasesLoaded = false;
+  document.getElementById('recordPaymentBtn').addEventListener('click', async () => {
+    document.getElementById('paymentModal').style.display = 'flex';
+    document.getElementById('payErr').style.display = 'none';
+    document.getElementById('payOk').style.display = 'none';
+    document.getElementById('pay_date').value = new Date().toISOString().slice(0, 10);
+
+    if (_leasesLoaded) return;
+    try {
+      const supa = await getSupa();
+      const { data: leases, error } = await supa.from('leases')
+        .select('id, monthly_rent, property_id, tenant_profile_ids')
+        .eq('status', 'active');
+      if (error) throw error;
+
+      const propIds = Array.from(new Set((leases || []).map(l => l.property_id).filter(Boolean)));
+      const profileIds = Array.from(new Set(
+        (leases || []).flatMap(l => Array.isArray(l.tenant_profile_ids) ? l.tenant_profile_ids : (typeof l.tenant_profile_ids === 'string' ? JSON.parse(l.tenant_profile_ids) : []))
+      ));
+
+      const [{ data: props }, { data: profs }] = await Promise.all([
+        propIds.length ? supa.from('properties').select('id, address_line1, address_line2, city, zip').in('id', propIds) : Promise.resolve({ data: [] }),
+        profileIds.length ? supa.from('profiles').select('id, full_name').in('id', profileIds) : Promise.resolve({ data: [] }),
+      ]);
+      const propMap = {};
+      (props || []).forEach(p => {
+        propMap[p.id] = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'LV'} ${p.zip || ''}`;
+      });
+      const profMap = {};
+      (profs || []).forEach(p => { profMap[p.id] = p.full_name; });
+
+      const sel = document.getElementById('pay_lease');
+      sel.innerHTML = '<option value="">— pick a lease —</option>' +
+        (leases || []).map(l => {
+          const tenants = (Array.isArray(l.tenant_profile_ids) ? l.tenant_profile_ids : []).map(id => profMap[id] || '?').join(', ');
+          return `<option value="${l.id}" data-rent="${l.monthly_rent}" data-property="${l.property_id || ''}" data-tenant="${(Array.isArray(l.tenant_profile_ids) ? l.tenant_profile_ids[0] : '') || ''}">${propMap[l.property_id] || '(no property)'} — ${tenants || '(no tenant)'} — $${Number(l.monthly_rent).toLocaleString()}</option>`;
+        }).join('');
+      _leasesLoaded = true;
+    } catch (err) {
+      const errBox = document.getElementById('payErr');
+      errBox.textContent = 'Could not load leases: ' + (err?.message || err);
+      errBox.style.display = '';
+    }
+  });
+
+  // When lease changes, prefill amount with monthly rent if type=rent
+  document.getElementById('pay_lease').addEventListener('change', (e) => {
+    const opt = e.target.selectedOptions[0];
+    if (opt && opt.dataset.rent && document.getElementById('pay_type').value === 'rent') {
+      document.getElementById('pay_amount').value = opt.dataset.rent;
+    }
+  });
+  document.getElementById('pay_type').addEventListener('change', (e) => {
+    const sel = document.getElementById('pay_lease');
+    const opt = sel.selectedOptions[0];
+    if (opt && opt.dataset.rent && e.target.value === 'rent') {
+      document.getElementById('pay_amount').value = opt.dataset.rent;
+    }
+  });
+
+  // ---- Generate Rent Charges modal ----
+  document.getElementById('genRentBtn').addEventListener('click', () => {
+    document.getElementById('genRentModal').style.display = 'flex';
+    document.getElementById('genRentErr').style.display = 'none';
+    document.getElementById('genRentOk').style.display = 'none';
+    const today = new Date();
+    document.getElementById('genRent_month').value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+  });
+
+  document.getElementById('genRentRunBtn').addEventListener('click', async () => {
+    const errBox = document.getElementById('genRentErr');
+    const okBox  = document.getElementById('genRentOk');
+    errBox.style.display = 'none'; okBox.style.display = 'none';
+
+    const m = document.getElementById('genRent_month').value;
+    if (!m) { errBox.textContent = 'Pick a month.'; errBox.style.display = ''; return; }
+    const [year, month] = m.split('-').map(Number);
+
+    const btn = document.getElementById('genRentRunBtn');
+    btn.disabled = true; btn.textContent = 'Generating…';
+    try {
+      const res = await fetch('/.netlify/functions/generate-rent-charges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, month })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Failed');
+      okBox.innerHTML = `Done. Active leases: <strong>${data.summary.active_leases}</strong> · Created: <strong>${data.summary.created_count}</strong> · Skipped (already existed): <strong>${data.summary.skipped_existing}</strong>`;
+      okBox.style.display = '';
+    } catch (err) {
+      errBox.textContent = 'Error: ' + (err?.message || err);
+      errBox.style.display = '';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Run for this month';
+    }
+  });
+
+  // ---- Distribute-to-Owner modal ----
+  let _distLoaded = false;
+  let _distPropMap = {};
+  document.getElementById('distributeBtn').addEventListener('click', async () => {
+    document.getElementById('distModal').style.display = 'flex';
+    document.getElementById('distErr').style.display = 'none';
+    document.getElementById('distOk').style.display = 'none';
+    document.getElementById('distOutstandingBox').style.display = 'none';
+    const today = new Date();
+    document.getElementById('dist_date').value = today.toISOString().slice(0, 10);
+    // Default period = previous month (typical PM cycle: distribute April rent in early May)
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    document.getElementById('dist_period').value = lastMonth.getFullYear() + '-' + String(lastMonth.getMonth() + 1).padStart(2, '0');
+
+    if (_distLoaded) return;
+    try {
+      const supa = await getSupa();
+      const { data: props, error } = await supa.from('properties')
+        .select('id, address_line1, address_line2, city, zip, owner_id')
+        .order('address_line1');
+      if (error) throw error;
+
+      const ownerIds = Array.from(new Set((props || []).map(p => p.owner_id).filter(Boolean)));
+      const { data: owners } = ownerIds.length
+        ? await supa.from('profiles').select('id, full_name, email').in('id', ownerIds)
+        : { data: [] };
+      const ownerMap = {};
+      (owners || []).forEach(o => { ownerMap[o.id] = o.full_name || o.email; });
+
+      const sel = document.getElementById('dist_property');
+      sel.innerHTML = '<option value="">— pick property —</option>' +
+        (props || []).map(p => {
+          const addr = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'LV'} ${p.zip || ''}`;
+          _distPropMap[p.id] = { addr, owner_id: p.owner_id, owner_name: ownerMap[p.owner_id] || '(no owner)' };
+          return `<option value="${p.id}">${addr} — owner: ${ownerMap[p.owner_id] || '?'}</option>`;
+        }).join('');
+      _distLoaded = true;
+    } catch (err) {
+      const errBox = document.getElementById('distErr');
+      errBox.textContent = 'Could not load properties: ' + (err?.message || err);
+      errBox.style.display = '';
+    }
+  });
+
+  // When property changes, compute outstanding balance (last 90 days)
+  document.getElementById('dist_property').addEventListener('change', async (e) => {
+    const propId = e.target.value;
+    const box = document.getElementById('distOutstandingBox');
+    if (!propId) { box.style.display = 'none'; return; }
+    try {
+      const supa = await getSupa();
+      const since = new Date(); since.setDate(since.getDate() - 90);
+      const [{ data: pays }, { data: wos }] = await Promise.all([
+        supa.from('payments').select('amount, type, status, paid_at').eq('property_id', propId).gte('paid_at', since.toISOString()),
+        supa.from('work_orders').select('invoice_amount, tenant_caused, completed_at').eq('property_id', propId).gte('completed_at', since.toISOString()),
+      ]);
+      const rentCollected = (pays || []).filter(p => p.status === 'paid' && p.type === 'rent').reduce((s, p) => s + Number(p.amount), 0);
+      const otherCharges  = (pays || []).filter(p => p.status === 'paid' && !['rent','security_deposit_hold','security_deposit_refund','credit','owner_distribution'].includes(p.type)).reduce((s, p) => s + Number(p.amount), 0);
+      const distributions = (pays || []).filter(p => p.status === 'paid' && p.type === 'owner_distribution').reduce((s, p) => s + Math.abs(Number(p.amount)), 0);
+      const pmFee         = rentCollected * 0.08;
+      const vendor        = (wos || []).filter(w => !w.tenant_caused).reduce((s, w) => s + Number(w.invoice_amount || 0), 0);
+      const earned        = rentCollected + otherCharges - pmFee - vendor;
+      const owed          = earned - distributions;
+      document.getElementById('distOutstandingVal').textContent = '$' + owed.toFixed(2);
+      document.getElementById('distOutstandingBox').style.display = '';
+      // Pre-fill amount with the outstanding balance
+      if (owed > 0 && !document.getElementById('dist_amount').value) {
+        document.getElementById('dist_amount').value = owed.toFixed(2);
+      }
+    } catch (err) {
+      console.warn('Outstanding calc failed:', err);
+    }
+  });
+
+  document.getElementById('distRecordBtn').addEventListener('click', async () => {
+    const errBox = document.getElementById('distErr');
+    const okBox  = document.getElementById('distOk');
+    errBox.style.display = 'none'; okBox.style.display = 'none';
+
+    const property_id = document.getElementById('dist_property').value;
+    const amount = document.getElementById('dist_amount').value;
+    const date = document.getElementById('dist_date').value;
+    const method = document.getElementById('dist_method').value;
+    const period = document.getElementById('dist_period').value;
+    const ext_id = document.getElementById('dist_ext_id').value.trim() || null;
+    const notes  = document.getElementById('dist_description').value.trim();
+
+    if (!property_id) { errBox.textContent = 'Pick a property.'; errBox.style.display = ''; return; }
+    if (!amount || Number(amount) <= 0) { errBox.textContent = 'Enter a positive amount.'; errBox.style.display = ''; return; }
+    if (!date)   { errBox.textContent = 'Enter a payout date.'; errBox.style.display = ''; return; }
+    if (!period) { errBox.textContent = 'Enter the period this covers.'; errBox.style.display = ''; return; }
+
+    const propInfo = _distPropMap[property_id];
+    const description = `Owner distribution — ${period} — ${propInfo?.addr || ''}` + (notes ? ' — ' + notes : '');
+
+    try {
+      const supa = await getSupa();
+      const { data: row, error } = await supa.from('payments').insert({
+        lease_id:          null,
+        property_id,
+        tenant_profile_id: null,
+        amount:            -Math.abs(Number(amount)),                  // negative — reduces owed-to-owner
+        type:              'owner_distribution',
+        status:            'paid',
+        due_date:          date,
+        paid_at:           date + 'T12:00:00Z',
+        payment_method:    method,
+        ext_payment_id:    ext_id,
+        description,
+        recorded_by_id:    u.id,
+        recorded_by_name:  u.name
+      }).select('id').single();
+      if (error) throw error;
+      okBox.textContent = `Distribution of $${Number(amount).toFixed(2)} recorded for ${propInfo?.owner_name || 'owner'}.`;
+      okBox.style.display = '';
+      document.getElementById('dist_amount').value = '';
+      document.getElementById('dist_description').value = '';
+      document.getElementById('dist_ext_id').value = '';
+
+      // Notify owner
+      fetch('/.netlify/functions/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'distribution_paid',
+          payload: { property_id, amount, period, method, ext_id }
+        })
+      }).catch(err => console.warn('notify distribution_paid failed:', err));
+    } catch (err) {
+      errBox.textContent = 'Save failed: ' + (err?.message || err);
+      errBox.style.display = '';
+    }
+  });
+
+  document.getElementById('payRecordBtn').addEventListener('click', async () => {
+    const errBox = document.getElementById('payErr');
+    const okBox  = document.getElementById('payOk');
+    errBox.style.display = 'none'; okBox.style.display = 'none';
+
+    const sel = document.getElementById('pay_lease');
+    const opt = sel.selectedOptions[0];
+    const lease_id = sel.value;
+    const amount = document.getElementById('pay_amount').value;
+    const type = document.getElementById('pay_type').value;
+    const method = document.getElementById('pay_method').value;
+    const date = document.getElementById('pay_date').value;
+    const description = document.getElementById('pay_description').value.trim() || null;
+    const ext_id = document.getElementById('pay_ext_id').value.trim() || null;
+
+    if (!lease_id) { errBox.textContent = 'Pick a lease.'; errBox.style.display = ''; return; }
+    if (!amount)   { errBox.textContent = 'Enter an amount.'; errBox.style.display = ''; return; }
+    if (!date)     { errBox.textContent = 'Enter a date.'; errBox.style.display = ''; return; }
+
+    try {
+      const supa = await getSupa();
+      const { data: row, error } = await supa.from('payments').insert({
+        lease_id,
+        property_id:       opt?.dataset.property || null,
+        tenant_profile_id: opt?.dataset.tenant || null,
+        amount:            Number(amount),
+        type,
+        status:            'paid',
+        due_date:          date,
+        paid_at:           date + 'T12:00:00Z',
+        payment_method:    method,
+        ext_payment_id:    ext_id,
+        description,
+        recorded_by_id:    u.id,
+        recorded_by_name:  u.name
+      }).select('id').single();
+      if (error) throw error;
+      okBox.textContent = 'Payment recorded — id ' + row.id.substring(0, 8).toUpperCase();
+      okBox.style.display = '';
+
+      // Notify tenant with a receipt (skips automatically if no tenant_profile_id)
+      fetch('/.netlify/functions/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'payment_recorded', payload: { payment_id: row.id } })
+      }).catch(err => console.warn('notify payment_recorded failed:', err));
+
+      // Reset for next entry
+      document.getElementById('pay_amount').value = '';
+      document.getElementById('pay_description').value = '';
+      document.getElementById('pay_ext_id').value = '';
+    } catch (err) {
+      errBox.textContent = 'Save failed: ' + (err?.message || err);
+      errBox.style.display = '';
+    }
+  });
 })();
 </script>
 </body>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documents — InvestPro Broker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .upload-card { background:#fff; border:1px solid #DDE3F0; border-radius:8px; padding:1.5rem 1.75rem; margin-bottom:1.5rem; }
+  .upload-card label { display:block; font-weight:600; color:#374151; font-size:.85rem; margin-bottom:.25rem; margin-top:.75rem; }
+  .upload-card input, .upload-card select, .upload-card textarea {
+    width:100%; padding:.5rem .75rem; border:1px solid #DDE3F0; border-radius:6px;
+    font-family:inherit; font-size:.92rem; box-sizing:border-box;
+  }
+  .upload-card .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .upload-card .check-row { display:flex; gap:1rem; margin-top:.5rem; }
+  .upload-card .check-row label { display:inline-flex; align-items:center; gap:.4rem; font-weight:400; }
+  .upload-card .check-row input[type=checkbox] { width:auto; }
+  .filter-row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+  .filter-row select, .filter-row input { padding:.45rem .75rem; border:1px solid #DDE3F0; border-radius:6px; font-size:.9rem; }
+</style>
+</head>
+<body class="dashboard-body" data-default-role="broker">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><a href="dashboard.html">Broker</a> · Documents</nav>
+    <div class="dash-user">
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+
+  <div class="dash-title">
+    <h1>Documents</h1>
+    <a href="dashboard.html" class="btn btn-outline">← Broker Dashboard</a>
+  </div>
+
+  <div class="dash-section">
+    <h2>📤 Upload a document</h2>
+    <div class="upload-card">
+      <div id="uploadErr" style="display:none;background:#FEE2E2;color:#991B1B;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+      <div id="uploadOk"  style="display:none;background:#D1FAE5;color:#065F46;padding:.6rem .9rem;border-radius:4px;margin-bottom:.75rem;font-size:.92rem;"></div>
+
+      <div class="grid-2">
+        <div>
+          <label>Type *</label>
+          <select id="u_type">
+            <option value="lease">Lease</option>
+            <option value="lease_addendum">Lease addendum</option>
+            <option value="pma">Property Management Agreement (PMA)</option>
+            <option value="pma_amendment">PMA amendment</option>
+            <option value="form_1099_misc">1099-MISC (year-end)</option>
+            <option value="form_w9">W-9</option>
+            <option value="insurance_certificate">Insurance certificate</option>
+            <option value="inspection_report">Inspection report</option>
+            <option value="work_order_invoice">Work order / vendor invoice</option>
+            <option value="utility_account">Utility / disclosure</option>
+            <option value="photo">Photo</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Tax year (for 1099 / W-9)</label>
+          <input type="number" id="u_tax_year" min="2020" max="2099" placeholder="e.g. 2026" />
+        </div>
+      </div>
+
+      <label>Title *</label>
+      <input type="text" id="u_title" placeholder="e.g. Smith lease — 3601 Sahara, signed 2026-04-15" maxlength="200" />
+
+      <label>Description (optional)</label>
+      <textarea id="u_description" rows="2" placeholder="Internal note for staff…"></textarea>
+
+      <div class="grid-2">
+        <div>
+          <label>Property *</label>
+          <select id="u_property">
+            <option value="">— pick a property —</option>
+          </select>
+        </div>
+        <div>
+          <label>Lease (if scoped to a specific lease)</label>
+          <select id="u_lease">
+            <option value="">— none —</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Owner (for PMA / 1099 / W-9)</label>
+      <select id="u_owner">
+        <option value="">— pick owner if relevant —</option>
+      </select>
+
+      <label>File *</label>
+      <input type="file" id="u_file" accept="application/pdf,image/jpeg,image/png,image/heic" />
+      <small class="muted">PDF, JPG, PNG, or HEIC. Max 20 MB.</small>
+
+      <label style="margin-top:1rem;">Visibility</label>
+      <div class="check-row">
+        <label><input type="checkbox" id="u_owner_visible" /> Visible to owner</label>
+        <label><input type="checkbox" id="u_tenant_visible" /> Visible to tenant</label>
+        <label><input type="checkbox" id="u_vendor_visible" /> Visible to assigned vendor</label>
+      </div>
+      <small class="muted">If you uncheck all, the doc is staff-only.</small>
+
+      <div style="margin-top:1.25rem; display:flex; gap:.5rem;">
+        <button id="uploadBtn" class="btn btn-primary">Upload Document</button>
+        <button id="uploadResetBtn" type="button" class="btn btn-outline">Clear form</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>📁 All documents</h2>
+
+    <div class="filter-row">
+      <select id="filterType">
+        <option value="">All types</option>
+        <option value="lease">Lease</option>
+        <option value="lease_addendum">Addendum</option>
+        <option value="pma">PMA</option>
+        <option value="form_1099_misc">1099</option>
+        <option value="form_w9">W-9</option>
+        <option value="insurance_certificate">Insurance</option>
+        <option value="inspection_report">Inspection</option>
+        <option value="work_order_invoice">Vendor invoice</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="search" id="filterQ" placeholder="Search title / description…" style="min-width:260px;" />
+      <button id="refreshBtn" class="btn btn-outline btn-sm">⟳ Refresh</button>
+    </div>
+
+    <div id="docsList">
+      <p class="muted">Loading…</p>
+    </div>
+  </div>
+
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script>
+  (async function () {
+    const u = await window.investproAuth.requireRole(['broker','compliance','admin_onsite','accounting']);
+    if (!u) return;
+    document.getElementById('userBadge').textContent = u.email + ' · ' + (u.role || 'broker');
+    document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    if (window.investproAuth.isDemoMode()) {
+      document.getElementById('docsList').innerHTML =
+        '<div class="banner banner-info">⚙️ <strong>Demo mode:</strong> connect Supabase to see/upload real documents.</div>';
+      return;
+    }
+
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const authSrc = await fetch('/js/auth.js').then(r => r.text());
+    const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+    const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+    const supa = createClient(url, key);
+
+    let _allDocs = [];
+    const _propMap = {};
+    const _ownerMap = {};
+
+    async function loadPickerData() {
+      const [{ data: props }, { data: leases }, { data: owners }] = await Promise.all([
+        supa.from('properties').select('id, address_line1, address_line2, city, zip, owner_id').order('address_line1'),
+        supa.from('leases').select('id, property_id, start_date, end_date, status').eq('status', 'active').order('start_date', { ascending: false }),
+        supa.from('profiles').select('id, full_name, email').eq('role', 'owner').order('full_name'),
+      ]);
+
+      const propSel = document.getElementById('u_property');
+      propSel.innerHTML = '<option value="">— pick a property —</option>' +
+        (props || []).map(p => {
+          _propMap[p.id] = `${p.address_line1}${p.address_line2 ? ' ' + p.address_line2 : ''}, ${p.city || 'LV'} ${p.zip || ''}`;
+          return `<option value="${p.id}" data-owner="${p.owner_id || ''}">${escapeHtml(_propMap[p.id])}</option>`;
+        }).join('');
+
+      const leaseSel = document.getElementById('u_lease');
+      leaseSel.innerHTML = '<option value="">— none —</option>' +
+        (leases || []).map(l => {
+          const addr = _propMap[l.property_id] || '(no property)';
+          return `<option value="${l.id}" data-property="${l.property_id || ''}">${escapeHtml(addr)} — ${l.start_date} → ${l.end_date}</option>`;
+        }).join('');
+
+      const ownerSel = document.getElementById('u_owner');
+      ownerSel.innerHTML = '<option value="">— pick owner if relevant —</option>' +
+        (owners || []).map(o => {
+          _ownerMap[o.id] = o.full_name || o.email;
+          return `<option value="${o.id}">${escapeHtml(_ownerMap[o.id])}</option>`;
+        }).join('');
+
+      // Auto-pick owner when a property is selected
+      propSel.addEventListener('change', (e) => {
+        const opt = e.target.selectedOptions[0];
+        const ownerId = opt?.dataset.owner;
+        if (ownerId) ownerSel.value = ownerId;
+      });
+      // Auto-pick property when a lease is selected
+      leaseSel.addEventListener('change', (e) => {
+        const opt = e.target.selectedOptions[0];
+        const propId = opt?.dataset.property;
+        if (propId) propSel.value = propId;
+      });
+
+      // Type-based default visibility
+      const typeSel = document.getElementById('u_type');
+      const ov = document.getElementById('u_owner_visible');
+      const tv = document.getElementById('u_tenant_visible');
+      const vv = document.getElementById('u_vendor_visible');
+      function defaultVis() {
+        const t = typeSel.value;
+        // Reset
+        ov.checked = false; tv.checked = false; vv.checked = false;
+        if (['pma','pma_amendment','form_1099_misc','form_w9','insurance_certificate'].includes(t)) ov.checked = true;
+        if (['lease','lease_addendum','inspection_report','utility_account'].includes(t)) { ov.checked = true; tv.checked = true; }
+        if (t === 'work_order_invoice') { ov.checked = true; vv.checked = true; }
+      }
+      typeSel.addEventListener('change', defaultVis);
+      defaultVis();
+    }
+
+    async function loadDocs() {
+      const { data, error } = await supa.from('documents')
+        .select('id, type, title, description, storage_bucket, storage_path, file_size_bytes, mime_type, property_id, lease_id, owner_profile_id, owner_visible, tenant_visible, vendor_visible, tax_year, deleted_at, created_at, uploaded_by_name')
+        .order('created_at', { ascending: false });
+      if (error) {
+        document.getElementById('docsList').innerHTML = '<p style="color:#991B1B;">Could not load documents: ' + escapeHtml(error.message) + '</p>';
+        return;
+      }
+      _allDocs = data || [];
+      renderList();
+    }
+
+    function renderList() {
+      const fType = document.getElementById('filterType').value;
+      const q = (document.getElementById('filterQ').value || '').toLowerCase().trim();
+      let rows = _allDocs.filter(d => !d.deleted_at);
+      if (fType) rows = rows.filter(d => d.type === fType);
+      if (q) rows = rows.filter(d =>
+        (d.title || '').toLowerCase().includes(q)
+        || (d.description || '').toLowerCase().includes(q)
+        || (_propMap[d.property_id] || '').toLowerCase().includes(q)
+      );
+      const fmtSize = b => {
+        if (!b) return '';
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+        return (b / 1048576).toFixed(1) + ' MB';
+      };
+      const visBadges = d => {
+        const parts = [];
+        if (d.owner_visible) parts.push('<span class="pill" style="background:#FEF3C7;color:#92400E;">owner</span>');
+        if (d.tenant_visible) parts.push('<span class="pill" style="background:#DBEAFE;color:#1E40AF;">tenant</span>');
+        if (d.vendor_visible) parts.push('<span class="pill" style="background:#DCFCE7;color:#065F46;">vendor</span>');
+        if (!parts.length) parts.push('<span class="pill" style="background:#F3F4F6;color:#6B7280;">staff only</span>');
+        return parts.join(' ');
+      };
+      const container = document.getElementById('docsList');
+      if (rows.length === 0) {
+        container.innerHTML = '<p class="muted">No documents match.</p>';
+        return;
+      }
+      container.innerHTML = `
+        <table class="dash-table">
+          <thead><tr>
+            <th>Type</th><th>Title</th><th>Property</th><th>Visibility</th><th>Uploaded</th><th>Size</th><th></th>
+          </tr></thead>
+          <tbody>${rows.map(d => `
+            <tr>
+              <td style="text-transform:capitalize;">${d.type.replace(/_/g, ' ')}${d.tax_year ? '<br/><small class="muted">' + d.tax_year + '</small>' : ''}</td>
+              <td><strong>${escapeHtml(d.title)}</strong>${d.description ? '<br/><small class="muted">' + escapeHtml(d.description) + '</small>' : ''}</td>
+              <td><small>${escapeHtml(_propMap[d.property_id] || '—')}</small></td>
+              <td>${visBadges(d)}</td>
+              <td><small>${new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}<br/>${escapeHtml(d.uploaded_by_name || 'staff')}</small></td>
+              <td>${fmtSize(d.file_size_bytes)}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" data-doc-bucket="${escapeHtml(d.storage_bucket)}" data-doc-path="${escapeHtml(d.storage_path)}">⬇</button>
+                <button class="btn btn-outline btn-sm" data-doc-delete="${d.id}" style="border-color:#991B1B;color:#991B1B;">🗑</button>
+              </td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      `;
+      // Wire download
+      container.querySelectorAll('button[data-doc-path]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const orig = btn.textContent;
+          btn.disabled = true;
+          btn.textContent = '...';
+          const { data: signed, error } = await supa.storage.from(btn.dataset.docBucket).createSignedUrl(btn.dataset.docPath, 60);
+          btn.disabled = false;
+          btn.textContent = orig;
+          if (error || !signed?.signedUrl) {
+            alert('Could not generate link: ' + (error?.message || 'unknown'));
+            return;
+          }
+          window.open(signed.signedUrl, '_blank', 'noopener');
+        });
+      });
+      // Wire soft-delete
+      container.querySelectorAll('button[data-doc-delete]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Soft-delete this document? File stays in storage but disappears from portals.')) return;
+          const { error } = await supa.from('documents').update({
+            deleted_at: new Date().toISOString(),
+            deleted_reason: 'Soft-deleted by ' + (u.name || u.email)
+          }).eq('id', btn.dataset.docDelete);
+          if (error) { alert('Delete failed: ' + error.message); return; }
+          await loadDocs();
+        });
+      });
+    }
+
+    // Filter wiring
+    ['filterType','filterQ'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderList);
+      document.getElementById(id).addEventListener('change', renderList);
+    });
+    document.getElementById('refreshBtn').addEventListener('click', loadDocs);
+
+    // ----- Upload -----
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const errBox = document.getElementById('uploadErr');
+      const okBox  = document.getElementById('uploadOk');
+      errBox.style.display = 'none'; okBox.style.display = 'none';
+
+      const file = document.getElementById('u_file').files[0];
+      const title = document.getElementById('u_title').value.trim();
+      const property_id = document.getElementById('u_property').value || null;
+      const lease_id = document.getElementById('u_lease').value || null;
+      const owner_profile_id = document.getElementById('u_owner').value || null;
+      const type = document.getElementById('u_type').value;
+      const description = document.getElementById('u_description').value.trim() || null;
+      const taxYearStr = document.getElementById('u_tax_year').value;
+      const tax_year = taxYearStr ? parseInt(taxYearStr) : null;
+      const owner_visible = document.getElementById('u_owner_visible').checked;
+      const tenant_visible = document.getElementById('u_tenant_visible').checked;
+      const vendor_visible = document.getElementById('u_vendor_visible').checked;
+
+      if (!file)        { errBox.textContent = 'Pick a file.'; errBox.style.display = ''; return; }
+      if (!title)       { errBox.textContent = 'Enter a title.'; errBox.style.display = ''; return; }
+      if (!property_id) { errBox.textContent = 'Pick a property.'; errBox.style.display = ''; return; }
+      if (file.size > 20 * 1024 * 1024) { errBox.textContent = 'File too large (max 20 MB).'; errBox.style.display = ''; return; }
+
+      const btn = document.getElementById('uploadBtn');
+      btn.disabled = true; btn.textContent = 'Uploading…';
+
+      try {
+        // Generate doc id first so we can use it in the storage path
+        const docId = crypto.randomUUID();
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-100);
+        const storagePath = `${property_id}/${docId}__${safeName}`;
+
+        // 1. Upload to Storage
+        const { error: upErr } = await supa.storage.from('property-documents').upload(storagePath, file, {
+          cacheControl: '3600',
+          contentType: file.type || 'application/octet-stream',
+          upsert: false
+        });
+        if (upErr) throw upErr;
+
+        // 2. Insert metadata row
+        const { error: insErr } = await supa.from('documents').insert({
+          id: docId,
+          property_id, lease_id, owner_profile_id,
+          type, title, description, tax_year,
+          storage_bucket: 'property-documents',
+          storage_path: storagePath,
+          file_size_bytes: file.size,
+          mime_type: file.type || null,
+          owner_visible, tenant_visible, vendor_visible,
+          uploaded_by_id: u.id,
+          uploaded_by_name: u.name || u.email
+        });
+        if (insErr) throw insErr;
+
+        okBox.textContent = 'Uploaded: ' + title;
+        okBox.style.display = '';
+        // Reset partial form (keep type + property for batch uploads)
+        document.getElementById('u_title').value = '';
+        document.getElementById('u_description').value = '';
+        document.getElementById('u_file').value = '';
+        await loadDocs();
+      } catch (err) {
+        errBox.textContent = 'Upload failed: ' + (err?.message || err);
+        errBox.style.display = '';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Upload Document';
+      }
+    });
+
+    document.getElementById('uploadResetBtn').addEventListener('click', () => {
+      ['u_title','u_description','u_tax_year','u_file'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('u_property').value = '';
+      document.getElementById('u_lease').value = '';
+      document.getElementById('u_owner').value = '';
+      document.getElementById('u_type').value = 'lease';
+      document.getElementById('u_type').dispatchEvent(new Event('change'));
+    });
+
+    await loadPickerData();
+    await loadDocs();
+  })();
+</script>
+</body>
+</html>
