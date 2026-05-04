@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>New Owner Inquiry — InvestPro Realty</title>
+<meta name="description" content="Considering InvestPro for property management? Tell us about your property and we'll send a custom proposal within 1 business day." />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../images/favicon.png" />
+<script src="../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<div class="topbar"><div class="container"><span>📞 <a href="tel:7028165555">702-816-5555</a></span><span>3601 W Sahara Ave, Suite 207</span></div></div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Las Vegas, NV</span></a>
+    <button class="menu-toggle" aria-label="Toggle menu"><span></span></button>
+    <nav class="nav"><ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../property-management.html">Property Management</a></li>
+      <li><a href="../listings.html">Listings</a></li>
+      <li><a href="../sales.html">Buy / Sell</a></li>
+      <li><a href="../portal/login.html" class="btn btn-primary">Owner Login</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumbs"><a href="../index.html">Home</a> &nbsp;/&nbsp; <a href="../property-management.html">Property Management</a> &nbsp;/&nbsp; New Owner Inquiry</div>
+    <h1>Considering InvestPro for property management?</h1>
+    <p>Tell us about your property and we'll send a custom proposal within 1 business day. Our PM fee is a flat 8% with no setup fees, no markups on maintenance, and a transparent monthly statement.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container" style="max-width:780px;">
+
+    <!-- Quick value strip -->
+    <div class="grid grid-3" style="margin-bottom:2rem;">
+      <div class="card"><h4 style="color:#1F4FC1;">📊 Free rental analysis</h4><p style="font-size:.92rem; color:#555A6B; margin:0;">Recommended rent + projected income, returned within 1 business day.</p></div>
+      <div class="card"><h4 style="color:#1F4FC1;">💎 Earn LYMX cashback</h4><p style="font-size:.92rem; color:#555A6B; margin:0;">Every PM fee earns LYMX cashback redeemable across the LYMX network. <em>Powered by LYMX.</em></p></div>
+      <div class="card"><h4 style="color:#1F4FC1;">🤝 No setup fee</h4><p style="font-size:.92rem; color:#555A6B; margin:0;">Onboarding, marketing, lease prep — all included. You pay 8% only when rent is collected.</p></div>
+    </div>
+
+    <div class="form-card">
+      <div id="formError" style="display:none; background:#FEE2E2; color:#991B1B; padding:.75rem 1rem; border-radius:4px; margin-bottom:1rem; font-size:.92rem;"></div>
+
+      <form id="ownerForm">
+        <fieldset>
+          <legend>About You</legend>
+          <div class="form-row">
+            <div class="form-group"><label>First Name <span class="required">*</span></label><input type="text" id="first_name" required /></div>
+            <div class="form-group"><label>Last Name <span class="required">*</span></label><input type="text" id="last_name" required /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="email" required /></div>
+            <div class="form-group"><label>Phone <span class="required">*</span></label><input type="tel" id="phone" required /></div>
+          </div>
+          <div class="form-group">
+            <label>Best time to contact</label>
+            <select id="contact_time">
+              <option>Anytime</option>
+              <option>Morning</option>
+              <option>Afternoon</option>
+              <option>Evening</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>About the Property</legend>
+          <div class="form-group">
+            <label>Property Address <span class="required">*</span></label>
+            <input type="text" id="property_address" required placeholder="Street, city, ZIP" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Number of properties</label>
+              <select id="property_count">
+                <option value="1">1 (single property)</option>
+                <option value="2-5">2–5 properties</option>
+                <option value="6-10">6–10 properties</option>
+                <option value="11-25">11–25 properties</option>
+                <option value="25+">25+ portfolio</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Property type</label>
+              <select id="property_type">
+                <option value="single_family">Single-family home</option>
+                <option value="condo">Condo / Townhome</option>
+                <option value="duplex">Duplex / Triplex / Fourplex</option>
+                <option value="multi">Multi-unit (5+)</option>
+                <option value="mixed">Mixed portfolio</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Currently…</label>
+              <select id="current_status">
+                <option value="vacant_ready">Vacant — ready to rent</option>
+                <option value="vacant_needs_work">Vacant — needs some work</option>
+                <option value="occupied_self">Occupied (I rent it myself)</option>
+                <option value="occupied_other_pm">Occupied (other PM company)</option>
+                <option value="owner_occupied">I live there now (will move out)</option>
+                <option value="under_contract">Under contract — closing soon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Current monthly rent (if any)</label>
+              <input type="number" id="current_rent" placeholder="$" min="0" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group"><label>Beds</label><input type="number" id="bedrooms" min="0" max="20" /></div>
+            <div class="form-group"><label>Baths</label><input type="number" id="bathrooms" min="0" max="20" step=".5" /></div>
+            <div class="form-group"><label>Sq Ft</label><input type="number" id="sqft" min="0" /></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Service Interest</legend>
+          <div class="form-group">
+            <label>What's most important to you? (optional)</label>
+            <div style="display:flex; flex-direction:column; gap:.4rem; margin-top:.5rem;">
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="tenant_quality" style="width:auto;" /> Quality tenant placement</label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="vacancy" style="width:auto;" /> Minimizing vacancy / time-to-rent</label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="maintenance" style="width:auto;" /> Hands-off maintenance</label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="reporting" style="width:auto;" /> Clear monthly reporting / accounting</label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="legal" style="width:auto;" /> Eviction protection / legal compliance</label>
+              <label style="font-weight:400; display:flex; align-items:center; gap:.5rem;"><input type="checkbox" data-priority="growth" style="width:auto;" /> Growing my portfolio (off-market deals)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Anything else we should know?</label>
+            <textarea id="message" rows="3" placeholder="HOA quirks, current PM headaches, timing considerations, etc."></textarea>
+          </div>
+        </fieldset>
+
+        <!-- Honeypot -->
+        <input type="text" id="website" name="website" style="display:none;" tabindex="-1" autocomplete="off" />
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Request Free Proposal</button>
+        <p class="muted center mt-2" style="font-size:.85rem;">No obligation. We'll respond within 1 business day with a custom plan and projected income.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><a href="../index.html" class="brand"><img src="../images/logo.png" alt="InvestPro Realty" class="brand-logo" /><span class="brand-tag">Licensed in Nevada</span></a><p style="margin-top:1rem;font-size:.9rem;">3601 W Sahara Ave, Suite 207<br/>Las Vegas, NV 89102</p></div>
+    <div><h4>Services</h4><ul><li><a href="../property-management.html">Property Management</a></li><li><a href="../sales.html">Buy / Sell</a></li><li><a href="../listings.html">Listings</a></li></ul></div>
+    <div><h4>Owners</h4><ul><li><a href="owner-inquiry.html">Free Proposal</a></li><li><a href="../portal/login.html">Owner Login</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="../about.html">About</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+  </div>
+  <div class="container footer-bottom"><span>&copy; <span data-year>2026</span> InvestPro Realty. Equal Housing Opportunity.</span><span>Nevada Real Estate Division &nbsp;|&nbsp; Cashback rewards <strong style="color:#FFD66B;">Powered by LYMX</strong></span></div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+  document.getElementById('ownerForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const errBox = document.getElementById('formError');
+    const btn    = document.getElementById('submitBtn');
+    errBox.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const priorities = Array.from(document.querySelectorAll('[data-priority]:checked')).map(c => c.dataset.priority);
+
+    const payload = {
+      first_name:       document.getElementById('first_name').value.trim(),
+      last_name:        document.getElementById('last_name').value.trim(),
+      email:            document.getElementById('email').value.trim().toLowerCase(),
+      phone:            document.getElementById('phone').value.trim(),
+      contact_time:     document.getElementById('contact_time').value,
+      property_address: document.getElementById('property_address').value.trim(),
+      property_count:   document.getElementById('property_count').value,
+      property_type:    document.getElementById('property_type').value,
+      current_status:   document.getElementById('current_status').value,
+      current_rent:     document.getElementById('current_rent').value || null,
+      bedrooms:         document.getElementById('bedrooms').value || null,
+      bathrooms:        document.getElementById('bathrooms').value || null,
+      sqft:             document.getElementById('sqft').value || null,
+      priorities,
+      message:          document.getElementById('message').value.trim(),
+      source_url:       window.location.href,
+      website:          document.getElementById('website').value
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/owner-inquiry', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errBox.textContent = data.error || 'Sorry — could not send. Try again or call 702-816-5555.';
+        errBox.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Request Free Proposal';
+        return;
+      }
+      window.location.href = 'owner-inquiry-submitted.html?id=' + (data.id || '');
+    } catch (err) {
+      errBox.textContent = 'Network error. Please check your connection and try again, or call 702-816-5555.';
+      errBox.style.display = '';
+      btn.disabled = false;
+      btn.textContent = 'Request Free Proposal';
+    }
+  });
+</script>
+</body>
+</html>
