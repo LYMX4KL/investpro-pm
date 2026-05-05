@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Outreach — InvestPro Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="../../images/favicon.png" />
+<script src="../../js/preview-gate.js"></script>
+<link rel="stylesheet" href="../../css/styles.css" />
+<link rel="stylesheet" href="../../css/dashboard.css" />
+<style>
+  .tabs { display:flex; gap:.25rem; border-bottom:2px solid #E5E7EB; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .tab-btn { padding:.6rem 1rem; background:none; border:none; cursor:pointer; font-family:inherit; font-size:.95rem; font-weight:600; color:#6B7280; border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .tab-btn:hover { color:#1F4FC1; }
+  .tab-btn.active { color:#1F4FC1; border-bottom-color:#1F4FC1; }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+  .stat-row { display:flex; gap:.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .stat-box { background:#fff; border:1px solid #DDE3F0; border-radius:6px; padding:.85rem 1.1rem; min-width:140px; flex:1; }
+  .stat-box .label { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6B7280; font-weight:600; }
+  .stat-box .value { font-size:1.5rem; font-weight:700; color:#1F4FC1; line-height:1.1; }
+  .stat-box.amber .value { color:#92400E; }
+  .stat-box.green .value { color:#065F46; }
+  .stat-box.red .value { color:#B0342B; }
+  .em-table { width:100%; border-collapse:collapse; font-size:.92rem; background:#fff; }
+  .em-table th, .em-table td { padding:.65rem .65rem; border-bottom:1px solid #E5E7EB; vertical-align:top; text-align:left; }
+  .em-table th { background:#F7F8FB; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:#555A6B; font-weight:600; }
+  .em-table tr:hover { background:#F7F8FB; }
+  .pill { display:inline-block; padding:.18rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .pill.s-active     { background:#D1FAE5; color:#065F46; }
+  .pill.s-draft      { background:#F3F4F6; color:#4B5563; }
+  .pill.s-scheduled  { background:#FEF3C7; color:#92400E; }
+  .pill.s-sending    { background:#DBEAFE; color:#1E40AF; }
+  .pill.s-sent       { background:#D1FAE5; color:#065F46; }
+  .pill.s-paused     { background:#FEF3C7; color:#92400E; }
+  .pill.s-archived   { background:#F3F4F6; color:#4B5563; }
+  .pill.s-bounced    { background:#FEE2E2; color:#B0342B; }
+  .pill.s-complained { background:#FEE2E2; color:#B0342B; }
+  .pill.s-unsubscribed { background:#FEE2E2; color:#B0342B; }
+  .pill.s-queued     { background:#F3F4F6; color:#4B5563; }
+  .pill.s-delivered  { background:#D1FAE5; color:#065F46; }
+  .pill.s-failed     { background:#FEE2E2; color:#B0342B; }
+  .pill.s-skipped    { background:#F3F4F6; color:#4B5563; }
+  .pill.aud-recruiting { background:#E0E7FF; color:#3730A3; }
+  .pill.aud-owner      { background:#D1FAE5; color:#065F46; }
+  .pill.aud-seller     { background:#FEF3C7; color:#92400E; }
+  .pill.aud-buyer      { background:#DBEAFE; color:#1E40AF; }
+  .pill.aud-other      { background:#F3F4F6; color:#4B5563; }
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(20,52,137,.55); z-index:1000; align-items:flex-start; justify-content:center; padding:2rem 1rem; overflow-y:auto; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:8px; max-width:760px; width:100%; padding:1.75rem 2rem; box-shadow:0 12px 48px rgba(0,0,0,.25); }
+  .modal h2 { margin:0 0 .25rem; font-family:'Playfair Display',Georgia,serif; color:#1F4FC1; }
+  .modal-meta { color:#6B7280; font-size:.85rem; margin-bottom:1rem; }
+  .form-row { margin-bottom:1rem; }
+  .form-row label { display:block; font-size:.85rem; font-weight:600; color:#374151; margin-bottom:.25rem; }
+  .form-row input, .form-row select, .form-row textarea {
+    width:100%; padding:.55rem .75rem; border:1px solid #DDE3F0; border-radius:6px;
+    font-family:inherit; font-size:.92rem; box-sizing:border-box;
+  }
+  .form-row textarea { font-family:'SFMono-Regular',Consolas,monospace; }
+  .actions-row { display:flex; gap:.5rem; flex-wrap:wrap; padding-top:1rem; border-top:1px solid #E5E7EB; margin-top:1rem; }
+  .empty-state { text-align:center; padding:3rem 2rem; color:#6B7280; }
+  .err { background:#FEE2E2; color:#B0342B; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .ok { background:#D1FAE5; color:#065F46; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .info { background:#DBEAFE; color:#1E40AF; padding:.6rem .85rem; border-radius:4px; margin-bottom:1rem; }
+  .small { font-size:.82rem; }
+  .muted { color:#6B7280; }
+  .preview-pane {
+    background:#F7F8FB; border:1px solid #DDE3F0; border-radius:6px;
+    padding:1rem; font-size:.9rem; max-height:400px; overflow-y:auto;
+  }
+  .preview-pane .subject { font-weight:600; padding-bottom:.5rem; margin-bottom:.5rem; border-bottom:1px solid #DDE3F0; }
+</style>
+</head>
+<body class="dashboard-body">
+
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <a href="../../index.html" class="brand"><img src="../../images/logo.png" alt="InvestPro" class="brand-logo" /></a>
+    <nav class="dash-breadcrumb"><strong>Outreach</strong> · Cold prospecting via investproleads.com</nav>
+    <div class="dash-user">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">← Dashboard</a>
+      <span id="userBadge" class="muted small">Loading…</span>
+      <button id="signOutBtn" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main container" style="max-width:1280px;">
+  <div class="dash-title">
+    <h1>Outreach</h1>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <a href="../../docs/INVESTPRO-OUTREACH-SETUP.md" target="_blank" class="btn btn-outline btn-sm">📋 Setup runbook</a>
+    </div>
+  </div>
+
+  <div id="banner-area"></div>
+
+  <!-- Top-level stats -->
+  <div class="stat-row">
+    <div class="stat-box"><div class="label">Total leads</div><div class="value" id="statTotalLeads">—</div></div>
+    <div class="stat-box green"><div class="label">Active</div><div class="value" id="statActiveLeads">—</div></div>
+    <div class="stat-box"><div class="label">Lists</div><div class="value" id="statLists">—</div></div>
+    <div class="stat-box amber"><div class="label">In flight</div><div class="value" id="statQueued">—</div></div>
+    <div class="stat-box red"><div class="label">Suppressed</div><div class="value" id="statSuppressed">—</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="lists">Lead Lists</button>
+    <button class="tab-btn" data-tab="campaigns">Campaigns</button>
+    <button class="tab-btn" data-tab="sends">Sends</button>
+    <button class="tab-btn" data-tab="suppression">Suppression</button>
+  </div>
+
+  <!-- TAB 1: LEAD LISTS ─────────────────────────────────────── -->
+  <div class="tab-pane active" id="tab-lists">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+      <button id="newListBtn" class="btn btn-primary">+ New list</button>
+      <button id="importCsvBtn" class="btn btn-outline">⬆ Import CSV</button>
+      <button id="refreshListsBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+    </div>
+
+    <table class="em-table" id="listsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Audience</th>
+          <th>Total</th>
+          <th>Active</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="listsBody"><tr><td colspan="6" class="muted small">Loading…</td></tr></tbody>
+    </table>
+    <div id="listsEmpty" class="empty-state" style="display:none;">No lead lists yet. Click "+ New list" or "⬆ Import CSV" to start.</div>
+  </div>
+
+  <!-- TAB 2: CAMPAIGNS ───────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-campaigns">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+      <button id="newCampaignBtn" class="btn btn-primary">+ New campaign</button>
+      <button id="refreshCampaignsBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+    </div>
+
+    <table class="em-table" id="campaignsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Audience</th>
+          <th>List</th>
+          <th>Status</th>
+          <th>Sent</th>
+          <th>Delivered</th>
+          <th>Bounced</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody id="campaignsBody"><tr><td colspan="8" class="muted small">Loading…</td></tr></tbody>
+    </table>
+    <div id="campaignsEmpty" class="empty-state" style="display:none;">No campaigns yet. Create a list first, then click "+ New campaign".</div>
+  </div>
+
+  <!-- TAB 3: SENDS ──────────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-sends">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;">
+      <select id="sendsFilterStatus">
+        <option value="">All statuses</option>
+        <option value="queued">Queued</option>
+        <option value="sending">Sending</option>
+        <option value="sent">Sent</option>
+        <option value="delivered">Delivered</option>
+        <option value="bounced">Bounced</option>
+        <option value="complained">Complained</option>
+        <option value="failed">Failed</option>
+        <option value="skipped">Skipped</option>
+      </select>
+      <select id="sendsFilterCampaign">
+        <option value="">All campaigns</option>
+      </select>
+      <button id="refreshSendsBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+    </div>
+
+    <table class="em-table" id="sendsTable">
+      <thead>
+        <tr>
+          <th>To</th>
+          <th>Campaign</th>
+          <th>Status</th>
+          <th>Queued</th>
+          <th>Sent</th>
+          <th>Last event</th>
+        </tr>
+      </thead>
+      <tbody id="sendsBody"><tr><td colspan="6" class="muted small">Loading…</td></tr></tbody>
+    </table>
+    <div id="sendsEmpty" class="empty-state" style="display:none;">No sends recorded yet.</div>
+  </div>
+
+  <!-- TAB 4: SUPPRESSION ────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-suppression">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;">
+      <input type="search" id="suppressionSearch" placeholder="🔎 Search by email…" style="min-width:280px;flex:1;padding:.45rem .65rem;border:1px solid #DDE3F0;border-radius:4px;" />
+      <button id="refreshSuppressionBtn" class="btn btn-outline btn-sm">↻ Refresh</button>
+    </div>
+
+    <h3 style="margin-top:1rem;">Unsubscribes</h3>
+    <table class="em-table" id="unsubsTable">
+      <thead>
+        <tr><th>Email</th><th>Source</th><th>When</th><th>Reason</th></tr>
+      </thead>
+      <tbody id="unsubsBody"><tr><td colspan="4" class="muted small">Loading…</td></tr></tbody>
+    </table>
+
+    <h3 style="margin-top:2rem;">Bounces &amp; Complaints</h3>
+    <table class="em-table" id="bouncesTable">
+      <thead>
+        <tr><th>Email</th><th>Type</th><th>Subtype</th><th>When</th><th>Diagnostic</th></tr>
+      </thead>
+      <tbody id="bouncesBody"><tr><td colspan="5" class="muted small">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ───────────── New / Edit list modal ───────────── -->
+<div class="modal-bg" id="listModalBg">
+  <div class="modal" style="max-width:560px;">
+    <h2 id="listModalTitle">New lead list</h2>
+    <div class="modal-meta">A list is a named bucket of prospects. Campaigns send to one list at a time.</div>
+    <div id="listErr" class="err" style="display:none;"></div>
+    <div id="listOk"  class="ok"  style="display:none;"></div>
+
+    <div class="form-row">
+      <label>Name *</label>
+      <input type="text" id="list_name" placeholder="e.g., LV Owners 2026-Q2" />
+    </div>
+    <div class="form-row">
+      <label>Audience *</label>
+      <select id="list_audience">
+        <option value="recruiting">Recruiting (agent recruiting)</option>
+        <option value="owner" selected>Owner (PM service pitch)</option>
+        <option value="seller">Seller (listing opportunity)</option>
+        <option value="buyer">Buyer</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Description (optional)</label>
+      <input type="text" id="list_description" placeholder="Short note about source / criteria" />
+    </div>
+
+    <div class="actions-row">
+      <button type="button" id="listSubmitBtn" class="btn btn-primary">Save</button>
+      <button type="button" id="listCancelBtn" class="btn btn-outline">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────── Import CSV modal ───────────── -->
+<div class="modal-bg" id="importModalBg">
+  <div class="modal" style="max-width:780px;">
+    <h2>Import leads from CSV</h2>
+    <div class="modal-meta">Paste CSV content or upload a file. Required column: <code>email</code>. Recognized: first_name, last_name, phone, property_address, property_city, property_state, property_zip, notes.</div>
+    <div id="importErr" class="err" style="display:none;"></div>
+    <div id="importOk"  class="ok"  style="display:none;"></div>
+
+    <div class="form-row">
+      <label>Add to list *</label>
+      <select id="import_list_id">
+        <option value="">— select an existing list, or create new below —</option>
+      </select>
+    </div>
+
+    <div id="newListSection" style="border:1px dashed #DDE3F0;padding:.75rem 1rem;border-radius:6px;margin-bottom:1rem;">
+      <div class="muted small" style="margin-bottom:.5rem;">— Or create a new list:</div>
+      <div class="form-row">
+        <label>New list name</label>
+        <input type="text" id="import_new_list_name" placeholder="e.g., LV Owners 2026-Q2" />
+      </div>
+      <div class="form-row">
+        <label>Audience</label>
+        <select id="import_new_list_audience">
+          <option value="recruiting">Recruiting</option>
+          <option value="owner" selected>Owner</option>
+          <option value="seller">Seller</option>
+          <option value="buyer">Buyer</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>CSV file (or paste below)</label>
+      <input type="file" id="csv_file" accept=".csv,text/csv" />
+    </div>
+    <div class="form-row">
+      <label>CSV content</label>
+      <textarea id="csv_content" rows="10" placeholder="email,first_name,last_name,phone,property_address&#10;jane@example.com,Jane,Doe,7025550101,123 Main St"></textarea>
+    </div>
+    <div class="form-row">
+      <label>Source label</label>
+      <input type="text" id="csv_source" value="manual_csv" placeholder="e.g., redx, mls_scraper, manual_csv" />
+    </div>
+
+    <div class="actions-row">
+      <button type="button" id="importDryRunBtn" class="btn btn-outline">Preview (dry run)</button>
+      <button type="button" id="importSubmitBtn" class="btn btn-primary">Import</button>
+      <button type="button" id="importCancelBtn" class="btn btn-outline">Cancel</button>
+    </div>
+
+    <div id="importResult" style="margin-top:1rem;"></div>
+  </div>
+</div>
+
+<!-- ───────────── New campaign modal ───────────── -->
+<div class="modal-bg" id="campaignModalBg">
+  <div class="modal" style="max-width:860px;">
+    <h2 id="campaignModalTitle">New campaign</h2>
+    <div class="modal-meta">A campaign sends ONE message to every active lead in a list. Use template variables: <code>{first_name}</code>, <code>{last_name}</code>, <code>{property_address}</code>, <code>{unsubscribe_url}</code>.</div>
+    <div id="campErr" class="err" style="display:none;"></div>
+    <div id="campOk"  class="ok"  style="display:none;"></div>
+
+    <div class="form-row">
+      <label>Name *</label>
+      <input type="text" id="camp_name" placeholder="e.g., Owner outreach 2026-05-A" />
+    </div>
+    <div class="form-row">
+      <label>Lead list *</label>
+      <select id="camp_list_id"><option value="">— pick a list —</option></select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+      <div class="form-row">
+        <label>From address *</label>
+        <input type="email" id="camp_from_address" placeholder="kenny@investproleads.com" />
+      </div>
+      <div class="form-row">
+        <label>From display name *</label>
+        <input type="text" id="camp_from_name" placeholder="Kenny Lin" />
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Reply-To *</label>
+      <input type="email" id="camp_reply_to" placeholder="kenny@investprorealty.net" />
+      <div class="muted small" style="margin-top:.2rem;">Replies to this address route via Cloudflare back to the agent's normal inbox.</div>
+    </div>
+
+    <div class="form-row">
+      <label>Subject template *</label>
+      <input type="text" id="camp_subject" placeholder="Hi {first_name}, quick question about {property_address}" />
+    </div>
+    <div class="form-row">
+      <label>Body (HTML or plain) *</label>
+      <textarea id="camp_body" rows="10" placeholder="Hi {first_name},&#10;&#10;Saw you own {property_address}…&#10;&#10;{unsubscribe_url}"></textarea>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;">
+      <div class="form-row">
+        <label>Daily send cap</label>
+        <input type="number" id="camp_daily_cap" value="250" min="1" max="5000" />
+      </div>
+      <div class="form-row">
+        <label>Per-second cap</label>
+        <input type="number" id="camp_per_sec_cap" value="1" min="1" max="14" />
+      </div>
+      <div class="form-row">
+        <label>Re-send suppression (days)</label>
+        <input type="number" id="camp_suppression_days" value="90" min="0" max="365" />
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button type="button" id="campPreviewBtn" class="btn btn-outline">Preview</button>
+      <button type="button" id="campSaveDraftBtn" class="btn btn-outline">Save draft</button>
+      <button type="button" id="campSaveQueueBtn" class="btn btn-primary">Save &amp; queue all</button>
+      <button type="button" id="campCancelBtn" class="btn btn-outline">Cancel</button>
+    </div>
+
+    <div id="campPreview" style="margin-top:1rem;display:none;">
+      <h3 style="margin-bottom:.5rem;">Preview (first 3 leads in list)</h3>
+      <div id="campPreviewBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/auth.js"></script>
+<script type="module">
+(async function () {
+  const u = await window.investproAuth.requireRole(['broker', 'compliance', 'admin_onsite']);
+  if (!u) return;
+  document.getElementById('userBadge').textContent = u.name + ' · ' + u.role;
+  document.getElementById('signOutBtn').addEventListener('click', () => window.investproAuth.signOut());
+
+  if (window.investproAuth.isDemoMode()) {
+    document.getElementById('banner-area').innerHTML = '<div class="info">Demo mode — connect Supabase to see real outreach data.</div>';
+    return;
+  }
+
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const authSrc = await fetch('/js/auth.js').then(r => r.text());
+  const url = authSrc.match(/SUPABASE_URL\s*=\s*'([^']+)'/)[1];
+  const key = authSrc.match(/SUPABASE_ANON_KEY\s*=\s*'([^']+)'/)[1];
+  const supa = createClient(url, key);
+
+  // ─────────────── Tab switching ───────────────
+  document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+    if      (b.dataset.tab === 'campaigns')   loadCampaigns();
+    else if (b.dataset.tab === 'sends')       loadSends();
+    else if (b.dataset.tab === 'suppression') loadSuppression();
+  }));
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ─────────────── Top-level stats ───────────────
+  async function refreshStats() {
+    const [leads, lists, queued, suppressed] = await Promise.all([
+      supa.from('leads').select('id, status, deleted_at').is('deleted_at', null),
+      supa.from('lead_lists').select('id, deleted_at').is('deleted_at', null),
+      supa.from('outreach_sends').select('id, status').eq('status', 'queued'),
+      supa.from('leads').select('id, status').is('deleted_at', null).neq('status', 'active')
+    ]);
+    document.getElementById('statTotalLeads').textContent  = leads.data?.length || 0;
+    document.getElementById('statActiveLeads').textContent = (leads.data || []).filter(l => l.status === 'active').length;
+    document.getElementById('statLists').textContent       = lists.data?.length || 0;
+    document.getElementById('statQueued').textContent      = queued.data?.length || 0;
+    document.getElementById('statSuppressed').textContent  = suppressed.data?.length || 0;
+  }
+
+  // ─────────────── Lead Lists tab ───────────────
+  async function loadLists() {
+    document.getElementById('listsBody').innerHTML = '<tr><td colspan="6" class="muted small">Loading…</td></tr>';
+    const { data, error } = await supa.from('lead_lists')
+      .select('id, name, description, audience_type, lead_count, active_lead_count, created_at')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('listsBody').innerHTML = '<tr><td colspan="6" class="err">Error: ' + escapeHtml(error.message) + '</td></tr>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      document.getElementById('listsBody').innerHTML = '';
+      document.getElementById('listsEmpty').style.display = '';
+      return;
+    }
+    document.getElementById('listsEmpty').style.display = 'none';
+    document.getElementById('listsBody').innerHTML = data.map(l => `
+      <tr>
+        <td><strong>${escapeHtml(l.name)}</strong>${l.description ? '<br/><small class="muted">' + escapeHtml(l.description) + '</small>' : ''}</td>
+        <td><span class="pill aud-${l.audience_type}">${l.audience_type}</span></td>
+        <td>${l.lead_count}</td>
+        <td>${l.active_lead_count}</td>
+        <td>${new Date(l.created_at).toLocaleDateString()}</td>
+        <td><button class="btn btn-outline btn-sm" data-import-into="${l.id}">+ Add leads</button></td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('[data-import-into]').forEach(btn => {
+      btn.addEventListener('click', () => openImport(btn.dataset.importInto));
+    });
+
+    // Refresh dropdowns that depend on lists
+    populateListDropdowns(data);
+  }
+
+  function populateListDropdowns(lists) {
+    const opts = '<option value="">— select an existing list, or create new below —</option>'
+      + lists.map(l => `<option value="${l.id}">${escapeHtml(l.name)} (${l.lead_count})</option>`).join('');
+    document.getElementById('import_list_id').innerHTML = opts;
+    const campOpts = '<option value="">— pick a list —</option>'
+      + lists.map(l => `<option value="${l.id}">${escapeHtml(l.name)} (${l.active_lead_count} active)</option>`).join('');
+    document.getElementById('camp_list_id').innerHTML = campOpts;
+  }
+
+  // ─────────────── New list modal ───────────────
+  function openNewList() {
+    document.getElementById('listErr').style.display = 'none';
+    document.getElementById('listOk').style.display = 'none';
+    document.getElementById('list_name').value = '';
+    document.getElementById('list_description').value = '';
+    document.getElementById('list_audience').value = 'owner';
+    document.getElementById('listModalBg').classList.add('show');
+  }
+  document.getElementById('newListBtn').addEventListener('click', openNewList);
+  document.getElementById('listCancelBtn').addEventListener('click', () => document.getElementById('listModalBg').classList.remove('show'));
+  document.getElementById('listSubmitBtn').addEventListener('click', async () => {
+    const name = document.getElementById('list_name').value.trim();
+    if (!name) {
+      document.getElementById('listErr').textContent = 'Name required.';
+      document.getElementById('listErr').style.display = '';
+      return;
+    }
+    const { error } = await supa.from('lead_lists').insert({
+      name,
+      description: document.getElementById('list_description').value.trim() || null,
+      audience_type: document.getElementById('list_audience').value,
+      created_by_id: u.id
+    });
+    if (error) {
+      document.getElementById('listErr').textContent = error.message;
+      document.getElementById('listErr').style.display = '';
+      return;
+    }
+    document.getElementById('listOk').textContent = '✓ List created.';
+    document.getElementById('listOk').style.display = '';
+    await loadLists();
+    setTimeout(() => document.getElementById('listModalBg').classList.remove('show'), 800);
+  });
+
+  // ─────────────── Import CSV modal ───────────────
+  function openImport(presetListId) {
+    document.getElementById('importErr').style.display = 'none';
+    document.getElementById('importOk').style.display = 'none';
+    document.getElementById('importResult').innerHTML = '';
+    document.getElementById('csv_content').value = '';
+    document.getElementById('csv_source').value = 'manual_csv';
+    document.getElementById('import_new_list_name').value = '';
+    if (presetListId) document.getElementById('import_list_id').value = presetListId;
+    else              document.getElementById('import_list_id').value = '';
+    document.getElementById('importModalBg').classList.add('show');
+  }
+  document.getElementById('importCsvBtn').addEventListener('click', () => openImport(null));
+  document.getElementById('importCancelBtn').addEventListener('click', () => document.getElementById('importModalBg').classList.remove('show'));
+
+  document.getElementById('csv_file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    document.getElementById('csv_content').value = text;
+  });
+
+  async function runImport(dryRun) {
+    document.getElementById('importErr').style.display = 'none';
+    document.getElementById('importOk').style.display = 'none';
+    document.getElementById('importResult').innerHTML = '';
+
+    const csv = document.getElementById('csv_content').value;
+    const list_id = document.getElementById('import_list_id').value || null;
+    const new_name = document.getElementById('import_new_list_name').value.trim();
+    if (!csv) {
+      document.getElementById('importErr').textContent = 'Paste CSV content or upload a file.';
+      document.getElementById('importErr').style.display = '';
+      return;
+    }
+    if (!list_id && !new_name) {
+      document.getElementById('importErr').textContent = 'Pick an existing list OR enter a new list name.';
+      document.getElementById('importErr').style.display = '';
+      return;
+    }
+
+    const payload = {
+      csv,
+      lead_list_id: list_id,
+      list_name: list_id ? null : new_name,
+      list_audience_type: document.getElementById('import_new_list_audience').value,
+      source: document.getElementById('csv_source').value.trim() || 'manual_csv',
+      dry_run: dryRun
+    };
+
+    const { data: { session } } = await supa.auth.getSession();
+    const r = await fetch('/.netlify/functions/import-leads-csv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) {
+      document.getElementById('importErr').textContent = j.error || ('HTTP ' + r.status);
+      document.getElementById('importErr').style.display = '';
+      return;
+    }
+
+    document.getElementById('importResult').innerHTML = `
+      <div class="ok">
+        ${dryRun ? '<strong>Dry run:</strong> ' : ''}
+        ${j.valid_rows} valid rows of ${j.total_rows}.
+        ${dryRun ? '' : `<br/>New leads: <strong>${j.new_leads}</strong>. Updated: <strong>${j.updated_leads}</strong>. Added to list: <strong>${j.added_to_list}</strong>. Already in list: ${j.already_in_list}.`}
+        ${j.skipped_invalid ? `<br/>Skipped (invalid): ${j.skipped_invalid}` : ''}
+        ${j.errors && j.errors.length ? `<br/><details><summary>${j.errors.length} errors</summary><pre>${escapeHtml(JSON.stringify(j.errors, null, 2))}</pre></details>` : ''}
+      </div>
+    `;
+    if (!dryRun) await loadLists();
+  }
+  document.getElementById('importDryRunBtn').addEventListener('click', () => runImport(true));
+  document.getElementById('importSubmitBtn').addEventListener('click', () => runImport(false));
+
+  // ─────────────── Campaigns tab ───────────────
+  async function loadCampaigns() {
+    document.getElementById('campaignsBody').innerHTML = '<tr><td colspan="8" class="muted small">Loading…</td></tr>';
+    const { data, error } = await supa.from('outreach_campaigns')
+      .select('id, name, audience_type, status, total_sent, total_delivered, total_bounced, created_at, lead_lists(name)')
+      .order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('campaignsBody').innerHTML = '<tr><td colspan="8" class="err">Error: ' + escapeHtml(error.message) + '</td></tr>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      document.getElementById('campaignsBody').innerHTML = '';
+      document.getElementById('campaignsEmpty').style.display = '';
+      return;
+    }
+    document.getElementById('campaignsEmpty').style.display = 'none';
+    document.getElementById('campaignsBody').innerHTML = data.map(c => `
+      <tr>
+        <td><strong>${escapeHtml(c.name)}</strong></td>
+        <td><span class="pill aud-${c.audience_type}">${c.audience_type}</span></td>
+        <td>${escapeHtml(c.lead_lists?.name || '—')}</td>
+        <td><span class="pill s-${c.status}">${c.status}</span></td>
+        <td>${c.total_sent}</td>
+        <td>${c.total_delivered}</td>
+        <td>${c.total_bounced}</td>
+        <td>${new Date(c.created_at).toLocaleDateString()}</td>
+      </tr>
+    `).join('');
+
+    // Populate sends-tab campaign filter
+    const sendsCampOpts = '<option value="">All campaigns</option>'
+      + data.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    document.getElementById('sendsFilterCampaign').innerHTML = sendsCampOpts;
+  }
+
+  function openNewCampaign() {
+    document.getElementById('campErr').style.display = 'none';
+    document.getElementById('campOk').style.display = 'none';
+    document.getElementById('campPreview').style.display = 'none';
+    ['camp_name','camp_subject','camp_body'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('camp_from_address').value = 'kenny@investproleads.com';
+    document.getElementById('camp_from_name').value = u.name || 'InvestPro';
+    document.getElementById('camp_reply_to').value = 'kenny@investprorealty.net';
+    document.getElementById('camp_daily_cap').value = 250;
+    document.getElementById('camp_per_sec_cap').value = 1;
+    document.getElementById('camp_suppression_days').value = 90;
+    document.getElementById('campaignModalBg').classList.add('show');
+  }
+  document.getElementById('newCampaignBtn').addEventListener('click', openNewCampaign);
+  document.getElementById('campCancelBtn').addEventListener('click', () => document.getElementById('campaignModalBg').classList.remove('show'));
+
+  function getCampPayload(status) {
+    return {
+      name:                     document.getElementById('camp_name').value.trim(),
+      audience_type:            'other',  // overridden below from list
+      lead_list_id:             document.getElementById('camp_list_id').value || null,
+      from_address:             document.getElementById('camp_from_address').value.trim(),
+      from_display_name:        document.getElementById('camp_from_name').value.trim(),
+      reply_to_address:         document.getElementById('camp_reply_to').value.trim(),
+      subject_template:         document.getElementById('camp_subject').value,
+      body_html_template:       document.getElementById('camp_body').value,
+      body_text_template:       null,
+      daily_send_cap:           parseInt(document.getElementById('camp_daily_cap').value, 10) || 250,
+      per_second_cap:           parseInt(document.getElementById('camp_per_sec_cap').value, 10) || 1,
+      resend_suppression_days:  parseInt(document.getElementById('camp_suppression_days').value, 10) || 90,
+      provider:                 'resend',
+      status,
+      created_by_id:            u.id
+    };
+  }
+
+  async function saveCampaign(queueImmediately) {
+    document.getElementById('campErr').style.display = 'none';
+    document.getElementById('campOk').style.display = 'none';
+    const p = getCampPayload(queueImmediately ? 'scheduled' : 'draft');
+    if (!p.name || !p.lead_list_id || !p.from_address || !p.reply_to_address || !p.subject_template || !p.body_html_template) {
+      document.getElementById('campErr').textContent = 'Fill all required fields.';
+      document.getElementById('campErr').style.display = '';
+      return;
+    }
+    // Inherit audience_type from list
+    const { data: list } = await supa.from('lead_lists').select('audience_type').eq('id', p.lead_list_id).single();
+    if (list) p.audience_type = list.audience_type;
+
+    const { data: created, error } = await supa.from('outreach_campaigns').insert(p).select('id').single();
+    if (error) {
+      document.getElementById('campErr').textContent = error.message;
+      document.getElementById('campErr').style.display = '';
+      return;
+    }
+    if (queueImmediately) {
+      // Hit the server-side queue function which creates outreach_sends rows
+      // for every active lead in the list (respecting suppression).
+      const { data: { session } } = await supa.auth.getSession();
+      const r = await fetch('/.netlify/functions/queue-outreach-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ campaign_id: created.id })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) {
+        document.getElementById('campErr').textContent = 'Saved as draft, but queueing failed: ' + (j.error || ('HTTP ' + r.status));
+        document.getElementById('campErr').style.display = '';
+      } else {
+        document.getElementById('campOk').textContent =
+          `✓ Campaign queued — ${j.queued} sends scheduled` +
+          (j.skipped_already_suppressed ? `, ${j.skipped_already_suppressed} skipped (already suppressed)` : '') +
+          '. The dispatch function picks up every 10 minutes and sends under the daily/per-second caps.';
+        document.getElementById('campOk').style.display = '';
+      }
+    } else {
+      document.getElementById('campOk').textContent = '✓ Draft saved.';
+      document.getElementById('campOk').style.display = '';
+    }
+    await loadCampaigns();
+    setTimeout(() => document.getElementById('campaignModalBg').classList.remove('show'), 2000);
+  }
+  document.getElementById('campSaveDraftBtn').addEventListener('click', () => saveCampaign(false));
+  document.getElementById('campSaveQueueBtn').addEventListener('click', () => saveCampaign(true));
+
+  document.getElementById('campPreviewBtn').addEventListener('click', async () => {
+    const list_id = document.getElementById('camp_list_id').value;
+    if (!list_id) {
+      document.getElementById('campErr').textContent = 'Pick a list to preview against.';
+      document.getElementById('campErr').style.display = '';
+      return;
+    }
+    const { data: members } = await supa.from('lead_list_members')
+      .select('lead_id, leads(first_name, last_name, email, property_address)')
+      .eq('lead_list_id', list_id)
+      .limit(3);
+    const subject = document.getElementById('camp_subject').value;
+    const body = document.getElementById('camp_body').value;
+    const previews = (members || []).map(m => {
+      const l = m.leads || {};
+      const ctx = {
+        first_name: l.first_name || 'Friend',
+        last_name:  l.last_name  || '',
+        property_address: l.property_address || 'your property',
+        unsubscribe_url: '[unsubscribe link will be inserted at send time]'
+      };
+      const renderedSubj = subject.replace(/\{(\w+)\}/g, (_, k) => ctx[k] || '');
+      const renderedBody = body.replace(/\{(\w+)\}/g, (_, k) => ctx[k] || '');
+      return `
+        <div class="preview-pane" style="margin-bottom:.75rem;">
+          <div class="muted small">→ ${escapeHtml(l.email)}</div>
+          <div class="subject">${escapeHtml(renderedSubj)}</div>
+          <pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(renderedBody)}</pre>
+        </div>
+      `;
+    }).join('') || '<div class="info">No leads in this list yet — add some first.</div>';
+    document.getElementById('campPreviewBody').innerHTML = previews;
+    document.getElementById('campPreview').style.display = '';
+  });
+
+  // ─────────────── Sends tab ───────────────
+  async function loadSends() {
+    document.getElementById('sendsBody').innerHTML = '<tr><td colspan="6" class="muted small">Loading…</td></tr>';
+    const status = document.getElementById('sendsFilterStatus').value;
+    const camp   = document.getElementById('sendsFilterCampaign').value;
+    let q = supa.from('outreach_sends')
+      .select('id, to_email, status, queued_at, sent_at, last_event_at, outreach_campaigns(name)')
+      .order('queued_at', { ascending: false })
+      .limit(200);
+    if (status) q = q.eq('status', status);
+    if (camp)   q = q.eq('campaign_id', camp);
+    const { data, error } = await q;
+    if (error) {
+      document.getElementById('sendsBody').innerHTML = '<tr><td colspan="6" class="err">Error: ' + escapeHtml(error.message) + '</td></tr>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      document.getElementById('sendsBody').innerHTML = '';
+      document.getElementById('sendsEmpty').style.display = '';
+      return;
+    }
+    document.getElementById('sendsEmpty').style.display = 'none';
+    document.getElementById('sendsBody').innerHTML = data.map(s => `
+      <tr>
+        <td>${escapeHtml(s.to_email)}</td>
+        <td>${escapeHtml(s.outreach_campaigns?.name || '—')}</td>
+        <td><span class="pill s-${s.status}">${s.status}</span></td>
+        <td>${s.queued_at ? new Date(s.queued_at).toLocaleString() : '—'}</td>
+        <td>${s.sent_at  ? new Date(s.sent_at).toLocaleString()  : '—'}</td>
+        <td>${s.last_event_at ? new Date(s.last_event_at).toLocaleString() : '—'}</td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('sendsFilterStatus').addEventListener('change', loadSends);
+  document.getElementById('sendsFilterCampaign').addEventListener('change', loadSends);
+  document.getElementById('refreshSendsBtn').addEventListener('click', loadSends);
+
+  // ─────────────── Suppression tab ───────────────
+  async function loadSuppression() {
+    const search = (document.getElementById('suppressionSearch').value || '').toLowerCase().trim();
+    let unsubsQ = supa.from('outreach_unsubscribes')
+      .select('email, source, reason, created_at')
+      .order('created_at', { ascending: false }).limit(200);
+    let bouncesQ = supa.from('outreach_bounces')
+      .select('email, bounce_type, bounce_subtype, diagnostic_code, created_at')
+      .order('created_at', { ascending: false }).limit(200);
+    if (search) {
+      unsubsQ = unsubsQ.ilike('email', `%${search}%`);
+      bouncesQ = bouncesQ.ilike('email', `%${search}%`);
+    }
+    const [unsubs, bounces] = await Promise.all([unsubsQ, bouncesQ]);
+
+    document.getElementById('unsubsBody').innerHTML = (unsubs.data || []).length === 0
+      ? '<tr><td colspan="4" class="muted small">No unsubscribes recorded.</td></tr>'
+      : unsubs.data.map(u => `
+        <tr>
+          <td>${escapeHtml(u.email)}</td>
+          <td><span class="pill s-unsubscribed">${u.source}</span></td>
+          <td>${new Date(u.created_at).toLocaleString()}</td>
+          <td>${escapeHtml(u.reason || '')}</td>
+        </tr>
+      `).join('');
+
+    document.getElementById('bouncesBody').innerHTML = (bounces.data || []).length === 0
+      ? '<tr><td colspan="5" class="muted small">No bounces recorded.</td></tr>'
+      : bounces.data.map(b => `
+        <tr>
+          <td>${escapeHtml(b.email)}</td>
+          <td><span class="pill s-bounced">${b.bounce_type}</span></td>
+          <td>${escapeHtml(b.bounce_subtype || '')}</td>
+          <td>${new Date(b.created_at).toLocaleString()}</td>
+          <td><small class="muted">${escapeHtml(b.diagnostic_code || '')}</small></td>
+        </tr>
+      `).join('');
+  }
+  document.getElementById('suppressionSearch').addEventListener('input', () => {
+    clearTimeout(window._suppDebounce);
+    window._suppDebounce = setTimeout(loadSuppression, 300);
+  });
+  document.getElementById('refreshSuppressionBtn').addEventListener('click', loadSuppression);
+
+  // ─────────────── Refresh buttons ───────────────
+  document.getElementById('refreshListsBtn').addEventListener('click', () => { loadLists(); refreshStats(); });
+  document.getElementById('refreshCampaignsBtn').addEventListener('click', loadCampaigns);
+
+  // ─────────────── Init ───────────────
+  refreshStats();
+  loadLists();
+})();
+</script>
+</body>
+</html>
