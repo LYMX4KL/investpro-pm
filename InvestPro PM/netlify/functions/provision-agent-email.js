@@ -7,10 +7,14 @@
  * an application's status to "joined". Does the work documented in
  * docs/COMPANY-EMAIL-ARCHITECTURE.md, Section 3.
  *
- * Request body:
- *   { application_id: UUID }
- *     OR
- *   { profile_id: UUID, company_slug: 'investpro', forward_to: 'personal@gmail.com' }
+ * Request body — three modes:
+ *   1. From application:
+ *        { application_id: UUID }
+ *   2. Direct staff (re-provision / manual):
+ *        { profile_id, company_slug, forward_to, local_part_override? }
+ *   3. Shared role-based inbox (marketing@, info@, support@):
+ *        { shared: true, company_slug, local_part, forward_to_list: [..1-5..],
+ *          display_name? }
  *
  * Auth: caller must be broker / compliance / admin_onsite (verified via JWT).
  *
@@ -60,13 +64,34 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch { return cors(400, JSON.stringify({ ok: false, error: 'Invalid JSON' })); }
 
-  const application_id = body.application_id;
-  const profile_id_in  = body.profile_id;
-  const company_slug   = (body.company_slug || 'investpro').toLowerCase();
-  const forward_to_in  = body.forward_to;
+  const application_id      = body.application_id;
+  const profile_id_in       = body.profile_id;
+  const company_slug        = (body.company_slug || 'investpro').toLowerCase();
+  const forward_to_in       = body.forward_to;
+  const local_part_override = (body.local_part_override || '').toLowerCase().trim();
+  const isShared            = !!body.shared;
+  const shared_local_part   = (body.local_part || '').toLowerCase().trim();
+  const shared_forward_list = Array.isArray(body.forward_to_list)
+    ? body.forward_to_list.map(s => String(s).trim()).filter(Boolean)
+    : [];
+  const shared_display_name = (body.display_name || '').trim();
 
-  if (!application_id && !profile_id_in) {
-    return cors(400, JSON.stringify({ ok: false, error: 'Need application_id OR profile_id' }));
+  if (!isShared && !application_id && !profile_id_in) {
+    return cors(400, JSON.stringify({ ok: false, error: 'Need application_id, profile_id, or shared:true' }));
+  }
+  if (isShared) {
+    if (!shared_local_part || !/^[a-z0-9._-]+$/.test(shared_local_part)) {
+      return cors(400, JSON.stringify({ ok: false, error: 'shared local_part must be lowercase a-z0-9._-' }));
+    }
+    if (shared_forward_list.length === 0) {
+      return cors(400, JSON.stringify({ ok: false, error: 'shared forward_to_list is required (1-5 addresses)' }));
+    }
+    if (shared_forward_list.length > 5) {
+      return cors(400, JSON.stringify({ ok: false, error: 'Cloudflare allows at most 5 destinations per route' }));
+    }
+  }
+  if (local_part_override && !/^[a-z0-9._-]+$/.test(local_part_override)) {
+    return cors(400, JSON.stringify({ ok: false, error: 'local_part_override must be lowercase a-z0-9._-' }));
   }
 
   // ---- 3. Verify caller ----
@@ -96,7 +121,13 @@ exports.handler = async (event) => {
   let profile_id, first_name, last_name, forward_to;
   let source_application_id = null;
 
-  if (application_id) {
+  if (isShared) {
+    // Skip per-profile resolution; we'll handle shared-inbox provisioning below.
+    profile_id = null;
+    first_name = shared_display_name || shared_local_part;
+    last_name  = '';
+    forward_to = shared_forward_list[0];
+  } else if (application_id) {
     const { data: app, error } = await admin
       .from('agent_applications')
       .select('id, first_name, last_name, email, status')
@@ -159,44 +190,73 @@ exports.handler = async (event) => {
   }
 
   // ---- 6. Pick local-part ----
-  const { data: lpData, error: lpErr } = await admin.rpc('agent_email_pick_local_part', {
-    p_first_name: first_name,
-    p_last_name:  last_name,
-    p_domain:     company.primary_domain
-  });
-  if (lpErr) {
-    return cors(500, JSON.stringify({ ok: false, error: 'Could not pick a local-part: ' + lpErr.message }));
+  let local_part;
+  if (isShared) {
+    local_part = shared_local_part;
+  } else if (local_part_override) {
+    local_part = local_part_override;
+  } else {
+    const { data: lpData, error: lpErr } = await admin.rpc('agent_email_pick_local_part', {
+      p_first_name: first_name,
+      p_last_name:  last_name,
+      p_domain:     company.primary_domain
+    });
+    if (lpErr) {
+      return cors(500, JSON.stringify({ ok: false, error: 'Could not pick a local-part: ' + lpErr.message }));
+    }
+    local_part = lpData;
   }
-  const local_part = lpData;
   const full_email = `${local_part}@${company.primary_domain}`;
 
   // ---- 7. Check for existing record ----
-  const { data: existing } = await admin
-    .from('agent_emails')
-    .select('id, full_email, status')
-    .eq('profile_id', profile_id)
-    .eq('company_id', company.id)
-    .maybeSingle();
-  if (existing) {
-    return cors(409, JSON.stringify({
-      ok: false,
-      error: `That agent already has a company email at this company: ${existing.full_email} (status: ${existing.status}). Use the regenerate flow instead.`,
-      existing
-    }));
+  if (isShared || local_part_override) {
+    // Either path could collide on full_email (UNIQUE)
+    const { data: existingFull } = await admin
+      .from('agent_emails')
+      .select('id, full_email, status')
+      .ilike('full_email', full_email)
+      .maybeSingle();
+    if (existingFull) {
+      return cors(409, JSON.stringify({
+        ok: false,
+        error: `Email ${full_email} already exists (status: ${existingFull.status}).`,
+        existing: existingFull
+      }));
+    }
+  } else {
+    const { data: existing } = await admin
+      .from('agent_emails')
+      .select('id, full_email, status')
+      .eq('profile_id', profile_id)
+      .eq('company_id', company.id)
+      .maybeSingle();
+    if (existing) {
+      return cors(409, JSON.stringify({
+        ok: false,
+        error: `That agent already has a company email at this company: ${existing.full_email} (status: ${existing.status}). Use the regenerate flow instead.`,
+        existing
+      }));
+    }
   }
 
   // ---- 8. INSERT agent_emails row (pending) ----
+  const insertPayload = {
+    profile_id,
+    company_id: company.id,
+    local_part,
+    full_email,
+    forward_to,
+    source_application_id,
+    status: 'pending'
+  };
+  if (isShared) {
+    insertPayload.is_shared = true;
+    insertPayload.shared_forward_to_list = shared_forward_list;
+    insertPayload.shared_display_name = shared_display_name || null;
+  }
   const { data: newRow, error: insErr } = await admin
     .from('agent_emails')
-    .insert({
-      profile_id,
-      company_id: company.id,
-      local_part,
-      full_email,
-      forward_to,
-      source_application_id,
-      status: 'pending'
-    })
+    .insert(insertPayload)
     .select('id')
     .single();
   if (insErr) {
@@ -218,6 +278,7 @@ exports.handler = async (event) => {
 
   if (cfToken && cfZone) {
     try {
+      const cfDestinations = isShared ? shared_forward_list : [forward_to];
       const cfRes = await fetch(`https://api.cloudflare.com/client/v4/zones/${cfZone}/email/routing/rules`, {
         method: 'POST',
         headers: {
@@ -225,10 +286,10 @@ exports.handler = async (event) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: `Forward ${local_part}`,
+          name: `Forward ${local_part}${isShared ? ' (shared)' : ''}`,
           enabled: true,
           matchers: [{ type: 'literal', field: 'to', value: full_email }],
-          actions:  [{ type: 'forward', value: [forward_to] }],
+          actions:  [{ type: 'forward', value: cfDestinations }],
           priority: 10
         })
       });
@@ -260,25 +321,35 @@ exports.handler = async (event) => {
     .eq('id', emailRowId);
 
   // ---- 11. Send onboarding email via Resend ----
-  // We mail the agent's PERSONAL address with their new company email + setup instructions.
+  // For staff: notify the agent's PERSONAL address with their new company email + Gmail send-as instructions.
+  // For shared: notify every recipient on the fan-out list that mail to <local>@<domain> now lands in their inbox.
   let onboarding_sent = false;
   let onboarding_error = null;
   if (RESEND_KEY) {
-    const { html, text, subject } = buildOnboardingEmail({
-      first_name,
-      full_name: `${first_name} ${last_name}`.trim(),
-      generated_email: full_email,
-      personal_email: forward_to,
-      company,
-      cf_route_active: !!cf_route_id
-    });
+    const recipients = isShared ? shared_forward_list : [forward_to];
+    const { html, text, subject } = isShared
+      ? buildSharedOnboardingEmail({
+          generated_email: full_email,
+          forward_list: shared_forward_list,
+          display_name: shared_display_name,
+          company,
+          cf_route_active: !!cf_route_id
+        })
+      : buildOnboardingEmail({
+          first_name,
+          full_name: `${first_name} ${last_name}`.trim(),
+          generated_email: full_email,
+          personal_email: forward_to,
+          company,
+          cf_route_active: !!cf_route_id
+        });
     try {
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: `${company.name} <onboarding@resend.dev>`,
-          to: [forward_to],
+          to: recipients,
           reply_to: company.support_email || 'info@investprorealty.net',
           subject,
           html,
@@ -306,6 +377,9 @@ exports.handler = async (event) => {
     id: emailRowId,
     full_email,
     forward_to,
+    is_shared: isShared,
+    shared_forward_to_list: isShared ? shared_forward_list : null,
+    onboarding_sent,
     cloudflare: {
       configured: !!(cfToken && cfZone),
       route_id:   cf_route_id,
@@ -386,6 +460,59 @@ function buildOnboardingEmail({ first_name, full_name, generated_email, personal
     `5. SMTP credentials will arrive in a follow-up email once your sender identity is verified.\n\n` +
     `Questions? Call ${phone}.\n\n` +
     `— ${safeName}\n`;
+
+  return { html, text, subject };
+}
+
+// ----------------------------------------------------------------
+// Shared-inbox onboarding email body
+// ----------------------------------------------------------------
+function buildSharedOnboardingEmail({ generated_email, forward_list, display_name, company, cf_route_active }) {
+  const labelName = display_name || generated_email.split('@')[0];
+  const subject = `${company.name}: ${generated_email} is live (shared inbox)`;
+  const phone = company.support_phone || '702-816-5555';
+  const recipientsHtml = forward_list.map(e => `<li>${escapeHtml(e)}</li>`).join('');
+
+  const html = `
+<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:620px; margin:0 auto; padding:1.5rem; color:#1F2937;">
+  <h2 style="font-family:Georgia,serif; color:${escapeAttr(company.brand_color || '#1F4FC1')}; margin:0 0 .5rem;">Shared inbox is live: ${escapeHtml(labelName)}</h2>
+  <p style="color:#555A6B; font-size:1rem;">Anyone who emails the address below will reach <strong>everyone</strong> on the recipient list. This is your team's shared role-based inbox at ${escapeHtml(company.name)}.</p>
+
+  <div style="background:#F7F8FB; border-left:4px solid ${escapeAttr(company.brand_color || '#1F4FC1')}; padding:1rem 1.25rem; border-radius:4px; margin:1rem 0;">
+    <div style="font-family:Georgia,serif; font-size:1.4rem; font-weight:700; color:#1F4FC1;">${escapeHtml(generated_email)}</div>
+    <div style="font-size:.85rem; color:#6B7280; margin-top:.25rem;">Forwards to ${forward_list.length} recipient${forward_list.length === 1 ? '' : 's'}:</div>
+    <ul style="margin:.4rem 0 0 0; padding-left:1.25rem; color:#1F2937; font-size:.9rem;">${recipientsHtml}</ul>
+  </div>
+
+  ${cf_route_active
+    ? `<p>The Cloudflare route is active right now. Send a test email to <strong>${escapeHtml(generated_email)}</strong> — every recipient above should receive a copy.</p>`
+    : `<p style="background:#FEF3C7; padding:.75rem 1rem; border-radius:4px; color:#92400E; font-size:.92rem;"><strong>Heads up:</strong> inbound forwarding will activate within a few minutes. The route is in the database but Cloudflare may need a moment to propagate.</p>`
+  }
+
+  <h3 style="color:#1F4FC1; margin-top:2rem;">Replying from this shared address (optional)</h3>
+  <p>If you want to <em>reply</em> as ${escapeHtml(generated_email)} (not as your personal address), each recipient should set up Gmail "Send mail as":</p>
+  <ol style="line-height:1.7; padding-left:1.25rem;">
+    <li>Gmail → Settings → "Accounts and Import" → "Send mail as" → "Add another email address"</li>
+    <li>Email: <strong>${escapeHtml(generated_email)}</strong>, Name: <strong>${escapeHtml(labelName)}</strong></li>
+    <li>Uncheck "Treat as an alias" → Next Step</li>
+    <li>SMTP credentials are sent in a follow-up email once the SES sender identity is verified by a manager.</li>
+  </ol>
+
+  <hr style="border:none; border-top:1px solid #E5E7EB; margin:2rem 0;" />
+  <p style="font-size:.95rem;">Questions? Reply here or call <a href="tel:${escapeAttr(phone)}" style="color:#1F4FC1;">${escapeHtml(phone)}</a>.</p>
+  <p style="font-size:.85rem; color:#6B7280; margin-top:1.5rem;">— ${escapeHtml(company.name)}<br/>${company.tagline ? escapeHtml(company.tagline) : ''}</p>
+</div>`;
+
+  const text =
+    `Shared inbox is live: ${labelName}\n\n` +
+    `Address: ${generated_email}\n` +
+    `Forwards to:\n` +
+    forward_list.map(e => '  - ' + e).join('\n') + '\n\n' +
+    `${cf_route_active
+      ? 'Cloudflare route is active. Send a test email — every recipient should receive a copy.'
+      : 'Inbound forwarding activates within a few minutes.'}\n\n` +
+    `Optional: set up Gmail "Send mail as" to reply from this address.\n\n` +
+    `Questions? Call ${phone}.\n\n— ${company.name}\n`;
 
   return { html, text, subject };
 }
