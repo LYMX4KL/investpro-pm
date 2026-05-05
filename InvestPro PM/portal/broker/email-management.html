@@ -63,7 +63,11 @@
 <main class="dash-main container" style="max-width:1280px;">
   <div class="dash-title">
     <h1>Email Management</h1>
-    <a href="../../docs/COMPANY-EMAIL-ARCHITECTURE.md" target="_blank" class="btn btn-outline btn-sm">📄 Architecture doc</a>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <button type="button" id="provisionBtn" class="btn btn-primary">+ Provision Email</button>
+      <a href="../../docs/INVESTPRO-EMAIL-SETUP.md" target="_blank" class="btn btn-outline btn-sm">📋 Setup runbook</a>
+      <a href="../../docs/COMPANY-EMAIL-ARCHITECTURE.md" target="_blank" class="btn btn-outline btn-sm">📄 Architecture doc</a>
+    </div>
   </div>
 
   <div id="banner-area"></div>
@@ -108,6 +112,69 @@
 
   <div id="emptyState" class="empty-state" style="display:none;">No agent emails match this filter.</div>
 </main>
+
+<!-- Provision modal -->
+<div class="modal-bg" id="provisionModalBg">
+  <div class="modal" style="max-width:580px;">
+    <h2>Provision a new company email</h2>
+    <div class="modal-meta">Creates the address, adds a Cloudflare forwarding route, and emails the recipient with setup instructions.</div>
+
+    <div id="pErr" class="err" style="display:none;"></div>
+    <div id="pOk"  class="ok"  style="display:none;"></div>
+
+    <div style="display:flex;gap:.6rem;background:#F7F8FB;border-radius:6px;padding:.5rem;margin-bottom:1rem;">
+      <label style="flex:1;display:flex;gap:.4rem;align-items:center;cursor:pointer;padding:.5rem .75rem;border-radius:4px;font-weight:600;background:#fff;border:2px solid #1F4FC1;">
+        <input type="radio" name="pmode" value="staff" checked /> Staff member (single recipient)
+      </label>
+      <label style="flex:1;display:flex;gap:.4rem;align-items:center;cursor:pointer;padding:.5rem .75rem;border-radius:4px;font-weight:600;background:#fff;border:2px solid transparent;">
+        <input type="radio" name="pmode" value="shared" /> Shared inbox (multi-recipient)
+      </label>
+    </div>
+
+    <!-- STAFF MODE -->
+    <div id="pmStaff">
+      <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.25rem;">Profile *</label>
+      <select id="p_profile" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;">
+        <option value="">— pick a staff member —</option>
+      </select>
+      <small class="muted">Includes broker, agents, leasing, accounting, va, admin_onsite, compliance, marketing roles.</small>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem;">
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Local-part (override)</label>
+          <input type="text" id="p_local" placeholder="leave blank for first.last" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+          <small class="muted">e.g. <code>kenny</code> for kenny@investprorealty.net.</small>
+        </div>
+        <div>
+          <label style="font-size:.85rem;font-weight:600;color:#374151;">Forward to</label>
+          <input type="email" id="p_forward" placeholder="auto-fills from profile" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARED INBOX MODE -->
+    <div id="pmShared" style="display:none;">
+      <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.25rem;">Shared inbox name *</label>
+      <div style="display:flex;align-items:center;gap:.4rem;">
+        <input type="text" id="p_shared_local" placeholder="marketing" style="flex:1;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+        <span class="muted">@investprorealty.net</span>
+      </div>
+      <small class="muted">Common: <code>marketing</code>, <code>info</code>, <code>sales</code>, <code>support</code>, <code>accounting</code>, <code>leasing</code>, <code>maintenance</code>.</small>
+
+      <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-top:.75rem;margin-bottom:.25rem;">Forward to (one address per line, up to 5) *</label>
+      <textarea id="p_shared_forwards" rows="4" placeholder="kenny@gmail.com&#10;jane@investprorealty-team.com&#10;mike@gmail.com" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;font-family:monospace;box-sizing:border-box;"></textarea>
+      <small class="muted">Mail to <code>marketing@investprorealty.net</code> will fan out to every address listed. Each must be a verified destination in Cloudflare first.</small>
+
+      <label style="font-size:.85rem;font-weight:600;color:#374151;display:block;margin-top:.75rem;">Display name (for onboarding email)</label>
+      <input type="text" id="p_shared_display" placeholder="e.g. Marketing Team" style="width:100%;padding:.5rem .75rem;border:1px solid #DDE3F0;border-radius:6px;font-size:.92rem;box-sizing:border-box;" />
+    </div>
+
+    <div class="actions-row" style="margin-top:1.25rem;">
+      <button type="button" id="pSubmitBtn" class="btn btn-primary">Provision</button>
+      <button type="button" id="pCancelBtn" class="btn btn-outline">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- Detail modal -->
 <div class="modal-bg" id="modalBg">
@@ -384,6 +451,177 @@
   document.getElementById('modalBg').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modalBg')) closeModal();
   });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Provision modal wiring
+  // ─────────────────────────────────────────────────────────────────
+  const provisionRoles = ['broker', 'agent_listing', 'agent_showing', 'leasing', 'accounting', 'va', 'admin_onsite', 'compliance', 'marketing'];
+  let staffProfiles = [];
+  let staffProfilesLoaded = false;
+
+  async function loadStaffProfiles() {
+    if (staffProfilesLoaded) return;
+    const { data, error } = await supa.from('profiles')
+      .select('id, full_name, email, role')
+      .in('role', provisionRoles)
+      .order('full_name');
+    if (error) {
+      document.getElementById('pErr').textContent = 'Could not load profiles: ' + error.message;
+      document.getElementById('pErr').style.display = '';
+      return;
+    }
+    staffProfiles = data || [];
+    const sel = document.getElementById('p_profile');
+    sel.innerHTML = '<option value="">— pick a staff member —</option>';
+    for (const p of staffProfiles) {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.full_name || '(no name)'} — ${p.role} · ${p.email || 'no email'}`;
+      opt.dataset.email = p.email || '';
+      opt.dataset.fullName = p.full_name || '';
+      sel.appendChild(opt);
+    }
+    staffProfilesLoaded = true;
+  }
+
+  function openProvisionModal() {
+    document.getElementById('pErr').style.display = 'none';
+    document.getElementById('pOk').style.display = 'none';
+    document.getElementById('p_profile').value = '';
+    document.getElementById('p_local').value = '';
+    document.getElementById('p_forward').value = '';
+    document.getElementById('p_shared_local').value = '';
+    document.getElementById('p_shared_forwards').value = '';
+    document.getElementById('p_shared_display').value = '';
+    // Reset to staff mode
+    document.querySelector('input[name="pmode"][value="staff"]').checked = true;
+    setMode('staff');
+    document.getElementById('provisionModalBg').classList.add('show');
+    loadStaffProfiles();
+  }
+
+  function closeProvisionModal() {
+    document.getElementById('provisionModalBg').classList.remove('show');
+  }
+
+  function setMode(mode) {
+    document.getElementById('pmStaff').style.display  = (mode === 'staff')  ? '' : 'none';
+    document.getElementById('pmShared').style.display = (mode === 'shared') ? '' : 'none';
+    // Highlight active radio label
+    const labels = document.querySelectorAll('input[name="pmode"]');
+    labels.forEach(r => {
+      const lbl = r.closest('label');
+      if (lbl) lbl.style.borderColor = r.checked ? '#1F4FC1' : 'transparent';
+    });
+  }
+
+  document.getElementById('provisionBtn').addEventListener('click', openProvisionModal);
+  document.getElementById('pCancelBtn').addEventListener('click', closeProvisionModal);
+  document.getElementById('provisionModalBg').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('provisionModalBg')) closeProvisionModal();
+  });
+  document.querySelectorAll('input[name="pmode"]').forEach(r => {
+    r.addEventListener('change', (e) => setMode(e.target.value));
+  });
+
+  // Auto-fill forward_to when a profile is picked
+  document.getElementById('p_profile').addEventListener('change', (e) => {
+    const opt = e.target.selectedOptions[0];
+    if (opt && opt.dataset.email) {
+      document.getElementById('p_forward').value = opt.dataset.email;
+    }
+  });
+
+  async function submitProvision() {
+    const errEl = document.getElementById('pErr');
+    const okEl  = document.getElementById('pOk');
+    errEl.style.display = 'none';
+    okEl.style.display = 'none';
+
+    const mode = document.querySelector('input[name="pmode"]:checked').value;
+    const btn = document.getElementById('pSubmitBtn');
+
+    let body = { company_slug: 'investpro' };
+
+    if (mode === 'staff') {
+      const profile_id = document.getElementById('p_profile').value;
+      const local_part = document.getElementById('p_local').value.trim().toLowerCase();
+      const forward_to = document.getElementById('p_forward').value.trim();
+      if (!profile_id) {
+        errEl.textContent = 'Pick a staff profile.';
+        errEl.style.display = '';
+        return;
+      }
+      if (!forward_to) {
+        errEl.textContent = 'Forward-to address is required.';
+        errEl.style.display = '';
+        return;
+      }
+      body.profile_id = profile_id;
+      body.forward_to = forward_to;
+      if (local_part) body.local_part_override = local_part;
+    } else {
+      const local_part = document.getElementById('p_shared_local').value.trim().toLowerCase();
+      const forwardsRaw = document.getElementById('p_shared_forwards').value;
+      const display_name = document.getElementById('p_shared_display').value.trim();
+      const forward_to_list = forwardsRaw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      if (!local_part || !/^[a-z0-9._-]+$/.test(local_part)) {
+        errEl.textContent = 'Shared inbox name must be lowercase letters, numbers, dots, dashes, or underscores.';
+        errEl.style.display = '';
+        return;
+      }
+      if (forward_to_list.length === 0) {
+        errEl.textContent = 'Add at least one forward-to address.';
+        errEl.style.display = '';
+        return;
+      }
+      if (forward_to_list.length > 5) {
+        errEl.textContent = 'Cloudflare allows at most 5 destinations per route.';
+        errEl.style.display = '';
+        return;
+      }
+      body.shared = true;
+      body.local_part = local_part;
+      body.forward_to_list = forward_to_list;
+      if (display_name) body.display_name = display_name;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Provisioning…';
+
+    try {
+      const { data: { session } } = await supa.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        errEl.textContent = 'Not signed in. Refresh and try again.';
+        errEl.style.display = '';
+        return;
+      }
+      const resp = await fetch('/.netlify/functions/provision-agent-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body)
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok || !json.ok) {
+        errEl.textContent = json.error || ('Provision failed (HTTP ' + resp.status + ')');
+        errEl.style.display = '';
+        return;
+      }
+      okEl.textContent = '✓ Provisioned ' + (json.full_email || 'email') + '. Onboarding message ' + (json.onboarding_sent ? 'sent.' : 'queued.');
+      okEl.style.display = '';
+      await loadAll();
+      setTimeout(closeProvisionModal, 1500);
+    } catch (err) {
+      errEl.textContent = 'Network error: ' + (err.message || err);
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Provision';
+    }
+  }
+
+  document.getElementById('pSubmitBtn').addEventListener('click', submitProvision);
 
   loadAll();
 })();
