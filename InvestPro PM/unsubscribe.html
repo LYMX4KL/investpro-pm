@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unsubscribe — InvestPro Realty</title>
+<meta name="description" content="Unsubscribe from InvestPro Realty outreach emails. One click and you're off the list — we'll never contact you again." />
+<meta name="robots" content="noindex,nofollow" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="images/favicon.png" />
+<link rel="stylesheet" href="css/styles.css" />
+<style>
+  .unsub-card {
+    max-width: 520px;
+    margin: 4rem auto;
+    padding: 2rem 2.25rem;
+    background: #fff;
+    border: 1px solid #DDE3F0;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(20, 52, 137, 0.06);
+  }
+  .unsub-card h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: #1F4FC1;
+    margin: 0 0 .5rem;
+    font-size: 1.65rem;
+  }
+  .unsub-card p { color: #4B5563; line-height: 1.55; }
+  .unsub-card .email-line {
+    background: #F7F8FB;
+    padding: .75rem 1rem;
+    border-radius: 6px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    word-break: break-all;
+    margin: 1rem 0;
+  }
+  .unsub-card .actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+  .unsub-card .reason { margin-top: 1rem; }
+  .unsub-card .reason label { font-size: .85rem; font-weight: 600; color: #374151; display: block; margin-bottom: .25rem; }
+  .unsub-card .reason textarea {
+    width: 100%; padding: .55rem .75rem; border: 1px solid #DDE3F0; border-radius: 6px;
+    font-family: inherit; font-size: .9rem; box-sizing: border-box; min-height: 80px;
+  }
+  .unsub-card .ok    { background: #D1FAE5; color: #065F46; padding: 1rem 1.1rem; border-radius: 6px; }
+  .unsub-card .err   { background: #FEE2E2; color: #B0342B; padding: 1rem 1.1rem; border-radius: 6px; }
+  .unsub-card .info  { background: #DBEAFE; color: #1E40AF; padding: 1rem 1.1rem; border-radius: 6px; }
+  .unsub-card .small { font-size: .82rem; color: #6B7280; }
+</style>
+</head>
+<body style="background:#F7F8FB;">
+
+<div class="unsub-card" id="card">
+  <h1>Unsubscribe from InvestPro outreach</h1>
+  <div id="loading" class="info">Loading…</div>
+  <div id="confirm" style="display:none;">
+    <p>You're about to unsubscribe this address from InvestPro Realty outreach. We'll never email you again from these campaigns.</p>
+    <div class="email-line" id="emailLine">—</div>
+    <div class="reason">
+      <label for="reason">Optional — tell us why (helps us improve):</label>
+      <textarea id="reason" placeholder="Not interested, wrong person, too many emails, etc."></textarea>
+    </div>
+    <div class="actions">
+      <button id="confirmBtn" class="btn btn-primary">Confirm unsubscribe</button>
+    </div>
+    <p class="small" style="margin-top:1rem;">If you got this link by mistake, just close this page — nothing happens until you click confirm.</p>
+  </div>
+  <div id="success" class="ok" style="display:none;">
+    <strong>You're unsubscribed.</strong>
+    <p style="margin:.5rem 0 0;">We've removed <span id="successEmail"></span> from our outreach list. You won't receive any more emails from these campaigns. <br/><br/>
+    <em>Thanks for letting us know.</em></p>
+  </div>
+  <div id="alreadyDone" class="info" style="display:none;">
+    <strong>Already unsubscribed.</strong>
+    <p style="margin:.5rem 0 0;">This address (<span id="alreadyEmail"></span>) is already off our outreach list. No further action needed.</p>
+  </div>
+  <div id="error" class="err" style="display:none;">
+    <strong>Something went wrong.</strong>
+    <p id="errorMsg" style="margin:.5rem 0 0;"></p>
+    <p class="small" style="margin-top:.75rem;">If this keeps happening, email <a href="mailto:info@investprorealty.net">info@investprorealty.net</a> with the address you'd like removed and we'll handle it manually.</p>
+  </div>
+</div>
+
+<script>
+  (async function () {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t');
+
+    if (!token) {
+      showError('Missing unsubscribe token in the URL. Please click the link from your email again.');
+      return;
+    }
+
+    // First, look up the email by hitting GET (idempotent — does NOT unsubscribe yet,
+    // unless the link came from a one-click List-Unsubscribe POST in which case the
+    // server flipped it already).
+    try {
+      const res = await fetch('/.netlify/functions/unsubscribe-outreach?t=' + encodeURIComponent(token), {
+        method: 'GET'
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        showError(j.error || ('HTTP ' + res.status));
+        return;
+      }
+      if (j.already_unsubscribed) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('alreadyEmail').textContent = j.email || '(your address)';
+        document.getElementById('alreadyDone').style.display = '';
+        return;
+      }
+      // Show the confirm UI
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('emailLine').textContent = j.email || '(your address)';
+      document.getElementById('confirm').style.display = '';
+    } catch (err) {
+      showError('Network error: ' + (err.message || err));
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', async () => {
+      const reason = document.getElementById('reason').value.trim();
+      const btn = document.getElementById('confirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Unsubscribing…';
+      try {
+        const res = await fetch('/.netlify/functions/unsubscribe-outreach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, reason })
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) {
+          showError(j.error || ('HTTP ' + res.status));
+          btn.disabled = false;
+          btn.textContent = 'Confirm unsubscribe';
+          return;
+        }
+        document.getElementById('confirm').style.display = 'none';
+        document.getElementById('successEmail').textContent = j.email || '(your address)';
+        document.getElementById('success').style.display = '';
+      } catch (err) {
+        showError('Network error: ' + (err.message || err));
+        btn.disabled = false;
+        btn.textContent = 'Confirm unsubscribe';
+      }
+    });
+
+    function showError(msg) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('confirm').style.display = 'none';
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('error').style.display = '';
+    }
+  })();
+</script>
+
+</body>
+</html>
